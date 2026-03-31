@@ -16,7 +16,7 @@ if [[ ! -f "$input" ]]; then
   exit 1
 fi
 
-pod=$(kubectl get pod -n "$namespace" -l "app.kubernetes.io/instance=${release},app.kubernetes.io/name=opencode-k8s-helm,app.kubernetes.io/user=${username}" -o jsonpath='{.items[0].metadata.name}')
+pod=$(kubectl get pod -n "$namespace" -l "app.kubernetes.io/instance=${release},app.kubernetes.io/name=ok8s,app.kubernetes.io/user=${username}" -o jsonpath='{.items[0].metadata.name}')
 
 if [[ -z "$pod" ]]; then
   echo "No pod found for user ${username} in ${namespace}" >&2
