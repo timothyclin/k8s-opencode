@@ -1,6 +1,8 @@
+{{- if and .Values.createNamespace (ne .Release.Namespace "default") }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Release.Namespace }}
   labels:
     {{- include "ok8s.labels" . | nindent 4 }}
+{{- end }}
