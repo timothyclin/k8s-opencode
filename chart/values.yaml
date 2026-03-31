@@ -59,6 +59,9 @@ auth:
     clientSecret: ""
     cookieSecret: ""
     emailDomain: "*"
+    # -- Cookie domain for multi-user OIDC (e.g. ".lynx-beta.ts.net")
+    # -- Required so the auth cookie is shared across all per-user hostnames
+    cookieDomain: ""
 
 # -- StatefulSet update strategy (used when mode: "multi")
 updateStrategy:

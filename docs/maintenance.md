@@ -260,27 +260,88 @@ Each user has their own provider configuration under `users[].providers.*`. Upda
 
 For multi-user deployments, you can use OIDC authentication via oauth2-proxy instead of per-user passwords.
 
-### Enable OIDC
+### How It Works
 
-1. Configure your OIDC provider (Google, GitHub, Auth0, etc.)
-2. Update `values.yaml`:
+A single shared oauth2-proxy sits in front of all users. Two settings make multi-user work:
+
+- **`relative_redirect_url`** — the callback URL is built from each request's `Host` header, so Alice visiting her hostname gets redirected to her callback, not Bob's.
+- **`cookieDomain`** — the session cookie is set on the parent tailnet domain (e.g. `.lynx-beta.ts.net`) so it's valid across all per-user hostnames.
+
+### Step 1: Create an OAuth Client
+
+#### Google Workspace
+
+1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Create or select a project
+3. Configure the **OAuth consent screen**:
+   - User Type: External (or Internal for Google Workspace)
+   - App name: e.g. "OpenCode"
+   - User support email: your email
+   - Authorized domains: add your tailnet domain (e.g. `lynx-beta.ts.net`)
+   - Scopes: `email`, `profile`, `openid` (default for OIDC)
+   - Add test users unless you publish the app
+4. Click **+ CREATE CREDENTIALS → OAuth client ID**
+   - Application type: **Web application**
+   - Name: e.g. "opencode-oauth2-proxy"
+   - Authorized redirect URIs: add **one** entry for each user:
+     ```
+     https://opencode-timothy-opencode.lynx-beta.ts.net/oauth2/callback
+     https://opencode-alice-opencode.lynx-beta.ts.net/oauth2/callback
+     ```
+   - Click Create and note the **Client ID** and **Client Secret**
+
+#### GitHub
+
+1. Go to [GitHub Settings → Developer Settings → OAuth Apps](https://github.com/settings/developers)
+2. Click **New OAuth App**
+   - Application name: e.g. "OpenCode"
+   - Homepage URL: `https://opencode-timothy-opencode.lynx-beta.ts.net`
+   - Authorization callback URL: add all per-user callbacks (same as Google above)
+3. Note the **Client ID** and generate a **Client Secret**
+
+#### Auth0
+
+1. Go to [Auth0 Dashboard → Applications](https://manage.auth0.com/)
+2. Create a **Regular Web Application**
+3. Under Settings → Allowed Callback URLs, add all per-user callbacks
+4. Note the **Domain** (used as `provider`), **Client ID**, and **Client Secret**
+
+### Step 2: Generate a Cookie Secret
+
+```bash
+python3 -c "import base64,os; print(base64.b64encode(os.urandom(32)).decode())"
+```
+
+### Step 3: Configure the Chart
 
 ```yaml
 auth:
   oidc:
     enabled: true
-    provider: "https://accounts.google.com"  # Your OIDC issuer URL
+    provider: "https://accounts.google.com"       # OIDC issuer URL
     clientId: "your-client-id"
     clientSecret: "your-client-secret"
-    cookieSecret: "generate-with: python -c 'import base64,os; print(base64.b64encode(os.urandom(32)).decode())'"
-    emailDomain: "yourcompany.com"  # Or "*" for any domain
+    cookieSecret: "base64-32-byte-secret-from-step-2"
+    emailDomain: "example.com"                     # Or "*" for any domain
+    cookieDomain: ".lynx-beta.ts.net"              # Your tailnet domain (with leading dot)
 ```
 
-3. Upgrade:
+> **`cookieDomain` is required for multi-user OIDC.** It must be your tailnet domain prefixed with `.` — this allows the auth cookie to be shared across all per-user hostnames.
+
+### Step 4: Upgrade
 
 ```bash
 helm upgrade opencode ./chart -f values.yaml
 ```
+
+### Adding a New User After OIDC is Configured
+
+1. Add the user to `values.yaml`
+2. Add their callback URL to your OAuth provider's allowed redirect URIs:
+   ```
+   https://opencode-<newuser>-<namespace>.<tailnet>.ts.net/oauth2/callback
+   ```
+3. Upgrade the release
 
 ---
 
