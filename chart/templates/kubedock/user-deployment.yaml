@@ -1,0 +1,52 @@
+{{- /*
+Multi-user mode: per-user kubedock deployment for test container isolation.
+Each user gets their own kubedock instance so ephemeral test pods are scoped
+to their user label, preventing cross-user test container access.
+*/ -}}
+{{- if and .Values.kubedock.enabled (eq .Values.mode "multi") }}
+{{- $root := . }}
+{{- range $index, $user := .Values.users }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k8s-omo.fullname" $root }}-kubedock-{{ $user.name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+    app.kubernetes.io/user: {{ $user.name | quote }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "k8s-omo.selectorLabels" $root | nindent 6 }}
+      app.kubernetes.io/component: kubedock
+      app.kubernetes.io/user: {{ $user.name | quote }}
+  template:
+    metadata:
+      labels:
+        {{- include "k8s-omo.selectorLabels" $root | nindent 8 }}
+        app.kubernetes.io/component: kubedock
+        app.kubernetes.io/user: {{ $user.name | quote }}
+    spec:
+      serviceAccountName: {{ include "k8s-omo.fullname" $root }}-kubedock
+      containers:
+      - name: kubedock
+        image: "{{ $root.Values.kubedock.image.repository }}:{{ $root.Values.kubedock.image.tag }}"
+        imagePullPolicy: {{ $root.Values.kubedock.image.pullPolicy }}
+        command: ["kubedock", "server"]
+        args:
+        - "--port={{ $root.Values.kubedock.port }}"
+        - "--labels=app.kubernetes.io/user={{ $user.name }},app.kubernetes.io/instance={{ $root.Release.Name }}"
+        {{- range $root.Values.kubedock.extraArgs }}
+        - {{ . | quote }}
+        {{- end }}
+        ports:
+        - containerPort: {{ $root.Values.kubedock.port }}
+          name: api
+          protocol: TCP
+        resources:
+          {{- toYaml $root.Values.kubedock.resources | nindent 10 }}
+{{- end }}
+{{- end }}

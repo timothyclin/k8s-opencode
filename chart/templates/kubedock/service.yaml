@@ -1,0 +1,23 @@
+{{- /*
+Single-user mode: shared kubedock Service.
+*/ -}}
+{{- if and .Values.kubedock.enabled (eq .Values.mode "single") }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-kubedock-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "k8s-omo.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+  ports:
+  - protocol: TCP
+    port: {{ .Values.kubedock.port }}
+    targetPort: {{ .Values.kubedock.port }}
+    name: api
+{{- end }}

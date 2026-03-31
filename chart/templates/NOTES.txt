@@ -1,0 +1,26 @@
+{{- if and (eq .Values.mode "single") .Values.ingress.enabled }}
+{{- $fullname := include "k8s-omo.fullname" . }}
+{{- $namespace := .Release.Namespace }}
+OpenCode is now accessible on your tailnet!
+
+  URL: https://{{ .Values.ingress.hostname }}-{{ $namespace }}.<your-tailnet>.ts.net
+  Username: opencode
+  Password: (the value you set for serverPassword)
+
+To find your exact tailnet name, run:
+  tailscale status
+
+Or check your Tailscale admin console at:
+  https://login.tailscale.com/admin/machines
+{{- end }}
+{{- if and (eq .Values.mode "multi") .Values.ingress.enabled }}
+OpenCode multi-user endpoints (Tailscale ingress):
+
+{{- range $index, $user := .Values.users }}
+  User {{ $user.name }}:
+    URL: https://opencode-{{ $user.name }}-{{ $.Release.Namespace }}.<your-tailnet>.ts.net
+{{- end }}
+
+OIDC (oauth2-proxy):
+  Enabled: {{ .Values.auth.oidc.enabled }}
+{{- end }}

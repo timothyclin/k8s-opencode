@@ -1,0 +1,243 @@
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "k8s-omo.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+*/}}
+{{- define "k8s-omo.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "k8s-omo.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Common labels
+*/}}
+{{- define "k8s-omo.labels" -}}
+helm.sh/chart: {{ include "k8s-omo.chart" . }}
+{{ include "k8s-omo.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "k8s-omo.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "k8s-omo.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Generate opencode.jsonc config
+*/}}
+{{- define "k8s-omo.opencodeConfig" -}}
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    {{- $first := true }}
+    {{- range .Values.mcp.remote }}
+    {{- if not $first }},{{ end }}
+    "{{ .name }}": {
+      "type": "remote",
+      "url": "{{ .url }}"{{ if .enabled }},
+      "enabled": true{{ end }}{{ if .headers }},
+      "headers": {{ .headers | toJson }}{{ end }}{{ if .oauth }},
+      "oauth": {{ .oauth | toJson }}{{ end }}
+    }
+    {{- $first = false }}
+    {{- end }}
+    {{- range .Values.mcp.laptopServers }}
+    {{- if not $first }},{{ end }}
+    "laptop_{{ .name }}": {
+      "type": "remote",
+      "url": "http://{{ $.Release.Name }}-egress-{{ .name }}:{{ .port }}"{{ if .enabled }},
+      "enabled": true{{ end }}
+    }
+    {{- $first = false }}
+    {{- end }}
+  }
+}
+{{- end }}
+
+{{/*
+Get user count
+*/}}
+{{- define "k8s-omo.userCount" -}}
+{{- len .Values.users }}
+{{- end }}
+
+{{/*
+Resolve user name by pod ordinal index.
+Uses a shell expression rendered into the template — the actual resolution
+happens at runtime via the entrypoint script.
+For the USER_NAME env var we render a comma-separated list and let the
+entrypoint pick by index.
+*/}}
+{{- define "k8s-omo.userNameByIndex" -}}
+{{- $names := list }}
+{{- range .Values.users }}
+{{- $names = append $names .name }}
+{{- end }}
+{{- join "," $names }}
+{{- end }}
+
+{{/*
+Generate oh-my-opencode.jsonc config
+*/}}
+{{- define "k8s-omo.omoConfig" -}}
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/refs/heads/dev/assets/oh-my-opencode.schema.json",
+  {{- if .Values.omo.enabled }}
+  "sisyphus": {
+    "enabled": true,
+    "max_concurrent_tasks": {{ .Values.omo.sisyphus.maxConcurrentTasks }},
+    "task_timeout": {{ .Values.omo.sisyphus.taskTimeout }}
+  },
+  "agents": {
+    "oracle": {
+      "enabled": true,
+      "model": {{ .Values.omo.agents.oracle.model | quote }},
+      "prompt_append": {{ .Values.omo.agents.oracle.promptAppend | quote }}
+    },
+    "librarian": {
+      "enabled": true,
+      "model": {{ .Values.omo.agents.librarian.model | quote }}
+    }
+  },
+  "categories": {
+    "quick": { "model": {{ .Values.omo.categories.quick.model | quote }} },
+    "visual-engineering": { "model": {{ .Values.omo.categories.visualEngineering.model | quote }} }
+  }
+  {{- else }}
+  "sisyphus": { "enabled": false }
+  {{- end }}
+}
+{{- end }}
+
+{{- define "k8s-omo.userList" -}}
+{{- $names := list -}}
+{{- range .Values.users }}
+{{- $names = append $names .name -}}
+{{- end }}
+{{- join "," $names -}}
+{{- end }}
+
+{{- define "k8s-omo.userConfigChecksum" -}}
+{{- $root := .root -}}
+{{- $user := .user -}}
+{{- toJson (dict "user" $user "sharedMcp" $root.Values.sharedMcp "sharedSkills" $root.Values.sharedSkills "omo" $root.Values.omo) -}}
+{{- end }}
+
+{{- define "k8s-omo.opencodeUserConfig" -}}
+{{- $root := .root -}}
+{{- $user := .user -}}
+{{- $userMcp := $user.mcp | default (dict) -}}
+{{- $userRemote := (get $userMcp "remote") | default (list) -}}
+{{- $userLaptop := (get $userMcp "laptopServers") | default (list) -}}
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    {{- $first := true }}
+    {{- range $root.Values.sharedMcp }}
+    {{- if not $first }},{{ end }}
+    "{{ .name }}": {
+      "type": "remote",
+      "url": "{{ .url }}"{{ if .enabled }},
+      "enabled": true{{ end }}{{ if .headers }},
+      "headers": {{ .headers | toJson }}{{ end }}{{ if .oauth }},
+      "oauth": {{ .oauth | toJson }}{{ end }}
+    }
+    {{- $first = false }}
+    {{- end }}
+    {{- range $userRemote }}
+    {{- if not $first }},{{ end }}
+    "{{ .name }}": {
+      "type": "remote",
+      "url": "{{ .url }}"{{ if .enabled }},
+      "enabled": true{{ end }}{{ if .headers }},
+      "headers": {{ .headers | toJson }}{{ end }}{{ if .oauth }},
+      "oauth": {{ .oauth | toJson }}{{ end }}
+    }
+    {{- $first = false }}
+    {{- end }}
+    {{- range $userLaptop }}
+    {{- if not $first }},{{ end }}
+    "laptop_{{ $user.name }}_{{ .name }}": {
+      "type": "remote",
+      "url": "http://{{ $root.Release.Name }}-egress-{{ $user.name }}-{{ .name }}:{{ .port }}"{{ if .enabled }},
+      "enabled": true{{ end }}
+    }
+    {{- $first = false }}
+    {{- end }}
+  }
+}
+{{- end }}
+
+{{- define "k8s-omo.omoUserConfig" -}}
+{{- $root := .root -}}
+{{- $user := .user -}}
+{{- $userSkills := $user.skills | default (dict) -}}
+{{- $sharedSkills := $root.Values.sharedSkills | default (dict) -}}
+{{- $sharedNpm := (get $sharedSkills "npm") | default (list) -}}
+{{- $sharedConfig := (get $sharedSkills "config") | default (list) -}}
+{{- $userNpm := (get $userSkills "npm") | default (list) -}}
+{{- $userConfig := (get $userSkills "config") | default (list) -}}
+{{- $npmSkills := concat $sharedNpm $userNpm -}}
+{{- $configSkills := concat $sharedConfig $userConfig -}}
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/refs/heads/dev/assets/oh-my-opencode.schema.json",
+  {{- if $root.Values.omo.enabled }}
+  "sisyphus": {
+    "enabled": true,
+    "max_concurrent_tasks": {{ $root.Values.omo.sisyphus.maxConcurrentTasks }},
+    "task_timeout": {{ $root.Values.omo.sisyphus.taskTimeout }}
+  },
+  "agents": {
+    "oracle": {
+      "enabled": true,
+      "model": {{ $root.Values.omo.agents.oracle.model | quote }},
+      "prompt_append": {{ $root.Values.omo.agents.oracle.promptAppend | quote }}
+    },
+    "librarian": {
+      "enabled": true,
+      "model": {{ $root.Values.omo.agents.librarian.model | quote }}
+    }
+  },
+  "categories": {
+    "quick": { "model": {{ $root.Values.omo.categories.quick.model | quote }} },
+    "visual-engineering": { "model": {{ $root.Values.omo.categories.visualEngineering.model | quote }} }
+  },
+  "skills": {
+    "npm": {{ $npmSkills | default (list) | toJson }},
+    "config": {{ $configSkills | default (list) | toJson }}
+  }
+  {{- else }}
+  "sisyphus": { "enabled": false },
+  "skills": {
+    "npm": {{ $npmSkills | default (list) | toJson }},
+    "config": {{ $configSkills | default (list) | toJson }}
+  }
+  {{- end }}
+}
+{{- end }}

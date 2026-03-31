@@ -1,0 +1,14 @@
+{{- /*
+ProxyClass that tells the Tailscale egress proxy to accept advertised routes.
+This is needed if your laptop MCP is behind a subnet router.
+*/}}
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-egress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+spec:
+  tailscale:
+    acceptRoutes: true

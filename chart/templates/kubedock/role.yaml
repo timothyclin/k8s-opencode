@@ -1,0 +1,17 @@
+{{- if .Values.kubedock.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-kubedock
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "pods/exec", "pods/log"]
+  verbs: ["get", "list", "watch", "create", "delete", "update", "patch"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+{{- end }}

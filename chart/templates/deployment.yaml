@@ -1,0 +1,149 @@
+{{- if eq .Values.mode "single" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "k8s-omo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "k8s-omo.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include "k8s-omo.opencodeConfig" . | sha256sum }}
+        checksum/omo: {{ include "k8s-omo.omoConfig" . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.identity.enabled }}
+      initContainers:
+      - name: init-identity
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - sh
+        - -c
+        - |
+          if [ -d /identity ]; then
+            for f in /identity/*; do
+              filename=$(basename "$f")
+              target="/workspace/$filename"
+              if [ ! -e "$target" ]; then
+                cp "$f" "$target"
+              fi
+            done
+          fi
+        volumeMounts:
+        - name: identity
+          mountPath: /identity
+          readOnly: true
+        - name: workspace
+          mountPath: /workspace
+      {{- end }}
+      containers:
+      - name: opencode
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]
+        ports:
+        - containerPort: 4096
+          name: http
+          protocol: TCP
+        env:
+        - name: OPENCODE_SERVER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "k8s-omo.fullname" . }}-secrets
+              key: server-password
+        {{- if .Values.providers.anthropic.enabled }}
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "k8s-omo.fullname" . }}-secrets
+              key: anthropic-api-key
+        {{- end }}
+        {{- if .Values.providers.openai.enabled }}
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "k8s-omo.fullname" . }}-secrets
+              key: openai-api-key
+        {{- end }}
+        {{- if .Values.providers.google.enabled }}
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "k8s-omo.fullname" . }}-secrets
+              key: gemini-api-key
+        {{- end }}
+        {{- if .Values.kubedock.enabled }}
+        - name: DOCKER_HOST
+          value: "tcp://{{ include "k8s-omo.fullname" . }}-kubedock-service:{{ .Values.kubedock.port }}"
+        - name: TESTCONTAINERS_RYUK_DISABLED
+          value: "true"
+        - name: TESTCONTAINERS_CHECKS_DISABLE
+          value: "true"
+        {{- end }}
+        {{- with .Values.extraEnv }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        volumeMounts:
+        - name: config
+          mountPath: /root/.config/opencode
+        - name: data
+          mountPath: /root/.local/share/opencode
+        - name: workspace
+          mountPath: /workspace
+        {{- with .Values.extraVolumeMounts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        readinessProbe:
+          httpGet:
+            path: /global/health
+            port: 4096
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /global/health
+            port: 4096
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "k8s-omo.fullname" . }}-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "k8s-omo.fullname" . }}-data
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: {{ include "k8s-omo.fullname" . }}-workspace
+      {{- if .Values.identity.enabled }}
+      - name: identity
+        configMap:
+          name: {{ include "k8s-omo.fullname" . }}-identity
+      {{- end }}
+      {{- with .Values.extraVolumes }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+{{- end }}

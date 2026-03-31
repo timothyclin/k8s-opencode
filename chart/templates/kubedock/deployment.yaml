@@ -1,0 +1,42 @@
+{{- /*
+Single-user mode: shared kubedock deployment for the entire release.
+*/ -}}
+{{- if and .Values.kubedock.enabled (eq .Values.mode "single") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-kubedock
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "k8s-omo.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: kubedock
+  template:
+    metadata:
+      labels:
+        {{- include "k8s-omo.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: kubedock
+    spec:
+      serviceAccountName: {{ include "k8s-omo.fullname" . }}-kubedock
+      containers:
+      - name: kubedock
+        image: "{{ .Values.kubedock.image.repository }}:{{ .Values.kubedock.image.tag }}"
+        imagePullPolicy: {{ .Values.kubedock.image.pullPolicy }}
+        command: ["kubedock", "server"]
+        args:
+        - "--port={{ .Values.kubedock.port }}"
+        {{- range .Values.kubedock.extraArgs }}
+        - {{ . | quote }}
+        {{- end }}
+        ports:
+        - containerPort: {{ .Values.kubedock.port }}
+          name: api
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.kubedock.resources | nindent 10 }}
+{{- end }}

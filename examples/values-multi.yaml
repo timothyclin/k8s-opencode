@@ -1,0 +1,55 @@
+mode: "multi"
+users:
+  - name: alice
+    password: "alice-password"
+    workspaceSize: 10Gi
+    providers:
+      anthropic:
+        enabled: true
+        apiKey: "sk-ant-..."
+    mcp:
+      remote: []
+      laptopServers: []
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    skills:
+      npm: []
+      config: []
+  - name: bob
+    password: "bob-password"
+    workspaceSize: 15Gi
+    providers:
+      openai:
+        enabled: true
+        apiKey: "sk-proj-..."
+    mcp:
+      remote: []
+      laptopServers: []
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    skills:
+      npm: []
+      config: []
+sharedMcp: []
+sharedSkills:
+  npm: []
+  config: []
+
+auth:
+  oidc:
+    enabled: true
+    provider: "https://accounts.google.com"
+    clientId: "client"
+    clientSecret: "secret"
+    cookieSecret: "cookie-secret"
+    emailDomain: "example.com"

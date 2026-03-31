@@ -1,0 +1,24 @@
+{{- if and (eq .Values.mode "multi") .Values.auth.oidc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-oauth2-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+data:
+  oauth2-proxy.cfg: |
+    http_address = "0.0.0.0:4180"
+    reverse_proxy = true
+    provider = "oidc"
+    client_id = {{ .Values.auth.oidc.clientId | quote }}
+    client_secret = {{ .Values.auth.oidc.clientSecret | quote }}
+    oidc_issuer_url = {{ .Values.auth.oidc.provider | quote }}
+    cookie_secret = {{ .Values.auth.oidc.cookieSecret | quote }}
+    email_domains = [{{ .Values.auth.oidc.emailDomain | quote }}]
+    pass_user_headers = true
+    pass_access_token = true
+    set_xauthrequest = true
+    pass_host_header = true
+    upstreams = ["http://{{ include "k8s-omo.fullname" . }}-router:8080/"]
+{{- end }}

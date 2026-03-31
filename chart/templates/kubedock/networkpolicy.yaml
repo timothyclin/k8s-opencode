@@ -1,0 +1,73 @@
+{{- /*
+NetworkPolicy: Prevent cross-user pod-to-pod traffic.
+- Kubedock-created test pods can only receive traffic from their owner's agent pod
+- All pods can reach kubedock API (needed for Docker API calls)
+- All pods can reach DNS
+*/ -}}
+{{- if and .Values.kubedock.enabled (eq .Values.mode "multi") }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-isolate-users
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "k8s-omo.selectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow DNS
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  # Allow kubedock API access from any pod in this release
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "k8s-omo.selectorLabels" . | nindent 10 }}
+    ports:
+    - port: {{ .Values.kubedock.port }}
+      protocol: TCP
+  # Allow user pods to receive traffic from their own kubedock test pods
+  {{- range .Values.users }}
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "k8s-omo.selectorLabels" $ | nindent 10 }}
+          app.kubernetes.io/user: {{ .name | quote }}
+    ports:
+    - protocol: TCP
+  {{- end }}
+  egress:
+  # Allow DNS
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  # Allow kubedock API access
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "k8s-omo.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: kubedock
+    ports:
+    - port: {{ .Values.kubedock.port }}
+      protocol: TCP
+  # Allow pods to reach their own kubedock test containers
+  {{- range .Values.users }}
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "k8s-omo.selectorLabels" $ | nindent 10 }}
+          app.kubernetes.io/user: {{ .name | quote }}
+    ports:
+    - protocol: TCP
+  {{- end }}
+{{- end }}

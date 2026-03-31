@@ -1,0 +1,19 @@
+{{- if and (eq .Values.mode "multi") .Values.auth.oidc.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-router
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: opencode-router
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+{{- end }}

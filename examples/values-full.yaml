@@ -1,0 +1,74 @@
+# Full-featured values — all capabilities enabled
+# Use this as a reference for what's possible
+
+image:
+  repository: ghcr.io/anomalyco/opencode
+  tag: "latest"
+
+# Multiple LLM providers
+providers:
+  anthropic:
+    enabled: true
+    apiKey: "sk-ant-your-key-here"
+  openai:
+    enabled: true
+    apiKey: "sk-proj-your-key-here"
+  google:
+    enabled: true
+    apiKey: "AIza-your-key-here"
+
+serverPassword: "your-secure-password"
+
+# Full Oh-My-OpenCode config
+omo:
+  enabled: true
+  sisyphus:
+    maxConcurrentTasks: 2
+    taskTimeout: 300
+  agents:
+    oracle:
+      model: "anthropic/claude-sonnet-4-20250514"
+      promptAppend: "Provide concise tradeoffs and a clear recommendation"
+    librarian:
+      model: "google/gemini-2.5-pro"
+  categories:
+    quick:
+      model: "openai/gpt-4.1-nano"
+    visualEngineering:
+      model: "google/gemini-2.5-pro"
+
+# Remote + laptop MCP servers
+mcp:
+  remote:
+    - name: context7
+      url: https://mcp.context7.com/mcp
+      enabled: true
+  laptopServers:
+    - name: playwright
+      tailscaleIP: "100.x.x.x"  # Replace with your laptop's Tailscale IP
+      port: 3000
+
+# Tailscale ingress — exposes OpenCode UI to your tailnet
+ingress:
+  enabled: true
+  hostname: "opencode"
+
+# Secret management — use sealed-secrets for gitops
+secrets:
+  backend: "plain"
+
+persistence:
+  data:
+    storageClass: ""
+    size: 5Gi
+  workspace:
+    storageClass: ""
+    size: 50Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
