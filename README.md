@@ -454,7 +454,7 @@ When asked to set up OIDC for multi-user mode:
    (e.g. `https://ok8s-auth-opencode.lynx-beta.ts.net/oauth2/callback`)
 3. Generate a cookie secret: `python3 -c "import base64,os; print(base64.b64encode(os.urandom(32)).decode())"`
 4. Set `auth.oidc.cookieDomain` to the tailnet domain with a leading dot (e.g. `.lynx-beta.ts.net`)
-5. Set `auth.oidc.ingress.enabled: true` to create the Tailscale ingress for the auth hostname
+5. The auth Tailscale ingress is created automatically when `auth.oidc.enabled: true` in multi-user mode
 6. See [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode) for full provider setup steps
 
 ## Common Tasks
