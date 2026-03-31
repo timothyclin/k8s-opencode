@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-data
+  name: {{ include "ok8s.fullname" . }}-data
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.data.accessMode }}
@@ -19,10 +19,10 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-workspace
+  name: {{ include "ok8s.fullname" . }}-workspace
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.workspace.accessMode }}

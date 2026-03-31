@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include "opencode-k8s-helm.fullname" . }}-test-connection"
+  name: "{{ include "ok8s.fullname" . }}-test-connection"
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test
 spec:
@@ -14,7 +14,7 @@ spec:
     image: busybox
     command: ['wget']
     args: [
-      '{{ include "opencode-k8s-helm.fullname" . }}:4096/global/health'
+      '{{ include "ok8s.fullname" . }}:4096/global/health'
     ]
   restartPolicy: Never
 {{- end }}

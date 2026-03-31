@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-config
+  name: {{ include "ok8s.fullname" . }}-config
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 data:
   opencode.jsonc: |
-    {{- include "opencode-k8s-helm.opencodeConfig" . | nindent 4 }}
+    {{- include "ok8s.opencodeConfig" . | nindent 4 }}
   oh-my-opencode.jsonc: |
-    {{- include "opencode-k8s-helm.omoConfig" . | nindent 4 }}
+    {{- include "ok8s.omoConfig" . | nindent 4 }}
 {{- end }}

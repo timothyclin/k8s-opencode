@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-router
+  name: {{ include "ok8s.fullname" . }}-router
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -31,5 +31,5 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "opencode-k8s-helm.fullname" . }}-router
+          name: {{ include "ok8s.fullname" . }}-router
 {{- end }}

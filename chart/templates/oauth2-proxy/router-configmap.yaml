@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-router
+  name: {{ include "ok8s.fullname" . }}-router
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 data:
   nginx.conf: |
     events {}
@@ -13,7 +13,7 @@ data:
       map $http_host $upstream_name {
         default "";
         {{- range $index, $user := .Values.users }}
-        ~^opencode-{{ $user.name }}-{{ $.Release.Namespace }}(\..*)?$ {{ include "opencode-k8s-helm.fullname" $ }}-user-{{ $user.name }};
+        ~^opencode-{{ $user.name }}-{{ $.Release.Namespace }}(\..*)?$ {{ include "ok8s.fullname" $ }}-user-{{ $user.name }};
         {{- end }}
       }
 

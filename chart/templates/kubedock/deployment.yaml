@@ -5,24 +5,24 @@ Single-user mode: shared kubedock deployment for the entire release.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-kubedock
+  name: {{ include "ok8s.fullname" . }}-kubedock
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
     app.kubernetes.io/component: kubedock
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "opencode-k8s-helm.selectorLabels" . | nindent 6 }}
+      {{- include "ok8s.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: kubedock
   template:
     metadata:
       labels:
-        {{- include "opencode-k8s-helm.selectorLabels" . | nindent 8 }}
+        {{- include "ok8s.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: kubedock
     spec:
-      serviceAccountName: {{ include "opencode-k8s-helm.fullname" . }}-kubedock
+      serviceAccountName: {{ include "ok8s.fullname" . }}-kubedock
       containers:
       - name: kubedock
         image: "{{ .Values.kubedock.image.repository }}:{{ .Values.kubedock.image.tag }}"

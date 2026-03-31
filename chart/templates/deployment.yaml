@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}
+  name: {{ include "ok8s.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "opencode-k8s-helm.selectorLabels" . | nindent 6 }}
+      {{- include "ok8s.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "opencode-k8s-helm.selectorLabels" . | nindent 8 }}
+        {{- include "ok8s.selectorLabels" . | nindent 8 }}
       annotations:
-        checksum/config: {{ include "opencode-k8s-helm.opencodeConfig" . | sha256sum }}
+        checksum/config: {{ include "ok8s.opencodeConfig" . | sha256sum }}
         {{- if .Values.omo.enabled }}
-        checksum/omo: {{ include "opencode-k8s-helm.omoConfig" . | sha256sum }}
+        checksum/omo: {{ include "ok8s.omoConfig" . | sha256sum }}
         {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -70,32 +70,32 @@ spec:
         - name: OPENCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "opencode-k8s-helm.fullname" . }}-secrets
+              name: {{ include "ok8s.fullname" . }}-secrets
               key: server-password
         {{- if .Values.providers.anthropic.enabled }}
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "opencode-k8s-helm.fullname" . }}-secrets
+              name: {{ include "ok8s.fullname" . }}-secrets
               key: anthropic-api-key
         {{- end }}
         {{- if .Values.providers.openai.enabled }}
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "opencode-k8s-helm.fullname" . }}-secrets
+              name: {{ include "ok8s.fullname" . }}-secrets
               key: openai-api-key
         {{- end }}
         {{- if .Values.providers.google.enabled }}
         - name: GEMINI_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "opencode-k8s-helm.fullname" . }}-secrets
+              name: {{ include "ok8s.fullname" . }}-secrets
               key: gemini-api-key
         {{- end }}
         {{- if .Values.kubedock.enabled }}
         - name: DOCKER_HOST
-          value: "tcp://{{ include "opencode-k8s-helm.fullname" . }}-kubedock-service:{{ .Values.kubedock.port }}"
+          value: "tcp://{{ include "ok8s.fullname" . }}-kubedock-service:{{ .Values.kubedock.port }}"
         - name: TESTCONTAINERS_RYUK_DISABLED
           value: "true"
         - name: TESTCONTAINERS_CHECKS_DISABLE
@@ -131,17 +131,17 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "opencode-k8s-helm.fullname" . }}-config
+          name: {{ include "ok8s.fullname" . }}-config
       - name: data
         persistentVolumeClaim:
-          claimName: {{ include "opencode-k8s-helm.fullname" . }}-data
+          claimName: {{ include "ok8s.fullname" . }}-data
       - name: workspace
         persistentVolumeClaim:
-          claimName: {{ include "opencode-k8s-helm.fullname" . }}-workspace
+          claimName: {{ include "ok8s.fullname" . }}-workspace
       {{- if .Values.identity.enabled }}
       - name: identity
         configMap:
-          name: {{ include "opencode-k8s-helm.fullname" . }}-identity
+          name: {{ include "ok8s.fullname" . }}-identity
       {{- end }}
       {{- with .Values.extraVolumes }}
       {{- toYaml . | nindent 6 }}

@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "opencode-k8s-helm.name" -}}
+{{- define "ok8s.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "opencode-k8s-helm.fullname" -}}
+{{- define "ok8s.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "opencode-k8s-helm.chart" -}}
+{{- define "ok8s.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "opencode-k8s-helm.labels" -}}
-helm.sh/chart: {{ include "opencode-k8s-helm.chart" . }}
-{{ include "opencode-k8s-helm.selectorLabels" . }}
+{{- define "ok8s.labels" -}}
+helm.sh/chart: {{ include "ok8s.chart" . }}
+{{ include "ok8s.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,15 +43,15 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "opencode-k8s-helm.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "opencode-k8s-helm.name" . }}
+{{- define "ok8s.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ok8s.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Generate opencode.jsonc config
 */}}
-{{- define "opencode-k8s-helm.opencodeConfig" -}}
+{{- define "ok8s.opencodeConfig" -}}
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
@@ -83,7 +83,7 @@ Generate opencode.jsonc config
 {{/*
 Get user count
 */}}
-{{- define "opencode-k8s-helm.userCount" -}}
+{{- define "ok8s.userCount" -}}
 {{- len .Values.users }}
 {{- end }}
 
@@ -94,7 +94,7 @@ happens at runtime via the entrypoint script.
 For the USER_NAME env var we render a comma-separated list and let the
 entrypoint pick by index.
 */}}
-{{- define "opencode-k8s-helm.userNameByIndex" -}}
+{{- define "ok8s.userNameByIndex" -}}
 {{- $names := list }}
 {{- range .Values.users }}
 {{- $names = append $names .name }}
@@ -105,7 +105,7 @@ entrypoint pick by index.
 {{/*
 Generate oh-my-opencode.jsonc config
 */}}
-{{- define "opencode-k8s-helm.omoConfig" -}}
+{{- define "ok8s.omoConfig" -}}
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/refs/heads/dev/assets/oh-my-opencode.schema.json",
   {{- if .Values.omo.enabled }}
@@ -135,7 +135,7 @@ Generate oh-my-opencode.jsonc config
 }
 {{- end }}
 
-{{- define "opencode-k8s-helm.userList" -}}
+{{- define "ok8s.userList" -}}
 {{- $names := list -}}
 {{- range .Values.users }}
 {{- $names = append $names .name -}}
@@ -143,13 +143,13 @@ Generate oh-my-opencode.jsonc config
 {{- join "," $names -}}
 {{- end }}
 
-{{- define "opencode-k8s-helm.userConfigChecksum" -}}
+{{- define "ok8s.userConfigChecksum" -}}
 {{- $root := .root -}}
 {{- $user := .user -}}
 {{- toJson (dict "user" $user "sharedMcp" $root.Values.sharedMcp "sharedSkills" $root.Values.sharedSkills "omo" $root.Values.omo) -}}
 {{- end }}
 
-{{- define "opencode-k8s-helm.opencodeUserConfig" -}}
+{{- define "ok8s.opencodeUserConfig" -}}
 {{- $root := .root -}}
 {{- $user := .user -}}
 {{- $userMcp := $user.mcp | default (dict) -}}
@@ -194,7 +194,7 @@ Generate oh-my-opencode.jsonc config
 }
 {{- end }}
 
-{{- define "opencode-k8s-helm.omoUserConfig" -}}
+{{- define "ok8s.omoUserConfig" -}}
 {{- $root := .root -}}
 {{- $user := .user -}}
 {{- $userSkills := $user.skills | default (dict) -}}
