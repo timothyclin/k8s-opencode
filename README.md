@@ -55,7 +55,7 @@ users:
 ### 1. Install
 
 ```bash
-helm install opencode ./chart \
+helm install ok8s ./chart -n opencode --create-namespace \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -64,8 +64,10 @@ helm install opencode ./chart \
 Or with a values file:
 
 ```bash
-helm install opencode ./chart -f my-values.yaml
+helm install ok8s ./chart -n opencode --create-namespace -f my-values.yaml
 ```
+
+> **Namespace is required** — the chart will fail if installed into `default`. Always use `-n <namespace>`.
 
 ### 2. Verify
 
@@ -430,11 +432,15 @@ When asked to modify this chart:
 When asked to deploy or configure:
 
 1. Start from `examples/values-minimal.yaml` and add only what's needed
-2. Tailscale operator must be installed separately — this chart does not install
+2. **Always use `-n <namespace>`** — the chart rejects installation into `default`
+   ```bash
+   helm install ok8s ./chart -n opencode --create-namespace -f my-values.yaml
+   ```
+3. Tailscale operator must be installed separately — this chart does not install
    it
-3. For laptop MCPs: user needs to provide their laptop's Tailscale IP or
+4. For laptop MCPs: user needs to provide their laptop's Tailscale IP or
    MagicDNS name
-4. Secret backend choice depends on their GitOps setup — `plain` for personal,
+5. Secret backend choice depends on their GitOps setup — `plain` for personal,
    `sealed`/`external` for teams
 
 When asked to set up OIDC for multi-user mode:
