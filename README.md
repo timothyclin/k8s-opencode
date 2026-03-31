@@ -445,13 +445,13 @@ When asked to deploy or configure:
 
 When asked to set up OIDC for multi-user mode:
 
-1. Guide the user through creating an OAuth client (Google, GitHub, or Auth0)
-   — see [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode)
-2. For each user in `values.yaml`, add their callback URL to the OAuth provider:
+1. There is ONE shared OAuth client for ALL users — do NOT create per-user OAuth clients
+2. Register ALL user callback URLs on that single OAuth client:
    `https://opencode-<user>-<namespace>.<tailnet>.ts.net/oauth2/callback`
+   (one URL per user, all on the same client)
 3. Generate a cookie secret: `python3 -c "import base64,os; print(base64.b64encode(os.urandom(32)).decode())"`
 4. Set `auth.oidc.cookieDomain` to the tailnet domain with a leading dot (e.g. `.lynx-beta.ts.net`)
-5. **Never suggest a single-user callback URL** — each user must have their own
+5. See [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode) for full provider setup steps
 
 ## Common Tasks
 
