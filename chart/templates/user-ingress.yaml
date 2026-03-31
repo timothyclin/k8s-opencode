@@ -8,7 +8,7 @@ metadata:
   name: {{ include "opencode-k8s-helm.fullname" $root }}-user-{{ $user.name }}
   namespace: {{ $root.Release.Namespace }}
   annotations:
-    tailscale.com/tags: "tag:user-{{ $user.name }}"
+    tailscale.com/hostname: "opencode-{{ $user.name }}-{{ $root.Release.Namespace }}"
   labels:
     {{- include "opencode-k8s-helm.labels" $root | nindent 4 }}
     app.kubernetes.io/user: {{ $user.name | quote }}
