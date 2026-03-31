@@ -427,7 +427,7 @@ kubectl logs -l app.kubernetes.io/component=kubedock
 
 # Multi-user mode (per-user)
 kubectl get deployment -l app.kubernetes.io/component=kubedock
-kubectl get networkpolicy -l app.kubernetes.io/name=opencode-k8s-helm
+kubectl get networkpolicy -l app.kubernetes.io/name=ok8s
 ```
 
 ### Troubleshooting Kubedock
@@ -457,7 +457,7 @@ kubectl get rolebinding -l app.kubernetes.io/component=kubedock
 **NetworkPolicy blocking traffic (multi-user mode):**
 
 ```bash
-kubectl get networkpolicy -l app.kubernetes.io/name=opencode-k8s-helm
+kubectl get networkpolicy -l app.kubernetes.io/name=ok8s
 kubectl describe networkpolicy <policy-name>
 ```
 
