@@ -1,0 +1,31 @@
+{{- /*
+Multi-user mode: per-user kubedock Service.
+Each user's agent pod connects to their own kubedock instance,
+ensuring test containers are isolated per user.
+*/ -}}
+{{- if and .Values.kubedock.enabled (eq .Values.mode "multi") }}
+{{- $root := . }}
+{{- range $index, $user := .Values.users }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "k8s-omo.fullname" $root }}-kubedock-{{ $user.name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+    app.kubernetes.io/user: {{ $user.name | quote }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "k8s-omo.selectorLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: kubedock
+    app.kubernetes.io/user: {{ $user.name | quote }}
+  ports:
+  - protocol: TCP
+    port: {{ $root.Values.kubedock.port }}
+    targetPort: {{ $root.Values.kubedock.port }}
+    name: api
+{{- end }}
+{{- end }}

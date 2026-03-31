@@ -1,0 +1,42 @@
+{{- if eq .Values.mode "single" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "k8s-omo.selectorLabels" . | nindent 4 }}
+  ports:
+  - name: http
+    port: 4096
+    targetPort: 4096
+    protocol: TCP
+{{- end }}
+{{- if eq .Values.mode "multi" }}
+{{- $root := . }}
+{{- range $index, $user := .Values.users }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "k8s-omo.fullname" $root }}-user-{{ $user.name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    app.kubernetes.io/user: {{ $user.name | quote }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "k8s-omo.selectorLabels" $root | nindent 4 }}
+    app.kubernetes.io/user: {{ $user.name | quote }}
+  ports:
+  - name: http
+    port: 4096
+    targetPort: 4096
+    protocol: TCP
+{{- end }}
+{{- end }}

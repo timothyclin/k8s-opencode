@@ -1,0 +1,37 @@
+{{- if and (eq .Values.mode "multi") .Values.auth.oidc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-oauth2-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oauth2-proxy
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: oauth2-proxy
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.1
+        imagePullPolicy: IfNotPresent
+        args:
+        - --config=/etc/oauth2-proxy/oauth2-proxy.cfg
+        ports:
+        - containerPort: 4180
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /etc/oauth2-proxy
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "k8s-omo.fullname" . }}-oauth2-proxy
+{{- end }}

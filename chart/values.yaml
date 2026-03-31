@@ -1,0 +1,248 @@
+# -- OpenCode container image
+image:
+  repository: ghcr.io/anomalyco/opencode
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# -- Deployment mode: "single" (Deployment) or "multi" (StatefulSet)
+mode: "single"
+
+# -- Multi-user configuration (used when mode: "multi")
+users: []
+# - name: alice
+#   password: "change-me"
+#   workspaceSize: 20Gi
+#   providers:
+#     anthropic:
+#       enabled: true
+#       apiKey: "sk-ant-..."
+#     openai:
+#       enabled: false
+#       apiKey: ""
+#     google:
+#       enabled: false
+#       apiKey: ""
+#       projectId: ""
+#   mcp:
+#     remote: []
+#     laptopServers: []
+#   resources:
+#     requests:
+#       cpu: 500m
+#       memory: 512Mi
+#     limits:
+#       cpu: "2"
+#       memory: 2Gi
+#   skills:
+#     npm: []
+#     config: []
+
+# -- Shared MCP servers for all users (used when mode: "multi")
+sharedMcp: []
+# - name: context7
+#   url: https://mcp.context7.com/mcp
+#   enabled: true
+#   headers: {}
+#   oauth: {}
+
+# -- Shared skills and rules for all users (used when mode: "multi")
+sharedSkills:
+  npm: []
+  config: []
+
+# -- OAuth2 Proxy OIDC configuration (shared for multi-user mode)
+auth:
+  oidc:
+    enabled: false
+    provider: "oidc"
+    clientId: ""
+    clientSecret: ""
+    cookieSecret: ""
+    emailDomain: "*"
+
+# -- StatefulSet update strategy (used when mode: "multi")
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    partition: 0
+    maxUnavailable: 1
+
+# -- Resource quota for multi-user namespaces
+resourceQuota:
+  enabled: false
+  maxCpu: "8"
+  maxMemory: 16Gi
+  maxPvcCount: 20
+
+# -- Backup settings for maintenance scripts
+backup:
+  enabled: false
+  schedule: "0 3 * * *"
+  retention: 7
+  storageClass: ""
+
+# -- LLM provider API keys (at least one required)
+providers:
+  anthropic:
+    enabled: false
+    apiKey: ""
+  openai:
+    enabled: false
+    apiKey: ""
+  google:
+    enabled: false
+    apiKey: ""
+    # -- For Gemini, you may also need a project ID for Vertex AI
+    projectId: ""
+
+# -- Server auth (REQUIRED — protects the HTTP endpoint)
+# -- If empty, the server will have no authentication
+serverPassword: "change-me"
+
+# -- Oh-My-OpenCode configuration
+omo:
+  enabled: false
+  sisyphus:
+    maxConcurrentTasks: 2
+    taskTimeout: 300
+  agents:
+    oracle:
+      model: "anthropic/claude-sonnet-4-20250514"
+      promptAppend: "Provide concise tradeoffs and a clear recommendation"
+    librarian:
+      model: "google/gemini-2.5-pro"
+  categories:
+    quick:
+      model: "openai/gpt-4.1-nano"
+    visualEngineering:
+      model: "google/gemini-2.5-pro"
+
+# -- MCP server configuration
+mcp:
+  # -- Remote MCP servers (URLs accessible from the cluster)
+  remote: []
+  # - name: context7
+  #   url: https://mcp.context7.com/mcp
+  #   enabled: true
+  #   headers: {}
+  #   oauth: {}
+
+  # -- Laptop MCP servers (reachable via Tailscale cluster egress)
+  # -- Each entry creates an ExternalName Service + MCP config
+  laptopServers: []
+  # - name: playwright
+  #   tailscaleIP: "100.x.x.x"      # Your laptop's Tailscale IP
+  #   # Or use MagicDNS instead of IP:
+  #   # tailscaleFqdn: "my-laptop.tail12345.ts.net"
+  #   port: 3000
+
+# -- Tailscale cluster ingress (exposes OpenCode UI to your tailnet)
+ingress:
+  enabled: false
+  # -- The hostname prefix for MagicDNS (final URL: https://<hostname>-<namespace>.<tailnet>.ts.net)
+  hostname: "opencode"
+
+# -- Tailscale operator configuration
+# -- If install: true, the chart expects the Tailscale Operator is already installed
+# -- This chart does NOT install the operator — install it separately per the README
+tailscaleOperator:
+  # -- Tag applied to Tailscale proxy nodes for ACL policies
+  proxyTag: "tag:k8s"
+
+# -- Secret management backend
+# -- Options: "plain" (K8s secrets), "sealed" (Bitnami sealed-secrets), "sops" (Mozilla SOPS), "external" (external-secrets-operator)
+secrets:
+  backend: "plain"
+  # -- For sealed-secrets: the certificate secret name
+  sealedSecretsCert: ""
+  # -- For external-secrets: the SecretStore name
+  externalSecretStore: ""
+
+# -- Persistent storage configuration
+persistence:
+  # -- OpenCode data (config, auth, MCP credentials)
+  data:
+    storageClass: ""
+    size: 5Gi
+    accessMode: ReadWriteOnce
+  # -- Project workspace files
+  workspace:
+    storageClass: ""
+    size: 20Gi
+    accessMode: ReadWriteOnce
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+# -- Node selector (defaults to arm64)
+nodeSelector:
+  kubernetes.io/arch: arm64
+
+# -- Tolerations
+tolerations: []
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Additional environment variables
+extraEnv: []
+# - name: MY_VAR
+#   value: "my-value"
+
+# -- Additional volume mounts
+extraVolumeMounts: []
+
+# -- Additional volumes
+extraVolumes: []
+
+# -- Identity files: default agent instructions and editor configs copied to /workspace on startup
+# -- Files are copied only if they don't already exist (user edits are preserved across restarts)
+# -- Set enabled: true to deploy the ConfigMap and init container
+identity:
+  enabled: false
+  files: {}
+    # AGENTS.md: |
+    #   # Project Identity
+    #   This file contains instructions for AI agents working in this workspace.
+    #
+    # .cursorrules: |
+    #   # Cursor Rules
+    #   - Always write TypeScript
+    #   - Use functional components
+    #
+    # .clinerules: |
+    #   # Cline Rules
+    #   - Follow existing code style
+    #   - Add tests for new features
+
+# -- Kubedock: Docker API to Kubernetes Pod translation layer
+# -- Prevents OOM kills by running test containers as separate Pods instead of DinD sidecars
+kubedock:
+  enabled: false
+  image:
+    repository: joyrex2001/kubedock
+    tag: "0.20.3"
+    pullPolicy: IfNotPresent
+  # -- Port the kubedock API listens on
+  port: 2475
+  # -- Additional kubedock server arguments
+  extraArgs: []
+  # - "--port-forward"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  # -- Environment variables injected into agent pods when kubedock is enabled
+  agentEnv:
+    DOCKER_HOST: "tcp://kubedock-service:2475"
+    TESTCONTAINERS_RYUK_DISABLED: "true"
+    TESTCONTAINERS_CHECKS_DISABLE: "true"

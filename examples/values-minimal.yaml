@@ -1,0 +1,42 @@
+# Minimal values to get OpenCode running on k8s
+# Copy this file and edit the values, then:
+#   helm install opencode ./chart -f my-values.yaml
+
+image:
+  repository: ghcr.io/anomalyco/opencode
+  tag: "latest"
+
+# At least one provider must be enabled
+providers:
+  anthropic:
+    enabled: true
+    apiKey: "sk-ant-your-key-here"
+
+# Required — protects the HTTP endpoint
+serverPassword: "your-secure-password"
+
+# Oh-My-OpenCode on with defaults
+omo:
+  enabled: true
+
+# No MCP servers by default
+mcp:
+  remote: []
+  laptopServers: []
+
+# No Tailscale ingress by default (set enabled: true and install the operator first)
+ingress:
+  enabled: false
+
+# Plain secrets (for production, use sealed-secrets or external-secrets)
+secrets:
+  backend: "plain"
+
+# Default storage — adjust storageClass for your cluster
+persistence:
+  data:
+    storageClass: ""
+    size: 5Gi
+  workspace:
+    storageClass: ""
+    size: 20Gi

@@ -1,0 +1,18 @@
+apiVersion: v2
+name: k8s-omo
+description: OpenCode + Oh-My-OpenCode on Kubernetes with Tailscale connectivity
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - opencode
+  - ai-coding
+  - tailscale
+  - mcp
+  - oh-my-opencode
+home: https://github.com/timothyclin/k8s-omo
+sources:
+  - https://github.com/timothyclin/k8s-omo
+maintainers:
+  - name: timothyclin
+    url: https://github.com/timothyclin

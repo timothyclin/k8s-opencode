@@ -1,0 +1,14 @@
+{{- if eq .Values.mode "single" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "k8s-omo.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+data:
+  opencode.jsonc: |
+    {{- include "k8s-omo.opencodeConfig" . | nindent 4 }}
+  oh-my-opencode.jsonc: |
+    {{- include "k8s-omo.omoConfig" . | nindent 4 }}
+{{- end }}

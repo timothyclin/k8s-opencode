@@ -1,0 +1,41 @@
+# Homelab-focused setup
+# Assumes: Tailscale operator already installed, local storage available
+
+image:
+  repository: ghcr.io/anomalyco/opencode
+  tag: "latest"
+
+# Use whichever providers you have
+providers:
+  anthropic:
+    enabled: true
+    apiKey: ""  # Set via env or sealed-secrets
+
+serverPassword: ""  # Set via sealed-secrets or external-secrets
+
+omo:
+  enabled: true
+
+# Example: local Ollama MCP running on your homelab server
+mcp:
+  remote: []
+  laptopServers:
+    - name: browser-tools
+      tailscaleFqdn: "my-laptop.tail12345.ts.net"  # MagicDNS name
+      port: 3000
+
+ingress:
+  enabled: true
+  hostname: "opencode"
+
+# Use local-path or your homelab storage class
+persistence:
+  data:
+    storageClass: "local-path"
+    size: 5Gi
+  workspace:
+    storageClass: "local-path"
+    size: 20Gi
+
+secrets:
+  backend: "plain"  # Switch to "sealed" for gitops

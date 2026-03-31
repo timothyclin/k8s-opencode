@@ -1,0 +1,62 @@
+{{- /*
+Create an ExternalName Service + Tailscale egress proxy for each laptop MCP server.
+The cluster can then reach the laptop MCP via the Service DNS name.
+*/}}
+{{- if eq .Values.mode "single" }}
+{{- range .Values.mcp.laptopServers }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-egress-{{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    {{- if .tailscaleFqdn }}
+    tailscale.com/tailnet-fqdn: {{ .tailscaleFqdn | quote }}
+    {{- else if .tailscaleIP }}
+    tailscale.com/tailnet-ip: {{ .tailscaleIP | quote }}
+    {{- end }}
+  labels:
+    app.kubernetes.io/component: tailscale-egress
+    app.kubernetes.io/laptop-mcp: {{ .name }}
+spec:
+  type: ExternalName
+  externalName: placeholder
+  ports:
+  - port: {{ .port }}
+    protocol: TCP
+    name: http
+{{- end }}
+{{- end }}
+{{- if eq .Values.mode "multi" }}
+{{- $root := . }}
+{{- range $index, $user := .Values.users }}
+{{- $userMcp := $user.mcp | default (dict) -}}
+{{- $userLaptop := (get $userMcp "laptopServers") | default (list) -}}
+{{- range $userLaptop }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $root.Release.Name }}-egress-{{ $user.name }}-{{ .name }}
+  namespace: {{ $root.Release.Namespace }}
+  annotations:
+    {{- if .tailscaleFqdn }}
+    tailscale.com/tailnet-fqdn: {{ .tailscaleFqdn | quote }}
+    {{- else if .tailscaleIP }}
+    tailscale.com/tailnet-ip: {{ .tailscaleIP | quote }}
+    {{- end }}
+  labels:
+    app.kubernetes.io/component: tailscale-egress
+    app.kubernetes.io/laptop-mcp: {{ .name }}
+    app.kubernetes.io/user: {{ $user.name | quote }}
+spec:
+  type: ExternalName
+  externalName: placeholder
+  ports:
+  - port: {{ .port }}
+    protocol: TCP
+    name: http
+{{- end }}
+{{- end }}
+{{- end }}

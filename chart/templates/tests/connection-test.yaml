@@ -1,0 +1,20 @@
+{{- if eq .Values.mode "single" }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "k8s-omo.fullname" . }}-test-connection"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8s-omo.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+  - name: wget
+    image: busybox
+    command: ['wget']
+    args: [
+      '{{ include "k8s-omo.fullname" . }}:4096/global/health'
+    ]
+  restartPolicy: Never
+{{- end }}
