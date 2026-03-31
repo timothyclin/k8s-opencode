@@ -67,11 +67,7 @@ auth:
     # -- One URL for ALL users — no per-user callback URLs needed
     hostname: "ok8s-auth"
     # -- Cookie domain for multi-user OIDC (e.g. ".lynx-beta.ts.net")
-    # -- Required so the auth cookie is shared across all per-user hostnames
     cookieDomain: ""
-    # -- Tailscale ingress for the auth hostname
-    ingress:
-      enabled: false
 
 # -- StatefulSet update strategy (used when mode: "multi")
 updateStrategy:
