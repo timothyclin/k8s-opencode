@@ -9,4 +9,4 @@ fi
 release="$1"
 namespace="$2"
 
-kubectl get pods -n "$namespace" -l "app.kubernetes.io/instance=${release},app.kubernetes.io/name=k8s-omo" -o wide
+kubectl get pods -n "$namespace" -l "app.kubernetes.io/instance=${release},app.kubernetes.io/name=opencode-k8s-helm" -o wide

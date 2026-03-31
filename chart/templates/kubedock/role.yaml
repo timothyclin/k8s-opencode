@@ -2,10 +2,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "k8s-omo.fullname" . }}-kubedock
+  name: {{ include "opencode-k8s-helm.fullname" . }}-kubedock
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: kubedock
 rules:
 - apiGroups: [""]

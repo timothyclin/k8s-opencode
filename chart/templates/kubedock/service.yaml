@@ -5,15 +5,15 @@ Single-user mode: shared kubedock Service.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "k8s-omo.fullname" . }}-kubedock-service
+  name: {{ include "opencode-k8s-helm.fullname" . }}-kubedock-service
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: kubedock
 spec:
   type: ClusterIP
   selector:
-    {{- include "k8s-omo.selectorLabels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: kubedock
   ports:
   - protocol: TCP

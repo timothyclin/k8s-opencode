@@ -5,15 +5,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "k8s-omo.fullname" $root }}-user-{{ $user.name }}-config
+  name: {{ include "opencode-k8s-helm.fullname" $root }}-user-{{ $user.name }}-config
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" $root | nindent 4 }}
     app.kubernetes.io/user: {{ $user.name | quote }}
 data:
   opencode.jsonc: |
-    {{- include "k8s-omo.opencodeUserConfig" (dict "root" $root "user" $user) | nindent 4 }}
+    {{- include "opencode-k8s-helm.opencodeUserConfig" (dict "root" $root "user" $user) | nindent 4 }}
   oh-my-opencode.jsonc: |
-    {{- include "k8s-omo.omoUserConfig" (dict "root" $root "user" $user) | nindent 4 }}
+    {{- include "opencode-k8s-helm.omoUserConfig" (dict "root" $root "user" $user) | nindent 4 }}
 {{- end }}
 {{- end }}

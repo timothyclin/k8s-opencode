@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: {{ include "k8s-omo.fullname" . }}-quota
+  name: {{ include "opencode-k8s-helm.fullname" . }}-quota
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
 spec:
   hard:
     requests.cpu: {{ .Values.resourceQuota.maxCpu | quote }}

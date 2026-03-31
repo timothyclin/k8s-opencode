@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "k8s-omo.fullname" . }}-oauth2-proxy
+  name: {{ include "opencode-k8s-helm.fullname" . }}-oauth2-proxy
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -33,5 +33,5 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "k8s-omo.fullname" . }}-oauth2-proxy
+          name: {{ include "opencode-k8s-helm.fullname" . }}-oauth2-proxy
 {{- end }}
