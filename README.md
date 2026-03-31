@@ -226,16 +226,23 @@ Each user gets their own URL:
 
 ### oauth2-proxy OIDC configuration
 
+See [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode) for full setup instructions.
+
+Quick config reference:
+
 ```yaml
 auth:
   oidc:
     enabled: true
-    provider: "https://accounts.google.com"
+    provider: "https://accounts.google.com"        # OIDC issuer URL
     clientId: "your-client-id"
     clientSecret: "your-client-secret"
     cookieSecret: "base64-32-byte-secret"
-    emailDomain: "example.com"
+    emailDomain: "example.com"                     # Or "*" for any domain
+    cookieDomain: ".<tailnet>.ts.net"              # REQUIRED — your tailnet domain with leading dot
 ```
+
+> **`cookieDomain` must be set** for multi-user OIDC. It allows the auth session cookie to work across all per-user hostnames.
 
 ### Maintenance operations
 
@@ -353,6 +360,8 @@ decisions templatized through `values.yaml`.
 - MCP servers are configured in `opencode.jsonc` — both remote (URLs) and laptop
   (Tailscale egress)
 - Multi-user mode uses per-user StatefulSets with shared oauth2-proxy + router for OIDC
+- oauth2-proxy uses `relative_redirect_url` so each user gets their own callback URL;
+  `cookieDomain` must be set to the tailnet domain (e.g. `.lynx-beta.ts.net`)
 
 ## File Structure
 
@@ -427,6 +436,16 @@ When asked to deploy or configure:
    MagicDNS name
 4. Secret backend choice depends on their GitOps setup — `plain` for personal,
    `sealed`/`external` for teams
+
+When asked to set up OIDC for multi-user mode:
+
+1. Guide the user through creating an OAuth client (Google, GitHub, or Auth0)
+   — see [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode)
+2. For each user in `values.yaml`, add their callback URL to the OAuth provider:
+   `https://opencode-<user>-<namespace>.<tailnet>.ts.net/oauth2/callback`
+3. Generate a cookie secret: `python3 -c "import base64,os; print(base64.b64encode(os.urandom(32)).decode())"`
+4. Set `auth.oidc.cookieDomain` to the tailnet domain with a leading dot (e.g. `.lynx-beta.ts.net`)
+5. **Never suggest a single-user callback URL** — each user must have their own
 
 ## Common Tasks
 
