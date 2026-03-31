@@ -4,6 +4,9 @@ image:
   tag: "latest"
   pullPolicy: IfNotPresent
 
+# -- Create the release namespace (set to false if installing into an existing namespace)
+createNamespace: false
+
 # -- Deployment mode: "single" (Deployment) or "multi" (StatefulSet)
 mode: "single"
 
