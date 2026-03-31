@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "k8s-omo.fullname" . }}
+  name: {{ include "opencode-k8s-helm.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   selector:
-    {{- include "k8s-omo.selectorLabels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.selectorLabels" . | nindent 4 }}
   ports:
   - name: http
     port: 4096
@@ -23,15 +23,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "k8s-omo.fullname" $root }}-user-{{ $user.name }}
+  name: {{ include "opencode-k8s-helm.fullname" $root }}-user-{{ $user.name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" $root | nindent 4 }}
     app.kubernetes.io/user: {{ $user.name | quote }}
 spec:
   type: ClusterIP
   selector:
-    {{- include "k8s-omo.selectorLabels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.selectorLabels" $root | nindent 4 }}
     app.kubernetes.io/user: {{ $user.name | quote }}
   ports:
   - name: http

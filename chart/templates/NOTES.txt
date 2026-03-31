@@ -1,5 +1,5 @@
 {{- if and (eq .Values.mode "single") .Values.ingress.enabled }}
-{{- $fullname := include "k8s-omo.fullname" . }}
+{{- $fullname := include "opencode-k8s-helm.fullname" . }}
 {{- $namespace := .Release.Namespace }}
 OpenCode is now accessible on your tailnet!
 

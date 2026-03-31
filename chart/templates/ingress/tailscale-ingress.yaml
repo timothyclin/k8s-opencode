@@ -2,17 +2,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "k8s-omo.fullname" . }}
+  name: {{ include "opencode-k8s-helm.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
   annotations:
     tailscale.com/hostname: {{ .Values.ingress.hostname | quote }}
 spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: {{ include "k8s-omo.fullname" . }}
+      name: {{ include "opencode-k8s-helm.fullname" . }}
       port:
         number: 4096
   tls:

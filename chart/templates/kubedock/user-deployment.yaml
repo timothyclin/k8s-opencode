@@ -10,27 +10,27 @@ to their user label, preventing cross-user test container access.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "k8s-omo.fullname" $root }}-kubedock-{{ $user.name }}
+  name: {{ include "opencode-k8s-helm.fullname" $root }}-kubedock-{{ $user.name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" $root | nindent 4 }}
     app.kubernetes.io/component: kubedock
     app.kubernetes.io/user: {{ $user.name | quote }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "k8s-omo.selectorLabels" $root | nindent 6 }}
+      {{- include "opencode-k8s-helm.selectorLabels" $root | nindent 6 }}
       app.kubernetes.io/component: kubedock
       app.kubernetes.io/user: {{ $user.name | quote }}
   template:
     metadata:
       labels:
-        {{- include "k8s-omo.selectorLabels" $root | nindent 8 }}
+        {{- include "opencode-k8s-helm.selectorLabels" $root | nindent 8 }}
         app.kubernetes.io/component: kubedock
         app.kubernetes.io/user: {{ $user.name | quote }}
     spec:
-      serviceAccountName: {{ include "k8s-omo.fullname" $root }}-kubedock
+      serviceAccountName: {{ include "opencode-k8s-helm.fullname" $root }}-kubedock
       containers:
       - name: kubedock
         image: "{{ $root.Values.kubedock.image.repository }}:{{ $root.Values.kubedock.image.tag }}"

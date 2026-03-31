@@ -10,16 +10,16 @@ ensuring test containers are isolated per user.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "k8s-omo.fullname" $root }}-kubedock-{{ $user.name }}
+  name: {{ include "opencode-k8s-helm.fullname" $root }}-kubedock-{{ $user.name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" $root | nindent 4 }}
     app.kubernetes.io/component: kubedock
     app.kubernetes.io/user: {{ $user.name | quote }}
 spec:
   type: ClusterIP
   selector:
-    {{- include "k8s-omo.selectorLabels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.selectorLabels" $root | nindent 4 }}
     app.kubernetes.io/component: kubedock
     app.kubernetes.io/user: {{ $user.name | quote }}
   ports:

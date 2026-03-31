@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: {{ .Release.Namespace }}
   labels:
-    {{- include "k8s-omo.labels" . | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}

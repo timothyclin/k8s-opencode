@@ -5,18 +5,18 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "k8s-omo.fullname" $root }}-user-{{ $user.name }}
+  name: {{ include "opencode-k8s-helm.fullname" $root }}-user-{{ $user.name }}
   namespace: {{ $root.Release.Namespace }}
   annotations:
     tailscale.com/tags: "tag:user-{{ $user.name }}"
   labels:
-    {{- include "k8s-omo.labels" $root | nindent 4 }}
+    {{- include "opencode-k8s-helm.labels" $root | nindent 4 }}
     app.kubernetes.io/user: {{ $user.name | quote }}
 spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: {{ ternary (printf "%s-oauth2-proxy" (include "k8s-omo.fullname" $root)) (printf "%s-user-%s" (include "k8s-omo.fullname" $root) $user.name) $root.Values.auth.oidc.enabled }}
+      name: {{ ternary (printf "%s-oauth2-proxy" (include "opencode-k8s-helm.fullname" $root)) (printf "%s-user-%s" (include "opencode-k8s-helm.fullname" $root) $user.name) $root.Values.auth.oidc.enabled }}
       port:
         number: {{ ternary 4180 4096 $root.Values.auth.oidc.enabled }}
   tls:
