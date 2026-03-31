@@ -262,10 +262,13 @@ For multi-user deployments, you can use OIDC authentication via oauth2-proxy ins
 
 ### How It Works
 
-A single shared oauth2-proxy sits in front of all users. Two settings make multi-user work:
+A single shared oauth2-proxy sits in front of all users. All OIDC traffic flows through one dedicated auth hostname:
 
-- **`relative_redirect_url`** — the callback URL is built from each request's `Host` header, so Alice visiting her hostname gets redirected to her callback, not Bob's.
+- **`auth.oidc.hostname`** — a single hostname for the OAuth callback (default: `ok8s-auth`). The full callback URL is:
+  `https://<hostname>-<namespace>.<tailnet>.ts.net/oauth2/callback`
 - **`cookieDomain`** — the session cookie is set on the parent tailnet domain (e.g. `.lynx-beta.ts.net`) so it's valid across all per-user hostnames.
+
+**One callback URL for ALL users.** No per-user callback URLs needed.
 
 ### Step 1: Create an OAuth Client
 
@@ -282,28 +285,29 @@ A single shared oauth2-proxy sits in front of all users. Two settings make multi
    - Add test users unless you publish the app
 4. Click **+ CREATE CREDENTIALS → OAuth client ID**
    - Application type: **Web application**
-   - Name: e.g. "opencode-oauth2-proxy"
-   - Authorized redirect URIs: add **one** entry for each user:
+   - Name: e.g. "ok8s-auth"
+   - Authorized redirect URI (just one):
      ```
-     https://opencode-timothy-opencode.lynx-beta.ts.net/oauth2/callback
-     https://opencode-alice-opencode.lynx-beta.ts.net/oauth2/callback
+     https://ok8s-auth-opencode.lynx-beta.ts.net/oauth2/callback
      ```
+     Format: `https://<hostname>-<namespace>.<tailnet>.ts.net/oauth2/callback`
    - Click Create and note the **Client ID** and **Client Secret**
 
 #### GitHub
 
 1. Go to [GitHub Settings → Developer Settings → OAuth Apps](https://github.com/settings/developers)
 2. Click **New OAuth App**
-   - Application name: e.g. "OpenCode"
-   - Homepage URL: `https://opencode-timothy-opencode.lynx-beta.ts.net`
-   - Authorization callback URL: add all per-user callbacks (same as Google above)
+   - Application name: e.g. "ok8s-auth"
+   - Homepage URL: `https://ok8s-auth-opencode.lynx-beta.ts.net`
+   - Authorization callback URL: `https://ok8s-auth-opencode.lynx-beta.ts.net/oauth2/callback`
 3. Note the **Client ID** and generate a **Client Secret**
 
 #### Auth0
 
 1. Go to [Auth0 Dashboard → Applications](https://manage.auth0.com/)
 2. Create a **Regular Web Application**
-3. Under Settings → Allowed Callback URLs, add all per-user callbacks
+3. Under Settings → Allowed Callback URLs, add:
+   `https://ok8s-auth-opencode.lynx-beta.ts.net/oauth2/callback`
 4. Note the **Domain** (used as `provider`), **Client ID**, and **Client Secret**
 
 ### Step 2: Generate a Cookie Secret
@@ -323,25 +327,51 @@ auth:
     clientSecret: "your-client-secret"
     cookieSecret: "base64-32-byte-secret-from-step-2"
     emailDomain: "example.com"                     # Or "*" for any domain
+    hostname: "ok8s-auth"                          # Single auth hostname (default)
     cookieDomain: ".lynx-beta.ts.net"              # Your tailnet domain (with leading dot)
 ```
 
 > **`cookieDomain` is required for multi-user OIDC.** It must be your tailnet domain prefixed with `.` — this allows the auth cookie to be shared across all per-user hostnames.
 
-### Step 4: Upgrade
+### Step 4: Create Tailscale Ingress for Auth
+
+The auth hostname needs its own Tailscale ingress so users can reach the OAuth callback:
+
+```yaml
+# Add to your values.yaml
+auth:
+  oidc:
+    ingress:
+      enabled: true
+```
+
+Or create the ingress manually:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ok8s-auth-ingress
+  annotations:
+    tailscale.com/hostname: "ok8s-auth-opencode"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: ok8s-oauth2-proxy
+      port:
+        number: 4180
+```
+
+### Step 5: Upgrade
 
 ```bash
-helm upgrade opencode ./chart -f values.yaml
+helm upgrade ok8s ./chart -n opencode -f values.yaml
 ```
 
 ### Adding a New User After OIDC is Configured
 
-1. Add the user to `values.yaml`
-2. Add their callback URL to your OAuth provider's allowed redirect URIs:
-   ```
-   https://opencode-<newuser>-<namespace>.<tailnet>.ts.net/oauth2/callback
-   ```
-3. Upgrade the release
+No OAuth changes needed — just add the user to `values.yaml` and upgrade. The single auth hostname handles all users automatically.
 
 ---
 

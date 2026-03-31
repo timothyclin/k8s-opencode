@@ -62,6 +62,10 @@ auth:
     clientSecret: ""
     cookieSecret: ""
     emailDomain: "*"
+    # -- Single hostname for OIDC auth (e.g. "ok8s-auth")
+    # -- Callback URL: https://<hostname>-<namespace>.<tailnet>.ts.net/oauth2/callback
+    # -- One URL for ALL users — no per-user callback URLs needed
+    hostname: "ok8s-auth"
     # -- Cookie domain for multi-user OIDC (e.g. ".lynx-beta.ts.net")
     # -- Required so the auth cookie is shared across all per-user hostnames
     cookieDomain: ""
