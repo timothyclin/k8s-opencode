@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-oauth2-proxy
+  name: {{ include "ok8s.fullname" . }}-oauth2-proxy
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 data:
   oauth2-proxy.cfg: |
     http_address = "0.0.0.0:4180"
@@ -24,5 +24,5 @@ data:
     pass_access_token = true
     set_xauthrequest = true
     pass_host_header = true
-    upstreams = ["http://{{ include "opencode-k8s-helm.fullname" . }}-router:8080/"]
+    upstreams = ["http://{{ include "ok8s.fullname" . }}-router:8080/"]
 {{- end }}

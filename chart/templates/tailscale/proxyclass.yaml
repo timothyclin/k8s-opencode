@@ -5,10 +5,10 @@ This is needed if your laptop MCP is behind a subnet router.
 apiVersion: tailscale.com/v1alpha1
 kind: ProxyClass
 metadata:
-  name: {{ include "opencode-k8s-helm.fullname" . }}-egress
+  name: {{ include "ok8s.fullname" . }}-egress
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "opencode-k8s-helm.labels" . | nindent 4 }}
+    {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   tailscale:
     acceptRoutes: true

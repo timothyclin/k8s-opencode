@@ -1,5 +1,5 @@
 apiVersion: v2
-name: opencode-k8s-helm
+name: ok8s
 description: OpenCode + Oh-My-OpenCode on Kubernetes with Tailscale connectivity
 type: application
 version: 0.1.0
