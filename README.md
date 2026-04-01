@@ -109,7 +109,7 @@ Required scopes: `devices`, `services`, `keys`.
 ### Enable Ingress
 
 ```bash
-helm upgrade opencode ./chart -f my-values.yaml \
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f my-values.yaml \
   --set ingress.enabled=true
 ```
 
@@ -260,14 +260,14 @@ Add user:
 
 ```bash
 ./scripts/add-user.sh alice | tee -a my-values.yaml
-helm upgrade opencode ./chart -f my-values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f my-values.yaml
 ```
 
 Remove user:
 
 ```bash
 ./scripts/remove-user.sh my-values.yaml alice default
-helm upgrade opencode ./chart -f my-values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f my-values.yaml
 ```
 
 Backup and restore:
@@ -442,7 +442,7 @@ When asked to deploy or configure:
 1. Start from `examples/values-minimal.yaml` and add only what's needed
 2. **Always use `-n <namespace>`** — the chart rejects installation into `default`
    ```bash
-   helm install ok8s ./chart -n opencode --create-namespace -f my-values.yaml
+   helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-namespace -f my-values.yaml
    ```
 3. Tailscale operator must be installed separately — this chart does not install
    it

@@ -25,7 +25,7 @@ each user gets their own copy of both files.
 
 **The files are read-only from inside the pod.** They're sourced from a
 ConfigMap and mounted as a volume — editing them directly won't persist. All
-changes go through `values.yaml` + `helm upgrade`.
+changes go through `values.yaml` + `helm upgrade`. See [Quick Start](../README.md#quick-start) for install commands.
 
 To inspect the generated config at any time:
 
@@ -383,7 +383,7 @@ mcp:
       port: 3000
 ```
 
-4. Upgrade: `helm upgrade ok8s ./chart -n opencode -f values.yaml`
+4. Upgrade: `helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f values.yaml`
 
 ### Add Team-Wide Skills (Multi-User)
 
@@ -464,7 +464,7 @@ what values map to what JSON output.
 3. MCP servers under `mcp.remote` or `mcp.laptopServers`
 4. Extra skills under `skills.npm` or `skills.config`
 5. Any extra env vars under `extraEnv`
-6. Apply: `helm upgrade ok8s ./chart -n opencode -f values.yaml`
+6. Apply: `helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f values.yaml`
 
 ### Multi-User Configuration Checklist
 
@@ -475,7 +475,7 @@ what values map to what JSON output.
 5. Shared skills under `sharedSkills.npm` / `sharedSkills.config`
 6. Per-user MCP servers under `users[].mcp.remote` / `users[].mcp.laptopServers`
 7. Per-user skills under `users[].skills.npm` / `users[].skills.config`
-8. Apply: `helm upgrade ok8s ./chart -n opencode -f values.yaml`
+8. Apply: `helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f values.yaml`
 
 ### Verifying the Generated Config
 
