@@ -57,6 +57,13 @@ Generate opencode.jsonc config
 {{- define "ok8s.opencodeConfig" -}}
 {
   "$schema": "https://opencode.ai/config.json",
+  {{- if .Values.plugins.enabled }}
+  "plugin": [
+    "oh-my-opencode@latest",
+    "@tarquinen/opencode-dcp@latest"{{- range .Values.plugins.npm }},
+    "{{ . }}"{{- end }}
+  ],
+  {{- end }}
   "mcp": {
     {{- $first := true }}
     {{- range .Values.mcp.remote }}
@@ -79,7 +86,12 @@ Generate opencode.jsonc config
     }
     {{- $first = false }}
     {{- end }}
+  }{{- if or (.Values.skills.npm | len) (.Values.skills.config | len) }},
+  "skills": {
+    {{- if .Values.skills.npm }}"npm": {{ .Values.skills.npm | toJson }}{{- else }}"npm": []{{- end }},
+    {{- if .Values.skills.config }}"config": {{ .Values.skills.config | toJson }}{{- else }}"config": []{{- end }}
   }
+  {{- end }}
 }
 {{- end }}
 
@@ -160,6 +172,13 @@ Generate oh-my-opencode.jsonc config
 {{- $userLaptop := (get $userMcp "laptopServers") | default (list) -}}
 {
   "$schema": "https://opencode.ai/config.json",
+  {{- if $root.Values.plugins.enabled }}
+  "plugin": [
+    "oh-my-opencode@latest",
+    "@tarquinen/opencode-dcp@latest"{{- range $root.Values.plugins.npm }},
+    "{{ . }}"{{- end }}
+  ],
+  {{- end }}
   "mcp": {
     {{- $first := true }}
     {{- range $root.Values.sharedMcp }}
@@ -193,7 +212,12 @@ Generate oh-my-opencode.jsonc config
     }
     {{- $first = false }}
     {{- end }}
+  }{{- $sharedSkills := $root.Values.sharedSkills | default (dict) }}{{- $userSkills := $user.skills | default (dict) }}{{- $npmSkills := concat (get $sharedSkills "npm" | default (list)) (get $userSkills "npm" | default (list)) }}{{- $configSkills := concat (get $sharedSkills "config" | default (list)) (get $userSkills "config" | default (list)) }}{{- if or ($npmSkills | len) ($configSkills | len) }},
+  "skills": {
+    "npm": {{ $npmSkills | toJson }},
+    "config": {{ $configSkills | toJson }}
   }
+  {{- end }}
 }
 {{- end }}
 

@@ -157,6 +157,32 @@ mcp:
   #   # tailscaleFqdn: "my-laptop.tail12345.ts.net"
   #   port: 3000
 
+# -- Plugin configuration for OpenCode
+# -- Plugins extend OpenCode with additional tools and capabilities
+# -- Default plugins: oh-my-opencode (task orchestration) and @tarquinen/opencode-dcp (design system)
+plugins:
+  # -- Enable default plugins (set to false to disable all plugins)
+  enabled: true
+  # -- Additional npm plugins to install (array of npm package specifiers)
+  # -- Examples: ["my-plugin@latest", "@scope/plugin@1.0.0"]
+  npm: []
+
+# -- OpenCode runtime configuration
+opencode:
+  # -- Additional JSON config to merge into opencode.jsonc (advanced)
+  # -- Use this for arbitrary config options not covered by other values
+  extraConfig: ""
+
+# -- Skills configuration for OpenCode
+# -- Skills are reusable prompt templates and tool configurations
+skills:
+  # -- npm-based skills to install (array of npm package specifiers)
+  # -- Example: ["@my-org/skills@latest"]
+  npm: []
+  # -- Inline skill configurations (array of skill config objects)
+  # -- See https://opencode.ai/docs/skills/ for format
+  config: []
+
 # -- Tailscale cluster ingress (exposes OpenCode UI to your tailnet)
 ingress:
   enabled: false
