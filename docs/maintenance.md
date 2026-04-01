@@ -283,8 +283,8 @@ Each user must have an `email` field that matches their Google Workspace email:
 
 ```yaml
 users:
-  - name: timothy
-    email: "timothylin@interpres.net"
+  - name: alice
+    email: "alice@example.com"
     password: "secure-password"
 ```
 
