@@ -1,0 +1,40 @@
+# Local agent state
+.sisyphus/
+.cursor/
+.aider/
+.cline/
+.gptengineer/
+.gemini/
+
+# Dependency directories
+node_modules/
+.venv/
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# Environment variables
+.env
+.env.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Go build artifacts
+*.o
+*.a
+*.so
+images/router/router
+images/router/main
+coverage.out
+
+# Helm artifacts
+*.tgz
+
+# IDE/Editor config
+.vscode/
+.idea/
+*.swp
