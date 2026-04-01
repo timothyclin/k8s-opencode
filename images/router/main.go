@@ -8,8 +8,12 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
+	"time"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 var (
@@ -32,6 +36,68 @@ func loadEmailMap(path string) error {
 	emailMapMu.Unlock()
 	log.Printf("loaded %d email→user mappings", len(m))
 	return nil
+}
+
+func watchEmailMap(path string) {
+	dir := filepath.Dir(path)
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Printf("failed to create watcher: %v", err)
+		return
+	}
+
+	if err := watcher.Add(dir); err != nil {
+		log.Printf("failed to watch directory %s: %v", dir, err)
+		_ = watcher.Close()
+		return
+	}
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("watcher panic recovered: %v", r)
+			}
+			_ = watcher.Close()
+		}()
+
+		var pending bool
+		var timer *time.Timer
+		triggerReload := func() {
+			if err := loadEmailMap(path); err != nil {
+				log.Printf("failed to reload email map: %v", err)
+				return
+			}
+			log.Printf("reloaded email map")
+		}
+
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Op&(fsnotify.Create|fsnotify.Write) == 0 {
+					continue
+				}
+				if pending {
+					if timer != nil {
+						timer.Reset(500 * time.Millisecond)
+					}
+					continue
+				}
+				pending = true
+				timer = time.AfterFunc(500*time.Millisecond, func() {
+					pending = false
+					triggerReload()
+				})
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Printf("watcher error: %v", err)
+			}
+		}
+	}()
 }
 
 func getEmail(email string) (string, bool) {
@@ -81,6 +147,7 @@ func main() {
 	if err := loadEmailMap(mapPath); err != nil {
 		log.Fatalf("failed to load email map: %v", err)
 	}
+	watchEmailMap(mapPath)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		email, err := authHandler(oauthProxyURL, r)
