@@ -24,5 +24,4 @@ data:
     pass_access_token = true
     set_xauthrequest = true
     pass_host_header = true
-    upstreams = ["http://{{ include "ok8s.fullname" . }}-router:8080/"]
 {{- end }}

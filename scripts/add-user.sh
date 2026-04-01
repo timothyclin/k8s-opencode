@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <username> [password] [workspaceSize]" >&2
+if [[ $# -lt 2 ]]; then
+  echo "Usage: $0 <username> <email> [password] [workspaceSize]" >&2
   exit 1
 fi
 
 username="$1"
-password="${2:-change-me}"
-workspace_size="${3:-20Gi}"
+email="$2"
+password="${3:-change-me}"
+workspace_size="${4:-20Gi}"
 
-cat <<EOF
+cat <<USEREOF
 - name: ${username}
+  email: "${email}"
   password: "${password}"
   workspaceSize: ${workspace_size}
   providers:
@@ -38,4 +40,4 @@ cat <<EOF
   skills:
     npm: []
     config: []
-EOF
+USEREOF

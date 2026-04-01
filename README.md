@@ -364,9 +364,10 @@ decisions templatized through `values.yaml`.
 - Oh-My-OpenCode is configured via `oh-my-opencode.jsonc` in a ConfigMap
 - MCP servers are configured in `opencode.jsonc` — both remote (URLs) and laptop
   (Tailscale egress)
-- Multi-user mode uses per-user StatefulSets with shared oauth2-proxy + router for OIDC
-- oauth2-proxy uses `relative_redirect_url` so each user gets their own callback URL;
-  `cookieDomain` must be set to the tailnet domain (e.g. `.lynx-beta.ts.net`)
+- Multi-user mode uses per-user StatefulSets with shared oauth2-proxy + auth router for OIDC
+- Auth router validates OIDC sessions and enforces email→user binding — users can only access their own workspace
+- Each user must have an `email` field matching their Google Workspace email
+- `cookieDomain` must be set to the tailnet domain (e.g. `.lynx-beta.ts.net`)
 
 ## File Structure
 

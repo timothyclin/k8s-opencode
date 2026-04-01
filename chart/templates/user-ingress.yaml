@@ -16,9 +16,9 @@ spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: {{ ternary (printf "%s-oauth2-proxy" (include "ok8s.fullname" $root)) (printf "%s-user-%s" (include "ok8s.fullname" $root) $user.name) $root.Values.auth.oidc.enabled }}
+      name: {{ ternary (printf "%s-auth-router" (include "ok8s.fullname" $root)) (printf "%s-user-%s" (include "ok8s.fullname" $root) $user.name) $root.Values.auth.oidc.enabled }}
       port:
-        number: {{ ternary 4180 4096 $root.Values.auth.oidc.enabled }}
+        number: {{ ternary 8080 4096 $root.Values.auth.oidc.enabled }}
   tls:
     - hosts:
         - opencode-{{ $user.name }}-{{ $root.Release.Namespace }}

@@ -13,6 +13,7 @@ mode: "single"
 # -- Multi-user configuration (used when mode: "multi")
 users: []
 # - name: alice
+#   email: "alice@example.com"       # Required for OIDC auth — maps Google email to this user
 #   password: "change-me"
 #   workspaceSize: 20Gi
 #   providers:
@@ -67,6 +68,18 @@ auth:
     hostname: "oc-ingress"
     # -- Cookie domain for multi-user OIDC (e.g. ".lynx-beta.ts.net")
     cookieDomain: ""
+  # -- Auth router: validates OIDC session and routes to correct user pod
+  router:
+    image:
+      repository: ok8s-auth-router
+      tag: "latest"
+      pullPolicy: IfNotPresent
+  # -- Auth router: validates OIDC session and routes to correct user pod
+  router:
+    image:
+      repository: ok8s-auth-router
+      tag: "latest"
+      pullPolicy: IfNotPresent
 
 # -- StatefulSet update strategy (used when mode: "multi")
 updateStrategy:

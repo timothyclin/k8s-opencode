@@ -13,6 +13,7 @@ Operational procedures for managing an OpenCode + Oh-My-OpenCode deployment on K
 ```yaml
 users:
   - name: alice
+    email: "alice@example.com"       # Required for OIDC — maps Google email to this user
     password: "secure-password-here"
     workspaceSize: 20Gi
     providers:
@@ -31,10 +32,12 @@ users:
         memory: 2Gi
 ```
 
+> **`email` is required** when using OIDC auth. It maps the Google Workspace email to the local user account. The auth router will reject access if the authenticated email doesn't match the user's hostname.
+
 2. Upgrade the release:
 
 ```bash
-helm upgrade opencode ./chart -f values.yaml
+helm upgrade ok8s ./chart -n opencode -f values.yaml
 ```
 
 3. A new StatefulSet will be created for the user.
@@ -262,15 +265,32 @@ For multi-user deployments, you can use OIDC authentication via oauth2-proxy ins
 
 ### How It Works
 
-A single shared oauth2-proxy sits in front of all users. All OIDC traffic flows through one dedicated auth hostname:
+Two components handle authentication and routing:
 
-- **`auth.oidc.hostname`** — a single hostname for the OAuth callback (default: `ok8s-auth`). The full callback URL is:
-  `https://<hostname>-<namespace>.<tailnet>.ts.net/oauth2/callback`
-- **`cookieDomain`** — the session cookie is set on the parent tailnet domain (e.g. `.lynx-beta.ts.net`) so it's valid across all per-user hostnames.
+1. **oauth2-proxy** — handles the OIDC flow with Google (or any OIDC provider). It issues session cookies and exposes the authenticated email via `/oauth2/auth`.
+2. **Auth router** — a lightweight Go service that sits between the user and their workspace. For each request, it:
+   - Calls oauth2-proxy's `/oauth2/auth` to validate the session
+   - Extracts the authenticated email from the response
+   - Looks up the email in the email→user mapping (from `users[].email`)
+   - Validates the email matches the requested hostname
+   - Proxies to the correct user pod, or returns 403 if the email doesn't match
 
-**One callback URL for ALL users.** No per-user callback URLs needed.
+**Security guarantee:** Even if Alice knows Bob's URL, she cannot access Bob's workspace — the auth router will reject her because her email maps to `alice`, not `bob`.
 
-### Step 1: Create an OAuth Client
+### Step 1: Configure User Emails
+
+Each user must have an `email` field that matches their Google Workspace email:
+
+```yaml
+users:
+  - name: timothy
+    email: "timothylin@interpres.net"
+    password: "secure-password"
+```
+
+The auth router uses this mapping to enforce that only the correct email can access each user's workspace.
+
+### Step 2: Create an OAuth Client
 
 #### Google Workspace
 
