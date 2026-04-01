@@ -1,4 +1,4 @@
-# k8s-omo
+# k8s-opencode
 
 OpenCode + Oh-My-OpenCode on Kubernetes, with Tailscale connectivity for remote
 access and laptop MCP servers.
@@ -55,9 +55,9 @@ users:
 ### 1. Install
 
 ```bash
-helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-namespace \
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace \
   --version 0.1.0 \
-  --set image.repository=ghcr.io/timothyclin/k8s-omo/opencode-workspace \
+  --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
   --set image.tag=0.1.0 \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
@@ -67,7 +67,7 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-n
 Or with a values file:
 
 ```bash
-helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-namespace \
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace \
   --version 0.1.0 \
   -f my-values.yaml
 ```
@@ -109,7 +109,7 @@ Required scopes: `devices`, `services`, `keys`.
 ### Enable Ingress
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f my-values.yaml \
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f my-values.yaml \
   --set ingress.enabled=true
 ```
 
@@ -260,14 +260,14 @@ Add user:
 
 ```bash
 ./scripts/add-user.sh alice | tee -a my-values.yaml
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f my-values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f my-values.yaml
 ```
 
 Remove user:
 
 ```bash
 ./scripts/remove-user.sh my-values.yaml alice default
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode -f my-values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f my-values.yaml
 ```
 
 Backup and restore:
@@ -364,7 +364,7 @@ decisions templatized through `values.yaml`.
 - Tailscale handles all external connectivity (no public ingress)
 - Two Tailscale directions: **ingress** (laptop→cluster UI) and **egress**
   (cluster→laptop MCPs)
-- Default Docker image: `ghcr.io/timothyclin/k8s-omo/opencode-workspace` (multi-arch)
+- Default Docker image: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace` (multi-arch)
 - Oh-My-OpenCode is configured via `oh-my-opencode.jsonc` in a ConfigMap
 - MCP servers are configured in `opencode.jsonc` — both remote (URLs) and laptop
   (Tailscale egress)
@@ -442,7 +442,7 @@ When asked to deploy or configure:
 1. Start from `examples/values-minimal.yaml` and add only what's needed
 2. **Always use `-n <namespace>`** — the chart rejects installation into `default`
    ```bash
-   helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-namespace -f my-values.yaml
+   helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace -f my-values.yaml
    ```
 3. Tailscale operator must be installed separately — this chart does not install
    it
@@ -479,4 +479,4 @@ When asked to set up OIDC for multi-user mode:
 ### Change the OpenCode image
 
 - User overrides via `image.repository` and `image.tag` in their values file
-- Default image is `ghcr.io/timothyclin/k8s-omo/opencode-workspace`
+- Default image is `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`

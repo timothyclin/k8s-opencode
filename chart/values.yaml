@@ -1,6 +1,6 @@
 # -- OpenCode container image
 image:
-  repository: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+  repository: ghcr.io/timothyclin/k8s-opencode/opencode-workspace
   tag: "0.1.0"
   pullPolicy: IfNotPresent
 
@@ -71,7 +71,7 @@ auth:
   # -- Auth router: validates OIDC session and routes to correct user pod
   router:
     image:
-      repository: ghcr.io/timothyclin/k8s-omo/auth-router
+      repository: ghcr.io/timothyclin/k8s-opencode/auth-router
       tag: "latest"
       pullPolicy: IfNotPresent
 
