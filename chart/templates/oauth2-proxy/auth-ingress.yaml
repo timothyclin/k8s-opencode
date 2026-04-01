@@ -4,8 +4,6 @@ kind: Ingress
 metadata:
   name: {{ include "ok8s.fullname" . }}-auth-ingress
   namespace: {{ .Release.Namespace }}
-  annotations:
-    tailscale.com/hostname: {{ .Values.auth.oidc.hostname }}-{{ .Release.Namespace }}
   labels:
     {{- include "ok8s.labels" . | nindent 4 }}
     app.kubernetes.io/component: oauth2-proxy
@@ -16,4 +14,7 @@ spec:
       name: {{ include "ok8s.fullname" . }}-oauth2-proxy
       port:
         number: 4180
+  tls:
+    - hosts:
+        - {{ .Values.auth.oidc.hostname }}-{{ .Release.Namespace }}
 {{- end }}
