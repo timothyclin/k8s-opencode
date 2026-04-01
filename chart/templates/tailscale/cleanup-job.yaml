@@ -1,0 +1,59 @@
+{{- /*
+Pre-delete hook: removes Tailscale proxy resources from the operator namespace
+to force clean node deregistration from the tailnet control plane.
+
+Without this, stale Tailscale nodes retain their serve config (127.0.0.1:80)
+after helm uninstall, causing connection errors on reinstall with the same hostname.
+*/}}
+{{- if .Values.ingress.enabled }}
+{{- $tsNamespace := .Values.tailscaleOperator.namespace | default "tailscale" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ok8s.fullname" . }}-ts-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ok8s.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 120
+  template:
+    metadata:
+      labels:
+        {{- include "ok8s.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ts-cleanup
+    spec:
+      serviceAccountName: {{ include "ok8s.fullname" . }}-ts-cleanup
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: cleanup
+          image: bitnami/kubectl:1.30
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              TS_NS="{{ $tsNamespace }}"
+              LABEL="tailscale.com/parent-resource-ns={{ .Release.Namespace }}"
+
+              echo "Removing Tailscale proxy resources in ${TS_NS} for parent namespace {{ .Release.Namespace }}..."
+
+              # Delete StatefulSets first — pods gracefully shut down and deregister from tailnet
+              kubectl delete statefulset -n "${TS_NS}" -l "${LABEL}" --ignore-not-found --wait=true --timeout=60s
+
+              # Delete Secrets containing node auth state — prevents stale identity reuse
+              kubectl delete secret -n "${TS_NS}" -l "${LABEL}" --ignore-not-found
+
+              # Delete proxy Services
+              kubectl delete svc -n "${TS_NS}" -l "${LABEL}" --ignore-not-found
+
+              echo "Tailscale cleanup complete."
+{{- end }}
