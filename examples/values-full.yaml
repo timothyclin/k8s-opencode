@@ -2,8 +2,8 @@
 # Use this as a reference for what's possible
 
 image:
-  repository: ghcr.io/anomalyco/opencode
-  tag: "latest"
+  repository: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+  tag: "0.1.0"
 
 # Multiple LLM providers
 providers:

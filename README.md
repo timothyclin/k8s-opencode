@@ -55,7 +55,10 @@ users:
 ### 1. Install
 
 ```bash
-helm install ok8s ./chart -n opencode --create-namespace \
+helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-namespace \
+  --version 0.1.0 \
+  --set image.repository=ghcr.io/timothyclin/k8s-omo/opencode-workspace \
+  --set image.tag=0.1.0 \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -64,7 +67,9 @@ helm install ok8s ./chart -n opencode --create-namespace \
 Or with a values file:
 
 ```bash
-helm install ok8s ./chart -n opencode --create-namespace -f my-values.yaml
+helm install ok8s oci://ghcr.io/timothyclin/k8s-omo/chart -n opencode --create-namespace \
+  --version 0.1.0 \
+  -f my-values.yaml
 ```
 
 > **Namespace is required** — the chart will fail if installed into `default`. Always use `-n <namespace>`.
@@ -359,8 +364,7 @@ decisions templatized through `values.yaml`.
 - Tailscale handles all external connectivity (no public ingress)
 - Two Tailscale directions: **ingress** (laptop→cluster UI) and **egress**
   (cluster→laptop MCPs)
-- Official Docker image: `ghcr.io/anomalyco/opencode` (multi-arch, includes
-  ARM64)
+- Default Docker image: `ghcr.io/timothyclin/k8s-omo/opencode-workspace` (multi-arch)
 - Oh-My-OpenCode is configured via `oh-my-opencode.jsonc` in a ConfigMap
 - MCP servers are configured in `opencode.jsonc` — both remote (URLs) and laptop
   (Tailscale egress)
@@ -475,4 +479,4 @@ When asked to set up OIDC for multi-user mode:
 ### Change the OpenCode image
 
 - User overrides via `image.repository` and `image.tag` in their values file
-- Do not change defaults in `values.yaml` without discussing
+- Default image is `ghcr.io/timothyclin/k8s-omo/opencode-workspace`

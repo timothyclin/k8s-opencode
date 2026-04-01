@@ -1,17 +1,8 @@
-# ok8s-workspace: Developer-ready OpenCode image
-#
 # The stock ghcr.io/anomalyco/opencode image is a minimal Alpine/musl build
 # with only libgcc, libstdc++, and ripgrep. This image provides a full
 # developer environment on glibc (Debian) with git, compilers, and common
 # CLI tools so hosted OpenCode sessions can actually build, test, and commit.
 #
-# Build (multi-arch):
-#   docker buildx build --platform linux/amd64,linux/arm64 \
-#     -t ghcr.io/<org>/ok8s-workspace:latest --push images/workspace/
-#
-# Build args:
-#   OPENCODE_IMAGE  - source image for the opencode binary (default: ghcr.io/anomalyco/opencode:latest)
-
 ARG OPENCODE_IMAGE=ghcr.io/anomalyco/opencode:latest
 
 # ---------------------------------------------------------------------------
@@ -24,7 +15,7 @@ FROM ${OPENCODE_IMAGE} AS opencode-bin
 # ---------------------------------------------------------------------------
 FROM debian:bookworm-slim
 
-LABEL org.opencontainers.image.title="ok8s-workspace" \
+LABEL org.opencontainers.image.title="opencode-workspace" \
       org.opencontainers.image.description="Developer-ready OpenCode image with git, compilers, and common CLI tools" \
       org.opencontainers.image.source="https://github.com/timothyclin/k8s-omo"
 

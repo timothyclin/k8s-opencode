@@ -78,8 +78,8 @@ helm upgrade opencode ./chart -f values.yaml
 
 ```yaml
 image:
-  repository: ghcr.io/anomalyco/opencode
-  tag: "1.2.3"  # Pin to a specific version
+  repository: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+  tag: "0.1.0"  # Pin to a specific version
 ```
 
 2. Upgrade:

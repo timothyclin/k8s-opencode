@@ -3,8 +3,8 @@
 #   helm install opencode ./chart -f my-values.yaml
 
 image:
-  repository: ghcr.io/anomalyco/opencode
-  tag: "latest"
+  repository: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+  tag: "0.1.0"
 
 # At least one provider must be enabled
 # GitHub Copilot uses the OpenAI-compatible API — put your Copilot key here

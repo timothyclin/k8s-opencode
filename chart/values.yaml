@@ -1,7 +1,7 @@
 # -- OpenCode container image
 image:
-  repository: ghcr.io/anomalyco/opencode
-  tag: "latest"
+  repository: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+  tag: "0.1.0"
   pullPolicy: IfNotPresent
 
 # -- Create the release namespace (set to false if installing into an existing namespace)
@@ -71,13 +71,7 @@ auth:
   # -- Auth router: validates OIDC session and routes to correct user pod
   router:
     image:
-      repository: ok8s-auth-router
-      tag: "latest"
-      pullPolicy: IfNotPresent
-  # -- Auth router: validates OIDC session and routes to correct user pod
-  router:
-    image:
-      repository: ok8s-auth-router
+      repository: ghcr.io/timothyclin/k8s-omo/auth-router
       tag: "latest"
       pullPolicy: IfNotPresent
 
