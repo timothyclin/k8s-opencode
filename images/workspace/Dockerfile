@@ -3,12 +3,35 @@
 # developer environment on glibc (Debian) with git, compilers, and common
 # CLI tools so hosted OpenCode sessions can actually build, test, and commit.
 #
-ARG OPENCODE_IMAGE=ghcr.io/anomalyco/opencode:latest
+# We download the glibc release tarballs directly because the musl-linked
+# binary from the stock Alpine image won't run on Debian/glibc.
+#
+ARG OPENCODE_VERSION=latest
 
 # ---------------------------------------------------------------------------
-# Stage 1: Extract the opencode binary from the stock image
+# Stage 1: Download the glibc opencode binary
 # ---------------------------------------------------------------------------
-FROM ${OPENCODE_IMAGE} AS opencode-bin
+FROM alpine:3.21 AS opencode-bin
+
+ARG OPENCODE_VERSION
+ARG TARGETARCH
+
+RUN apk add --no-cache curl && \
+    if [ "$TARGETARCH" = "amd64" ]; then \
+      ARCH="x64"; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+      ARCH="arm64"; \
+    else \
+      echo "Unsupported arch: $TARGETARCH" && exit 1; \
+    fi && \
+    if [ "$OPENCODE_VERSION" = "latest" ]; then \
+      URL="https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-${ARCH}.tar.gz"; \
+    else \
+      URL="https://github.com/anomalyco/opencode/releases/download/${OPENCODE_VERSION}/opencode-linux-${ARCH}.tar.gz"; \
+    fi && \
+    echo "Downloading $URL" && \
+    curl -fSL "$URL" | tar xzf - -C /usr/local/bin opencode && \
+    chmod +x /usr/local/bin/opencode
 
 # ---------------------------------------------------------------------------
 # Stage 2: Developer-ready base
