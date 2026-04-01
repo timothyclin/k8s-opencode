@@ -93,6 +93,8 @@ spec:
               name: {{ include "ok8s.fullname" . }}-secrets
               key: gemini-api-key
         {{- end }}
+        - name: OPENCODE_ENABLE_EXA
+          value: "1"
         {{- if .Values.kubedock.enabled }}
         - name: DOCKER_HOST
           value: "tcp://{{ include "ok8s.fullname" . }}-kubedock-service:{{ .Values.kubedock.port }}"

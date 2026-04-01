@@ -104,6 +104,8 @@ spec:
               name: {{ include "ok8s.fullname" $root }}-user-{{ $user.name }}-secrets
               key: gemini-api-key
         {{- end }}
+        - name: OPENCODE_ENABLE_EXA
+          value: "1"
         {{- if $root.Values.kubedock.enabled }}
         - name: DOCKER_HOST
           value: "tcp://{{ include "ok8s.fullname" $root }}-kubedock-{{ $user.name }}:{{ $root.Values.kubedock.port }}"
