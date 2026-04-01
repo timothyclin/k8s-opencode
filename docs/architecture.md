@@ -1,12 +1,12 @@
-# K8s-OMO Architecture Design
+# K8s-OpenCode Architecture Design
 
 OpenCode + Oh-My-OpenCode on Kubernetes with Tailscale connectivity and Kubedock test container support.
 
 The chart and container images are published to GitHub Container Registry (GHCR):
 
-- **Chart**: `oci://ghcr.io/timothyclin/k8s-omo/chart`
-- **Workspace image**: `ghcr.io/timothyclin/k8s-omo/opencode-workspace`
-- **Auth router image**: `ghcr.io/timothyclin/k8s-omo/auth-router`
+- **Chart**: `oci://ghcr.io/timothyclin/k8s-opencode/chart`
+- **Workspace image**: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`
+- **Auth router image**: `ghcr.io/timothyclin/k8s-opencode/auth-router`
 
 See [Quick Start](../README.md#quick-start) for installation instructions.
 

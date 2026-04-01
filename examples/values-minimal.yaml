@@ -3,7 +3,7 @@
 #   helm install opencode ./chart -f my-values.yaml
 
 image:
-  repository: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+  repository: ghcr.io/timothyclin/k8s-opencode/opencode-workspace
   tag: "0.1.0"
 
 # At least one provider must be enabled

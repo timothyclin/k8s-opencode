@@ -10,9 +10,9 @@ keywords:
   - tailscale
   - mcp
   - oh-my-opencode
-home: https://github.com/timothyclin/k8s-omo
+home: https://github.com/timothyclin/k8s-opencode
 sources:
-  - https://github.com/timothyclin/k8s-omo
+  - https://github.com/timothyclin/k8s-opencode
 maintainers:
   - name: timothyclin
     url: https://github.com/timothyclin

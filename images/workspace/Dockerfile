@@ -17,7 +17,7 @@ FROM debian:bookworm-slim
 
 LABEL org.opencontainers.image.title="opencode-workspace" \
       org.opencontainers.image.description="Developer-ready OpenCode image with git, compilers, and common CLI tools" \
-      org.opencontainers.image.source="https://github.com/timothyclin/k8s-omo"
+      org.opencontainers.image.source="https://github.com/timothyclin/k8s-opencode"
 
 ENV DEBIAN_FRONTEND=noninteractive
 

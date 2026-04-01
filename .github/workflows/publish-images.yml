@@ -33,7 +33,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/timothyclin/k8s-omo/auth-router
+          images: ghcr.io/timothyclin/k8s-opencode/auth-router
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -71,7 +71,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/timothyclin/k8s-omo/opencode-workspace
+          images: ghcr.io/timothyclin/k8s-opencode/opencode-workspace
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}

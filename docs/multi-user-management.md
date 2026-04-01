@@ -515,7 +515,7 @@ user: alice\
 spec:\
 containers:\
 \- name: opencode\
-image: ghcr.io/timothyclin/k8s-omo/opencode-workspace:0.1.0\
+image: ghcr.io/timothyclin/k8s-opencode/opencode-workspace:0.1.0\
 ports:\
 \- containerPort: 8080\
 \# Dynamically provision persistent storage for the AI agent's workspace\
