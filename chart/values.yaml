@@ -62,10 +62,9 @@ auth:
     clientSecret: ""
     cookieSecret: ""
     emailDomain: "*"
-    # -- Single hostname for OIDC auth (e.g. "ok8s-auth")
+    # -- Single hostname for OIDC auth (default: oc-ingress)
     # -- Callback URL: https://<hostname>-<namespace>.<tailnet>.ts.net/oauth2/callback
-    # -- One URL for ALL users — no per-user callback URLs needed
-    hostname: "ok8s-auth"
+    hostname: "oc-ingress"
     # -- Cookie domain for multi-user OIDC (e.g. ".lynx-beta.ts.net")
     cookieDomain: ""
 
