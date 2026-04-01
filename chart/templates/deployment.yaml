@@ -24,6 +24,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -44,7 +51,7 @@ spec:
           if [ -d /identity ]; then
             for f in /identity/*; do
               filename=$(basename "$f")
-              target="/workspace/$filename"
+              target="/home/opencode/$filename"
               if [ ! -e "$target" ]; then
                 cp "$f" "$target"
               fi
@@ -55,7 +62,7 @@ spec:
           mountPath: /identity
           readOnly: true
         - name: workspace
-          mountPath: /workspace
+          mountPath: /home/opencode
       {{- end }}
       containers:
       - name: opencode
@@ -67,6 +74,8 @@ spec:
           name: http
           protocol: TCP
         env:
+        - name: HOME
+          value: "/home/opencode"
         - name: OPENCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -108,11 +117,11 @@ spec:
         {{- end }}
         volumeMounts:
         - name: config
-          mountPath: /root/.config/opencode
+          mountPath: /home/opencode/.config/opencode
         - name: data
-          mountPath: /root/.local/share/opencode
+          mountPath: /home/opencode/.local/share/opencode
         - name: workspace
-          mountPath: /workspace
+          mountPath: /home/opencode
         {{- with .Values.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
