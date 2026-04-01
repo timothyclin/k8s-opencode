@@ -7,10 +7,11 @@ image:
   tag: "latest"
 
 # At least one provider must be enabled
+# GitHub Copilot uses the OpenAI-compatible API — put your Copilot key here
 providers:
-  anthropic:
+  openai:
     enabled: true
-    apiKey: "sk-ant-your-key-here"
+    apiKey: "your-github-copilot-token-here"
 
 # Required — protects the HTTP endpoint
 serverPassword: "your-secure-password"

@@ -27,15 +27,15 @@ omo:
     taskTimeout: 300
   agents:
     oracle:
-      model: "anthropic/claude-sonnet-4-20250514"
+      model: "github-copilot/gpt-5.2"
       promptAppend: "Provide concise tradeoffs and a clear recommendation"
     librarian:
-      model: "google/gemini-2.5-pro"
+      model: "github-copilot/gpt-5-mini"
   categories:
     quick:
-      model: "openai/gpt-4.1-nano"
+      model: "github-copilot/gpt-4.1"
     visualEngineering:
-      model: "google/gemini-2.5-pro"
+      model: "github-copilot/claude-sonnet-4.6"
 
 # Remote + laptop MCP servers
 mcp:
