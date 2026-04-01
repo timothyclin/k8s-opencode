@@ -223,6 +223,15 @@ resources:
     cpu: "2"
     memory: 2Gi
 
+# -- Pod security context for the OpenCode container
+# -- Runs as non-root user (UID 1000) for security best practices
+securityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
 # -- Node selector (defaults to arm64)
 nodeSelector:
   kubernetes.io/arch: arm64
