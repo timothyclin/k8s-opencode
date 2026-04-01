@@ -1,134 +1,115 @@
-# AGENTS.md — Coding Practices & Conventions
+# AGENTS.md — k8s-opencode Knowledge Base
 
-Guidelines for AI agents and human contributors working in this repository.
+**Generated:** 2026-04-01 | **Commit:** 6832d82 | **Branch:** main
 
----
+## Overview
+
+Helm chart + container images for deploying [OpenCode](https://github.com/anomalyco/opencode) on Kubernetes with Tailscale connectivity. Supports single-user and multi-user modes with per-user isolation, OIDC auth, kubedock, and MCP laptop server egress.
+
+## Structure
+
+```
+k8s-opencode/
+├── chart/                  # Helm chart (see chart/AGENTS.md for deep template docs)
+│   ├── Chart.yaml          # name: ok8s, version: 0.1.0
+│   ├── values.yaml         # ALL config — single source of truth
+│   └── templates/          # 19 template files across 6 subdirs
+├── images/
+│   ├── router/             # Go auth-router (main.go + Dockerfile)
+│   └── workspace/          # OpenCode workspace image (Dockerfile only)
+├── scripts/                # User lifecycle: add/remove/list/backup/restore
+├── docs/                   # Architecture, maintenance, customization, multi-user
+├── examples/               # values-minimal.yaml, values-full.yaml, values-multi.yaml
+└── .github/workflows/      # publish-images.yml, publish-chart.yml (tag-driven)
+```
+
+## Where to Look
+
+| Task | Location | Notes |
+|---|---|---|
+| Change chart defaults | `chart/values.yaml` | Every value documented inline |
+| Add/modify K8s resources | `chart/templates/` | See `chart/AGENTS.md` for template map |
+| Change helper functions | `chart/templates/_helpers.tpl` | `ok8s.*` helpers used everywhere |
+| Modify auth router logic | `images/router/main.go` | Single-file Go app, rebuild image after |
+| Modify workspace image | `images/workspace/Dockerfile` | Debian-based, copies opencode from upstream |
+| Add/remove users (ops) | `scripts/add-user.sh` etc. | Manipulate values.yaml + helm upgrade |
+| Example configs | `examples/values-*.yaml` | Minimal, full, and multi-user samples |
+| CI/CD | `.github/workflows/` | Both trigger on `v*` tag push only |
+
+## Naming Conventions (CRITICAL)
+
+Four distinct names — do NOT confuse:
+
+| Name | Where | Meaning |
+|---|---|---|
+| `opencode` | Namespace, hostPrefix, pod names, resource names | Product runtime identity |
+| `ok8s` | Chart name, helper prefix (`ok8s.fullname`), Go module (`ok8s-auth-router`), release name | Chart/infra shorthand |
+| `omo` | Config key (`omo:` in values), oh-my-opencode.jsonc | Oh-My-OpenCode agent config |
+| `k8s-opencode` | Repo name, GHCR path (`ghcr.io/timothyclin/k8s-opencode/`) | Repository/registry identity |
+
+## Images
+
+### auth-router (`images/router/`)
+
+Go reverse proxy for multi-user OIDC auth. Single file: `main.go`.
+
+- **Listens:** `:8080`
+- **Auth flow:** Calls oauth2-proxy `/oauth2/auth` with request cookies → extracts `X-Auth-Request-Email` → maps email→user via JSON file → proxies to `http://opencode-user-{user}:4096`
+- **Env vars:** `OAUTH2_PROXY_URL`, `SIGNIN_URL`, `EMAIL_MAP_PATH`, `HOST_PREFIX`
+- **Hot-reload:** Watches `EMAIL_MAP_PATH` via fsnotify, reloads without restart
+- **No health endpoint** — probes must use TCP `:8080` or add `/health`
+
+### opencode-workspace (`images/workspace/`)
+
+Debian bookworm + opencode binary + dev tools (git, python3, ripgrep, jq, tmux, build-essential, etc.).
+
+- **ARG:** `OPENCODE_IMAGE=ghcr.io/anomalyco/opencode:latest` (source of opencode binary)
+- **Entrypoint:** `opencode` (serves on `:4096` when run by chart)
+- **WORKDIR:** `/workspace`
+
+### CI Build
+
+Both images built multi-arch (`linux/amd64,linux/arm64`) via `docker buildx`. Tagging: `v1.2.3` → tags `1.2.3`, `1.2`, `1`. Published to GHCR on `v*` tag push.
 
 ## Git Workflow
 
-### Branch-First Development
+### Branch-First (Mandatory)
 
-Never commit directly to `main`. Always work on a feature branch.
+Never commit to `main`. Always feature branch → PR.
 
 ```bash
 git checkout -b feat/my-feature
-# ... make changes ...
 git add -A && git commit -m "feat: add my feature"
 git push -u origin feat/my-feature
 ```
 
-### Git Worktree
+### Worktrees
 
-Use `git worktree` for parallel work streams — reviewing PRs, hotfixes, or running tests on another branch without stashing or switching context.
+Use for parallel work (PR review, hotfixes). Name: `<repo>-<purpose>`. Clean up with `git worktree prune`.
 
-```bash
-# Add a worktree for a feature branch
-git worktree add ../k8s-opencode-feat-xyz feat/xyz
+### Commits
 
-# Add a worktree for reviewing a PR
-git worktree add ../k8s-opencode-pr-review pr-branch
-
-# List active worktrees
-git worktree list
-
-# Remove when done
-git worktree remove ../k8s-opencode-feat-xyz
-```
-
-**When to use worktrees:**
-
-- Reviewing a PR while your current branch has uncommitted work
-- Running long tests on one branch while developing on another
-- Hotfixing `main` without disrupting your feature branch
-- Comparing behavior across branches side-by-side
-
-**Worktree conventions:**
-
-- Name worktree directories with a clear suffix: `<repo>-<purpose>`
-- Clean up worktrees promptly after use (`git worktree prune`)
-- Never nest worktrees inside the main repo directory
-
-### Commit Messages
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add user authentication endpoint
-fix: resolve helm chart default values override
-docs: update architecture diagram
-refactor: extract validation into shared utility
-chore: bump dependency versions
-```
-
-### Atomic Commits
-
-Each commit should represent one logical change. Don't mix unrelated changes in a single commit.
-
----
+[Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`. One logical change per commit.
 
 ## Code Changes
 
-### Minimal Diffs
+- **Minimal diffs** — change only what's needed, don't refactor unrelated code
+- **Type safety** — never `as any`, `@ts-ignore`, `@ts-expect-error`
+- **Error handling** — no empty `catch` blocks, log with context
+- **Bugfixes** — fix minimally, never refactor while fixing
 
-- Change only what's necessary to accomplish the task
-- Don't refactor unrelated code in the same PR
-- Don't fix pre-existing lint/style issues unless that's the explicit goal
-
-### Type Safety
-
-- Never suppress type errors with `as any`, `@ts-ignore`, or `@ts-expect-error`
-- Fix the root cause instead of silencing the compiler
-
-### Error Handling
-
-- No empty `catch` blocks — always handle or propagate errors
-- Use structured error types when available
-- Log with sufficient context for debugging
-
----
-
-## Helm / Kubernetes Conventions
-
-### Values Files
-
-- Provide sensible defaults in `values.yaml`
-- Document every value with inline comments
-- Use `--set` overrides sparingly; prefer values files for complex configs
-
-### Template Safety
-
-- Always use `default` and `required` functions for critical values
-- Quote strings in templates: `{{ .Values.name | quote }}`
-- Test templates with `helm template` before applying
-
----
-
-## Testing & Verification
-
-### Before Marking Work Complete
-
-1. Run `helm template` or `helm lint` on chart changes
-2. Verify no regressions in existing functionality
-3. Check that all new files are tracked by git
-
-### Validation Commands
+## Verification Commands
 
 ```bash
-# Lint the Helm chart (local development)
+# Lint chart
 helm lint chart/
 
-# Render templates locally (local development)
-helm template my-release chart/ -f chart/values.yaml
+# Render templates locally
+helm template ok8s chart/ -f chart/values.yaml -n opencode
 
-# Dry-run against a cluster (local development)
-helm install my-release chart/ --dry-run --debug
-```
+# Dry-run against cluster
+helm install ok8s chart/ --dry-run --debug -n opencode
 
-### Deployment Commands
-
-The chart is published to GHCR as an OCI artifact. Use these for actual deployments:
-
-```bash
 # Install from GHCR (production)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace \
   --version 0.1.0 -f values.yaml
@@ -137,24 +118,36 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --cre
 helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
 ```
 
-> **Local `./chart` paths** are for development and testing only — they require a clone of the repository. Published deployments should always use the OCI URI.
+> Local `./chart` paths are for development only. Published deployments use the OCI URI.
 
----
+## Anti-Patterns
 
-## File Organization
+- **Never install in `default` namespace** — `ok8s.fullname` helper will fail
+- **Never commit real credentials** in values files or examples
+- **Never use `plain` secrets backend in GitOps** — use `sealed` or `external`
+- **Never rename `ok8s.*` helpers** without updating all templates
+- **Never reorder `users[]` array** without understanding StatefulSet ordinal→user mapping
+- **Don't confuse naming** — `omo` ≠ `opencode` ≠ `ok8s` ≠ `k8s-opencode`
 
-- Documentation goes in `docs/`
-- Example configurations go in `examples/`
-- Scripts go in `scripts/`
-- Keep the repo root clean — only top-level config and docs belong here
+## Component Dependencies
 
----
+```
+auth-router ──→ oauth2-proxy ──→ OIDC provider (Google/GitHub/etc.)
+     │                │
+     │                └── cookieDomain + clientId/Secret required
+     │
+     └── per-user Services (opencode-user-{name}:4096)
+              │
+              └── StatefulSets (one per user in multi mode)
+                       │
+                       ├── kubedock sidecar (optional, per-user Deployment)
+                       ├── Tailscale Ingress (operator-managed, not sidecar)
+                       └── egress ExternalName Services (laptop MCP servers)
+```
 
-## Agent Delegation & Failure Recovery
+**Tailscale Operator** must be installed separately. Chart creates CRDs (Ingress, ProxyClass) that instruct the operator.
 
-### Delegate First, Always
-
-The primary agent (Sisyphus) should **maximize token efficiency by delegating work to specialized sub-agents**. Never do manually what a sub-agent can handle.
+## Agent Delegation
 
 | Task Type | Delegate To |
 |---|---|
@@ -165,57 +158,21 @@ The primary agent (Sisyphus) should **maximize token efficiency by delegating wo
 | Trivial single-file edits | `quick` category |
 | Complex logic, algorithms | `ultrabrain` category |
 
-**Rules:**
-
-- Fire multiple explore/librarian agents **in parallel** for non-trivial questions
-- Always run explore/librarian in the **background** (`run_in_background=true`)
-- After delegating a search, **do not repeat that same search manually** — wait for the agent's result
-- Use `session_id` to continue with a sub-agent instead of starting fresh — preserves context and saves tokens
-
-### When Sub-Agents Fail: Stop, Don't Take Over
-
-If a delegated task fails, retry **once** with a corrected prompt or additional context via `session_id`. If it fails again:
-
-1. **Stop.** Do not attempt a third retry.
-2. **Do not silently take over the work yourself.** Taking over masks the root cause and wastes tokens on a potentially doomed approach.
-3. **Inform the user immediately** with:
-   - What task was delegated
-   - Which agent was used
-   - What failed (error, incorrect output, partial result)
-   - How many attempts were made
-4. **Triage together.** Let the user decide whether to:
-   - Adjust the approach and retry
-   - Escalate to a different agent (e.g., Oracle for debugging)
-   - Handle it manually
-   - Skip the task entirely
-
-**Example failure report:**
-
-```
-⚠️ Delegation failed after 2 attempts.
-
-Task: "Add responsive grid layout to dashboard"
-Agent: visual-engineering (session: ses_abc123)
-Attempt 1: Agent produced layout but ignored existing CSS variables
-Attempt 2 (via session_id): Agent acknowledged CSS variables but broke the sidebar
-
-I've stopped retrying. Options:
-1. I can consult Oracle for a diagnosis
-2. You can provide additional constraints and I'll retry
-3. We skip this for now and move on
-```
-
-### Why This Matters
-
-- **Token efficiency**: Sub-agents use cheaper, domain-optimized models. The primary agent's tokens are expensive — don't waste them on work a sub-agent should handle.
-- **Failure visibility**: Silent takeover hides systemic issues (bad prompts, wrong agent choice, missing context). Surfacing failures lets us fix the root cause.
-- **User agency**: The user should always be in the loop when the automated path breaks down.
-
----
+- Fire explore/librarian **in parallel**, always `run_in_background=true`
+- After delegating a search, **never repeat it manually** — wait for agent result
+- Use `session_id` to continue with a sub-agent (preserves context, saves tokens)
+- If delegation fails twice: **stop, report to user, triage together**
 
 ## PR Etiquette
 
 - One concern per PR
-- Include a summary of **what** changed and **why**
+- Summary of **what** and **why**
 - Link related issues
-- Self-review your diff before requesting review
+- Self-review diff before requesting review
+
+## File Organization
+
+- Docs → `docs/`
+- Examples → `examples/`
+- Scripts → `scripts/`
+- Keep repo root clean
