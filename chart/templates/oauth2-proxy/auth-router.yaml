@@ -1,0 +1,47 @@
+{{- if and (eq .Values.mode "multi") .Values.auth.oidc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ok8s.fullname" . }}-auth-router
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ok8s.labels" . | nindent 4 }}
+    app.kubernetes.io/component: auth-router
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth-router
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth-router
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: auth-router
+    spec:
+      containers:
+      - name: auth-router
+        image: "{{ .Values.auth.router.image.repository }}:{{ .Values.auth.router.image.tag }}"
+        imagePullPolicy: {{ .Values.auth.router.image.pullPolicy }}
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: OAUTH2_PROXY_URL
+          value: "http://{{ include "ok8s.fullname" . }}-oauth2-proxy:4180"
+        - name: SIGNIN_URL
+          value: "https://{{ .Values.auth.oidc.hostname }}-{{ .Release.Namespace }}{{ .Values.auth.oidc.cookieDomain }}/oauth2/sign_in"
+        - name: EMAIL_MAP_PATH
+          value: /etc/email-map/email-map.json
+        - name: HOST_PREFIX
+          value: {{ .Values.ingress.hostname }}
+        volumeMounts:
+        - name: email-map
+          mountPath: /etc/email-map
+          readOnly: true
+      volumes:
+      - name: email-map
+        configMap:
+          name: {{ include "ok8s.fullname" . }}-email-map
+{{- end }}

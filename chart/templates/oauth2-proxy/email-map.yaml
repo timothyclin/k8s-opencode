@@ -1,0 +1,21 @@
+{{- if and (eq .Values.mode "multi") .Values.auth.oidc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ok8s.fullname" . }}-email-map
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ok8s.labels" . | nindent 4 }}
+data:
+  email-map.json: |
+    {
+      {{- $first := true }}
+      {{- range $index, $user := .Values.users }}
+      {{- if $user.email }}
+      {{- if not $first }},{{ end }}
+      {{ $user.email | quote }}: {{ $user.name | quote }}
+      {{- $first = false }}
+      {{- end }}
+      {{- end }}
+    }
+{{- end }}
