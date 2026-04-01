@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- opencode_v1alpha1_opencodeworkspace.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
