@@ -5,7 +5,7 @@ metadata:
   name: {{ include "ok8s.fullname" . }}-auth-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
-    tailscale.com/hostname: {{ .Values.auth.oidc.hostname }}-{{ .Release.Namespace }}
+    tailscale.com/proxy-class: {{ include "ok8s.fullname" . }}-auth
   labels:
     {{- include "ok8s.labels" . | nindent 4 }}
     app.kubernetes.io/component: oauth2-proxy
