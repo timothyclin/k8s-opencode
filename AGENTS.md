@@ -216,11 +216,15 @@ git push origin v0.1.5
 The chart is published to GHCR as an OCI artifact. Use these for actual deployments:
 
 ```bash
-# Install from GHCR (production)
+# Install latest version (recommended - omit --version to use latest)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.2 -f values.yaml
+  -f values.yaml
 
-# Upgrade from GHCR (production)
+# Specific version (only if you need exact version)
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.5 -f values.yaml
+
+# Upgrade
 helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 

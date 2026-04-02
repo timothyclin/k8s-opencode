@@ -42,11 +42,18 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
 ### Install
 
+**No version required** — omit `--version` to use the latest published version:
+
 ```bash
+# Latest version (recommended - no --version flag needed)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.2 \
-  --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
-  --set image.tag=0.1.2 \
+  --set providers.anthropic.enabled=true \
+  --set providers.anthropic.apiKey=sk-ant-your-key \
+  --set serverPassword=your-secure-password
+
+# Specific version (only if you need an exact version)
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.5 \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -55,8 +62,13 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 Or with a values file:
 
 ```bash
+# Latest version (recommended)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.2 \
+  -f my-values.yaml
+
+# Specific version
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.5 \
   -f my-values.yaml
 ```
 
