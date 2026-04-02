@@ -2,23 +2,46 @@
 
 Quick install for AI agents working with k8s-opencode.
 
-## Quick Deploy (Single-User)
+## Recommended Deploy (Single-User)
 
-```bash
-# Latest version - no --version flag needed
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  -f values.yaml
-```
-
-## With Custom Values
+This includes Oh-My-OpenCode (task orchestration), plugins, and Tailscale ingress:
 
 ```yaml
 # values.yaml
-serverPassword: "secure-password"
+serverPassword: "your-secure-password"
 providers:
   anthropic:
     enabled: true
     apiKey: "sk-ant-your-key"
+
+# Enable Oh-My-OpenCode (task orchestration with Sisyphus, Oracle, Librarian)
+omo:
+  enabled: true
+  sisyphus:
+    maxConcurrentTasks: 2
+    taskTimeout: 300
+  agents:
+    oracle:
+      model: "github-copilot/gpt-5.2"
+      promptAppend: "Provide concise tradeoffs and a clear recommendation"
+    librarian:
+      model: "github-copilot/gpt-5-mini"
+  categories:
+    quick:
+      model: "github-copilot/gpt-4.1"
+    visualEngineering:
+      model: "github-copilot/claude-sonnet-4.6"
+
+# Enable plugins (including oh-my-opencode and tarquinen/opencode-dcp)
+plugins:
+  enabled: true
+  npm: []
+
+# Enable Tailscale ingress (exposes OpenCode at https://opencode.<tailnet>.ts.net)
+ingress:
+  enabled: true
+
+# Storage (adjust as needed)
 persistence:
   workspace:
     size: 20Gi
@@ -27,7 +50,26 @@ persistence:
 ```
 
 ```bash
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace -f values.yaml
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  -f values.yaml
+```
+
+## Minimal Deploy (Vanilla OpenCode)
+
+Only if you need vanilla OpenCode without Oh-My-OpenCode:
+
+```yaml
+# values.yaml
+serverPassword: "your-secure-password"
+providers:
+  anthropic:
+    enabled: true
+    apiKey: "sk-ant-your-key"
+```
+
+```bash
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  -f values.yaml
 ```
 
 ## Specific Version (if needed)
@@ -47,6 +89,7 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 - **Storage**: PVCs mounted at `/home/opencode/workspace`, `/home/opencode/.local`, `/home/opencode/.config`
 - **User**: UID 1000 (non-root)
 - **Init container**: Runs as root to fix PVC permissions
+- **Ingress URL**: `https://opencode.<your-tailnet>.ts.net` (when ingress.enabled=true)
 
 ## Upgrade
 
