@@ -91,6 +91,55 @@ See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
 | `kubedock.*` | Docker API → K8s Pod translation |
 | `persistence.*` | Storage for config and workspace |
 
+### Enabling Oh-My-OpenCode, Skills, MCPs, and Plugins
+
+By default, the chart installs OpenCode with **no plugins, skills, or MCP servers**. To enable them, add the following to your values file:
+
+```yaml
+# Enable Oh-My-OpenCode (task orchestration, specialized agents)
+omo:
+  enabled: true
+  sisyphus:
+    maxConcurrentTasks: 2
+    taskTimeout: 300
+  agents:
+    oracle:
+      model: "github-copilot/gpt-5.2"
+      promptAppend: "Provide concise tradeoffs and a clear recommendation"
+    librarian:
+      model: "github-copilot/gpt-5-mini"
+  categories:
+    quick:
+      model: "github-copilot/gpt-4.1"
+    visualEngineering:
+      model: "github-copilot/claude-sonnet-4.6"
+
+# Install npm skills (optional)
+skills:
+  npm: []
+  # Example: ["@my-org/skills@latest"]
+  config: []
+
+# Configure MCP servers (optional)
+mcp:
+  remote: []
+  # Example:
+  # - name: context7
+  #   url: https://mcp.context7.com/mcp
+  #   enabled: true
+  laptopServers: []
+  # Example:
+  # - name: playwright
+  #   tailscaleIP: "100.x.x.x"
+  #   port: 3000
+
+# Additional plugins (optional)
+plugins:
+  enabled: true
+  npm: []
+  # Example: ["@tarquinen/opencode-dcp@latest"]
+```
+
 ---
 
 ## Multi-User Mode (Operator)
@@ -434,3 +483,47 @@ spec:
 2. Run `make manifests generate`
 3. Implement reconciler logic in `operator/internal/controller/`
 4. Test with `make test`
+
+### Enabling Built-in Defaults (for AI)
+
+When the human asks you to enable built-in defaults, recommend which features to enable based on their use case:
+
+| Feature | What It Does | Recommended For |
+|---------|--------------|------------------|
+| **Oh-My-OpenCode (omo)** | Task orchestration with specialized agents (Sisyphus, Oracle, Librarian) | Users who want multi-agent workflows, research, and complex task coordination |
+| **Skills (npm)** | Reusable prompt templates and tools | Teams with standardized practices they want AI to follow |
+| **MCP Servers** | Connect to external services (Context7, file search, etc.) | Users needing code search, web search, or external tool integration |
+| **Plugins** | Extend OpenCode functionality | Users who want design tools, additional commands, or custom integrations |
+
+**Recommended starting configuration for new users:**
+
+```yaml
+omo:
+  enabled: true
+  sisyphus:
+    maxConcurrentTasks: 2
+    taskTimeout: 300
+  agents:
+    oracle:
+      model: "github-copilot/gpt-5.2"
+      promptAppend: "Provide concise tradeoffs and a clear recommendation"
+    librarian:
+      model: "github-copilot/gpt-5-mini"
+  categories:
+    quick:
+      model: "github-copilot/gpt-4.1"
+    visualEngineering:
+      model: "github-copilot/claude-sonnet-4.6"
+
+plugins:
+  enabled: true
+  npm: []
+  # Add plugins as needed based on use case
+```
+
+Ask the human:
+1. Do you want Oh-My-OpenCode enabled? (enables multi-agent orchestration)
+2. Do you have any specific skills or MCP servers you want to connect?
+3. Any specific plugins you need?
+
+

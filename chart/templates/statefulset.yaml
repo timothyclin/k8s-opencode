@@ -118,6 +118,7 @@ spec:
         image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
         imagePullPolicy: {{ $root.Values.image.pullPolicy }}
         command: ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]
+        workingDir: /home/opencode
         ports:
         - containerPort: 4096
           name: http
