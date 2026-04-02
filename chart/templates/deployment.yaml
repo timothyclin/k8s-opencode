@@ -48,21 +48,35 @@ spec:
         - sh
         - -c
         - |
+          set -e
+          # Ensure workspace directory exists and has correct permissions
+          if [ -d /home/opencode/workspace ]; then
+            chown -R 1000:1000 /home/opencode/workspace
+          fi
+          # Copy identity files if present
           if [ -d /identity ]; then
             for f in /identity/*; do
               filename=$(basename "$f")
               target="/home/opencode/$filename"
               if [ ! -e "$target" ]; then
-                cp "$f" "$target"
+                cp -r "$f" "$target"
+                chown -R 1000:1000 "$target"
               fi
             done
           fi
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
         volumeMounts:
         - name: identity
           mountPath: /identity
           readOnly: true
         - name: workspace
           mountPath: /home/opencode/workspace
+        - name: data
+          mountPath: /home/opencode/.local/share/opencode
+        - name: config
+          mountPath: /home/opencode/.config/opencode
       {{- end }}
       containers:
       - name: opencode
