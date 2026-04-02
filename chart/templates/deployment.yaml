@@ -65,6 +65,7 @@ spec:
           mountPath: /home/opencode/.local
         - name: config
           mountPath: /home/opencode/.config
+          subPath: opencode
       {{- if .Values.identity.enabled }}
       initContainers:
       - name: init-identity
