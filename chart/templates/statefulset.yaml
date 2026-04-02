@@ -50,6 +50,30 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      # Always run init container to fix PVC permissions (runs as root)
+      initContainers:
+      - name: init-permissions
+        image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+        imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          # Fix ownership on all mounted directories
+          chown -R 1000:1000 /home/opencode/workspace /home/opencode/.local /home/opencode/.config 2>/dev/null || true
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: workspace
+          mountPath: /home/opencode/workspace
+        - name: data
+          mountPath: /home/opencode/.local/share/opencode
+          subPath: ..
+        - name: config
+          mountPath: /home/opencode/.config/opencode
+          subPath: ..
       {{- if $root.Values.identity.enabled }}
       initContainers:
       - name: init-identity
