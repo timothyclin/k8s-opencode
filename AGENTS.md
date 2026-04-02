@@ -4,6 +4,17 @@ Guidelines for AI agents and human contributors working in this repository.
 
 ---
 
+## AI Installation (for agents)
+
+Use the standalone install guide: **docs/ai-install.md**
+
+```bash
+# Quick install - latest version
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace -f values.yaml
+```
+
+---
+
 ## Git Workflow
 
 ### MANDATORY: Worktrees for ALL Edits

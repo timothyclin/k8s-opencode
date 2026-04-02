@@ -3,6 +3,15 @@
 OpenCode on Kubernetes, with Tailscale connectivity for remote access and laptop
 MCP servers.
 
+## AI Installation
+
+For AI agents, use the standalone install guide:
+
+```bash
+# Read: https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.md
+# Or copy/paste commands from docs/ai-install.md
+```
+
 ## What This Is
 
 Deploy [OpenCode](https://opencode.ai) (AI coding agent) on your Kubernetes
