@@ -3,6 +3,15 @@
 OpenCode on Kubernetes, with Tailscale connectivity for remote access and laptop
 MCP servers.
 
+## AI Installation
+
+For AI agents, use the standalone install guide:
+
+```bash
+# Read: https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.md
+# Or copy/paste commands from docs/ai-install.md
+```
+
 ## What This Is
 
 Deploy [OpenCode](https://opencode.ai) (AI coding agent) on your Kubernetes
@@ -42,11 +51,18 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
 ### Install
 
+**No version required** — omit `--version` to use the latest published version:
+
 ```bash
+# Latest version (recommended - no --version flag needed)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.2 \
-  --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
-  --set image.tag=0.1.2 \
+  --set providers.anthropic.enabled=true \
+  --set providers.anthropic.apiKey=sk-ant-your-key \
+  --set serverPassword=your-secure-password
+
+# Specific version (only if you need an exact version - check GitHub releases)
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version <version> \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -55,8 +71,13 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 Or with a values file:
 
 ```bash
+# Latest version (recommended)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.2 \
+  -f my-values.yaml
+
+# Specific version (check GitHub releases for available versions)
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version <version> \
   -f my-values.yaml
 ```
 
