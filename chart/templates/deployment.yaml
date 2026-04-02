@@ -51,6 +51,9 @@ spec:
           set -e
           # Fix ownership on all mounted directories
           chown -R 1000:1000 /home/opencode/workspace /home/opencode/.local /home/opencode/.config 2>/dev/null || true
+          # Create opencode subdirectory if it doesn't exist (main app needs it)
+          mkdir -p /home/opencode/.config/opencode 2>/dev/null || true
+          chown -R 1000:1000 /home/opencode/.config/opencode 2>/dev/null || true
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -65,7 +68,6 @@ spec:
           mountPath: /home/opencode/.local
         - name: config
           mountPath: /home/opencode/.config
-          subPath: opencode
       {{- if .Values.identity.enabled }}
       initContainers:
       - name: init-identity
