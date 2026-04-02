@@ -72,9 +72,9 @@ spec:
         - name: workspace
           mountPath: /home/opencode/workspace
         - name: data
-          mountPath: /home/opencode/.local/share/opencode
+          mountPath: /home/opencode/.local
         - name: config
-          mountPath: /home/opencode/.config/opencode
+          mountPath: /home/opencode/.config
       {{- if $root.Values.identity.enabled }}
       initContainers:
       - name: init-identity
@@ -110,9 +110,9 @@ spec:
         - name: workspace
           mountPath: /home/opencode/workspace
         - name: data
-          mountPath: /home/opencode/.local/share/opencode
+          mountPath: /home/opencode/.local
         - name: config
-          mountPath: /home/opencode/.config/opencode
+          mountPath: /home/opencode/.config
       {{- end }}
       containers:
       - name: opencode
@@ -167,9 +167,9 @@ spec:
         {{- end }}
         volumeMounts:
         - name: config
-          mountPath: /home/opencode/.config/opencode
+          mountPath: /home/opencode/.config
         - name: data
-          mountPath: /home/opencode/.local/share/opencode
+          mountPath: /home/opencode/.local
         - name: workspace
           mountPath: /home/opencode/workspace
         {{- with $root.Values.extraVolumeMounts }}
