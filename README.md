@@ -45,6 +45,11 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 ```bash
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
   --version 0.1.2 \
+<<<<<<< HEAD
+  --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
+  --set image.tag=0.1.2 \
+=======
+>>>>>>> origin/main
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
