@@ -81,19 +81,6 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
   -f my-values.yaml
 ```
 
-Or with a values file:
-
-```bash
-# Latest version (recommended)
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  -f my-values.yaml
-
-# Specific version
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.5 \
-  -f my-values.yaml
-```
-
 > **Namespace is required** — the chart will fail if installed into `default`.
 
 ### Verify
