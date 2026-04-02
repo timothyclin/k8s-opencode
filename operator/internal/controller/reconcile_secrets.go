@@ -31,54 +31,56 @@ import (
 
 const providerSecretsName = "provider-api-keys"
 
-// reconcileSecrets copies provider API key secrets from their source namespaces
-// into the workspace namespace.
-func (r *OpenCodeWorkspaceReconciler) reconcileSecrets(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) error {
-	// Collect API keys from referenced secrets
-	apiKeys := make(map[string][]byte)
+type APIKeys struct {
+	Anthropic  string
+	OpenAI     string
+	OpenRouter string
+}
 
-	// Anthropic
+func (r *OpenCodeWorkspaceReconciler) reconcileSecrets(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) (*APIKeys, error) {
+	apiKeys := make(map[string][]byte)
+	result := &APIKeys{}
+
 	if workspace.Spec.Providers.Anthropic.Enabled {
 		ref := workspace.Spec.Providers.Anthropic.APIKeySecretRef
 		if ref.Name != "" && ref.Namespace != "" {
 			key, err := r.getSecretKey(ctx, ref.Namespace, ref.Name, "api-key")
 			if err != nil {
-				return fmt.Errorf("failed to get Anthropic API key: %w", err)
+				return nil, fmt.Errorf("failed to get Anthropic API key: %w", err)
 			}
 			apiKeys["ANTHROPIC_API_KEY"] = key
+			result.Anthropic = string(key)
 		}
 	}
 
-	// OpenAI
 	if workspace.Spec.Providers.OpenAI.Enabled {
 		ref := workspace.Spec.Providers.OpenAI.APIKeySecretRef
 		if ref.Name != "" && ref.Namespace != "" {
 			key, err := r.getSecretKey(ctx, ref.Namespace, ref.Name, "api-key")
 			if err != nil {
-				return fmt.Errorf("failed to get OpenAI API key: %w", err)
+				return nil, fmt.Errorf("failed to get OpenAI API key: %w", err)
 			}
 			apiKeys["OPENAI_API_KEY"] = key
+			result.OpenAI = string(key)
 		}
 	}
 
-	// OpenRouter
 	if workspace.Spec.Providers.OpenRouter.Enabled {
 		ref := workspace.Spec.Providers.OpenRouter.APIKeySecretRef
 		if ref.Name != "" && ref.Namespace != "" {
 			key, err := r.getSecretKey(ctx, ref.Namespace, ref.Name, "api-key")
 			if err != nil {
-				return fmt.Errorf("failed to get OpenRouter API key: %w", err)
+				return nil, fmt.Errorf("failed to get OpenRouter API key: %w", err)
 			}
 			apiKeys["OPENROUTER_API_KEY"] = key
+			result.OpenRouter = string(key)
 		}
 	}
 
-	// If no API keys are configured, skip creating the secret
 	if len(apiKeys) == 0 {
-		return nil
+		return result, nil
 	}
 
-	// Create or update the provider secrets in the workspace namespace
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      providerSecretsName,
@@ -97,10 +99,10 @@ func (r *OpenCodeWorkspaceReconciler) reconcileSecrets(ctx context.Context, work
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("failed to reconcile secrets %q: %w", providerSecretsName, err)
+		return nil, fmt.Errorf("failed to reconcile secrets %q: %w", providerSecretsName, err)
 	}
 
-	return nil
+	return result, nil
 }
 
 // getSecretKey retrieves a specific key from a secret in another namespace.
