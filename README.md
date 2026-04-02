@@ -56,9 +56,9 @@ users:
 
 ```bash
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.1 \
+  --version 0.1.2 \
   --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
-  --set image.tag=0.1.1 \
+  --set image.tag=0.1.2 \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -68,7 +68,19 @@ Or with a values file:
 
 ```bash
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.1 \
+  --version 0.1.2 \
+  --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
+  --set image.tag=0.1.2 \
+  --set providers.anthropic.enabled=true \
+  --set providers.anthropic.apiKey=sk-ant-your-key \
+  --set serverPassword=your-secure-password
+```
+
+Or with a values file:
+
+```bash
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.2 \
   -f my-values.yaml
 ```
 

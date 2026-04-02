@@ -156,6 +156,24 @@ helm template my-release chart/ -f chart/values.yaml
 helm install my-release chart/ --dry-run --debug
 ```
 
+### Release Checklist (Chart or Image Updates)
+
+Whenever a new chart version is tagged or Docker images are updated:
+
+1. **Verify pipelines run cleanly** — check GitHub Actions workflow status
+2. **Verify published artifacts are reachable** — confirm OCI chart and container images are publicly accessible
+3. **Update README.md** — bump all version references, update install commands, ensure documentation matches the release
+4. **Update docs/** — any affected documentation files (architecture, customization, maintenance) must reflect the changes
+
+### Release Checklist (Chart or Image Updates)
+
+Whenever a new chart version is tagged or Docker images are updated:
+
+1. **Verify pipelines run cleanly** — check GitHub Actions workflow status
+2. **Verify published artifacts are reachable** — confirm OCI chart and container images are publicly accessible
+3. **Update README.md** — bump all version references, update install commands, ensure documentation matches the release
+4. **Update docs/** — any affected documentation files (architecture, customization, maintenance) must reflect the changes
+
 ### Deployment Commands
 
 The chart is published to GHCR as an OCI artifact. Use these for actual deployments:
@@ -163,7 +181,7 @@ The chart is published to GHCR as an OCI artifact. Use these for actual deployme
 ```bash
 # Install from GHCR (production)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.1 -f values.yaml
+  --version 0.1.2 -f values.yaml
 
 # Upgrade from GHCR (production)
 helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
