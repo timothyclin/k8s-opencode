@@ -1,0 +1,45 @@
+name: operator-ci
+
+on:
+  pull_request:
+    paths:
+      - "operator/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "operator/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: operator
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: operator/go.mod
+          cache-dependency-path: operator/go.sum
+
+      - name: Verify manifests
+        run: |
+          make manifests generate
+          if ! git diff --quiet; then
+            echo "Generated files are out of date. Run 'make manifests generate' and commit."
+            git diff
+            exit 1
+          fi
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
