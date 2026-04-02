@@ -165,14 +165,51 @@ Whenever a new chart version is tagged or Docker images are updated:
 3. **Update README.md** — bump all version references, update install commands, ensure documentation matches the release
 4. **Update docs/** — any affected documentation files (architecture, customization, maintenance) must reflect the changes
 
-### Release Checklist (Chart or Image Updates)
+### Version Synchronization (CRITICAL)
 
-Whenever a new chart version is tagged or Docker images are updated:
+**This is an automated process handled by CI, not manual edits.**
 
-1. **Verify pipelines run cleanly** — check GitHub Actions workflow status
-2. **Verify published artifacts are reachable** — confirm OCI chart and container images are publicly accessible
-3. **Update README.md** — bump all version references, update install commands, ensure documentation matches the release
-4. **Update docs/** — any affected documentation files (architecture, customization, maintenance) must reflect the changes
+When a tag like `v0.1.4` is pushed, the CI workflows MUST automatically synchronize version numbers:
+
+| File | What to Update | Example |
+|------|----------------|---------|
+| `chart/Chart.yaml` | `version` and `appVersion` | `version: 0.1.4`, `appVersion: "0.1.4"` |
+| `chart/values.yaml` | `image.tag` | `tag: "0.1.4"` |
+| `chart/values.yaml` | `auth.router.image.tag` | `tag: "0.1.4"` |
+
+**Why this matters:**
+- Chart version (Chart.yaml `version`) must match the tag, otherwise OCI push fails
+- Image tags must be consistent, otherwise helm install pulls wrong image version
+- Version mismatch causes "chart not found" and "image not found" errors
+
+**CI Workflow Implementation:**
+
+The publish workflows (`publish-chart.yml` and `publish-images.yml`) MUST:
+1. Extract version from git tag: `VERSION=${GITHUB_REF#refs/tags/v}`
+2. Update Chart.yaml: `yq -i ".version = \"$VERSION\"" chart/Chart.yaml`
+3. Update values.yaml: `yq -i ".image.tag = \"$VERSION\"" chart/values.yaml`
+4. Update auth-router tag: `yq -i ".auth.router.image.tag = \"$VERSION\"" chart/values.yaml`
+5. Commit the version changes back to the branch
+6. Then package and push
+
+**Common failure patterns (DO NOT do):**
+- ❌ Manually editing Chart.yaml/values.yaml before tagging
+- ❌ Tagging without running CI (e.g., local tag push)
+- ❌ Pushing tags but not letting CI update versions
+- ❌ Forgetting to update auth.router.image.tag
+
+**Correct workflow:**
+```bash
+# Just push a tag - CI handles everything else
+git tag v0.1.5
+git push origin v0.1.5
+# CI will:
+#   1. Update chart/Chart.yaml version to 0.1.5
+#   2. Update chart/values.yaml image tags to 0.1.5
+#   3. Commit those changes
+#   4. Build and push images to ghcr.io/timothyclin/k8s-opencode/*:0.1.5
+#   5. Build and push chart to oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s:0.1.5
+```
 
 ### Deployment Commands
 

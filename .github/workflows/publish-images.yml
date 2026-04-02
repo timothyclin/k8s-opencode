@@ -10,7 +10,35 @@ permissions:
   packages: write
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update values.yaml image tags
+        run: |
+          # Update main image tag
+          yq -i ".image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
+          # Update auth router image tag
+          yq -i ".auth.router.image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
+          # Show updated values
+          cat chart/values.yaml | grep -E "^image:|^  tag:|^  router:|^    tag:"
+
+      - name: Commit version update
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update image tags to ${{ steps.version.outputs.VERSION }}"
+          file_pattern: chart/values.yaml
+
   auth-router:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,8 +75,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.setup.outputs.version }}
 
   opencode-workspace:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

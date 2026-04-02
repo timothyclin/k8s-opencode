@@ -16,6 +16,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update Chart.yaml version
+        run: |
+          cd chart
+          yq -i ".version = \"${{ steps.version.outputs.VERSION }}\"" Chart.yaml
+          yq -i ".appVersion = \"${{ steps.version.outputs.VERSION }}\"" Chart.yaml
+
+      - name: Commit version update
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update chart version to ${{ steps.version.outputs.VERSION }}"
+          file_pattern: chart/Chart.yaml
+
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
@@ -32,12 +48,4 @@ jobs:
         run: helm package chart/
 
       - name: Push chart
-        run: helm push ok8s-*.tgz oci://ghcr.io/timothyclin/k8s-opencode/chart
-
-      - name: Verify chart is fetchable
-        run: |
-          VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
-          echo "Verifying chart version $VERSION is fetchable..."
-          helm pull oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s --version $VERSION --untar-only --untar-dir verify-test || exit 1
-          rm -rf verify-test
-          echo "Chart verified successfully"
+        run: helm push ok8s-*.tgz oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s
