@@ -52,10 +52,9 @@ func (r *OpenCodeWorkspaceReconciler) reconcilePVCs(ctx context.Context, workspa
 		workspacePVC.Spec.Resources.Requests = corev1.ResourceList{
 			corev1.ResourceStorage: workspaceSize,
 		}
-		if storageClassName != "" {
+		// Only set storageClassName if explicitly configured (it's immutable after creation)
+		if storageClassName != "" && workspacePVC.Spec.StorageClassName == nil {
 			workspacePVC.Spec.StorageClassName = &storageClassName
-		} else {
-			workspacePVC.Spec.StorageClassName = nil
 		}
 		return nil
 	})
@@ -78,10 +77,8 @@ func (r *OpenCodeWorkspaceReconciler) reconcilePVCs(ctx context.Context, workspa
 		dataPVC.Spec.Resources.Requests = corev1.ResourceList{
 			corev1.ResourceStorage: dataSize,
 		}
-		if storageClassName != "" {
+		if storageClassName != "" && dataPVC.Spec.StorageClassName == nil {
 			dataPVC.Spec.StorageClassName = &storageClassName
-		} else {
-			dataPVC.Spec.StorageClassName = nil
 		}
 		return nil
 	})
