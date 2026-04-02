@@ -7,5 +7,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -o manager cmd/main.go
 
 FROM alpine:3.20
+RUN adduser -D -u 65532 nonroot
 COPY --from=builder /app/manager /manager
+USER 65532:65532
 ENTRYPOINT ["/manager"]
