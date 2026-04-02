@@ -1,14 +1,18 @@
 # k8s-opencode
 
-OpenCode + Oh-My-OpenCode on Kubernetes, with Tailscale connectivity for remote
-access and laptop MCP servers.
+OpenCode on Kubernetes, with Tailscale connectivity for remote access and laptop
+MCP servers.
 
 ## What This Is
 
-A Helm chart that deploys [OpenCode](https://opencode.ai) (AI coding agent) with
-optional [Oh-My-OpenAgent](https://github.com/code-yeongyu/oh-my-openagent)
-orchestration on your Kubernetes cluster. Tailscale provides secure access from
-anywhere — no public ports, no ingress controllers, no TLS cert management.
+Deploy [OpenCode](https://opencode.ai) (AI coding agent) on your Kubernetes
+cluster with two deployment options:
+
+- **Single-user**: Helm chart → simple personal deployment
+- **Multi-user**: Kubernetes operator → dynamic user provisioning via CRD
+
+Tailscale provides secure access from anywhere — no public ports, no ingress
+controllers, no TLS cert management.
 
 **Two-way connectivity:**
 
@@ -16,34 +20,18 @@ anywhere — no public ports, no ingress controllers, no TLS cert management.
 - **Cluster → Your laptop**: OpenCode agents call MCP servers running locally on
   your machine
 
-## Modes
+## Deployment Options
 
-### Single-User Mode (default)
+| Mode | Tool | Use Case |
+|------|------|----------|
+| Single-user | Helm chart | Personal use, simple setup |
+| Multi-user | Operator + CRD | Teams, dynamic provisioning, enterprise |
 
-One OpenCode instance. Simple, personal use. Uses a standard `Deployment`.
+---
 
-```yaml
-mode: "single"
-```
+## Single-User Mode (Helm Chart)
 
-### Multi-User Mode
-
-Per-user isolation with dedicated StatefulSet, PVCs, ConfigMap, Secret, and
-ingress per user. Shared oauth2-proxy for OIDC authentication and an internal
-router for host-based routing to each user service.
-
-```yaml
-mode: "multi"
-users:
-  - name: alice
-    password: "secure-password"
-    providers:
-      anthropic:
-        enabled: true
-        apiKey: "sk-ant-..."
-```
-
-## Quick Start
+One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
 ### Prerequisites
 
@@ -52,13 +40,11 @@ users:
 - Tailscale account (free tier works)
 - At least one LLM provider API key
 
-### 1. Install
+### Install
 
 ```bash
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.1 \
-  --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
-  --set image.tag=0.1.1 \
+  --version 0.1.2 \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -68,19 +54,19 @@ Or with a values file:
 
 ```bash
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.1 \
+  --version 0.1.2 \
   -f my-values.yaml
 ```
 
-> **Namespace is required** — the chart will fail if installed into `default`. Always use `-n <namespace>`.
+> **Namespace is required** — the chart will fail if installed into `default`.
 
-### 2. Verify
+### Verify
 
 ```bash
-helm test opencode
+helm test ok8s -n opencode
 ```
 
-### 3. Access OpenCode
+### Access OpenCode
 
 After enabling Tailscale ingress (see [Tailscale Setup](#tailscale-setup)):
 
@@ -88,6 +74,131 @@ After enabling Tailscale ingress (see [Tailscale Setup](#tailscale-setup)):
 https://opencode.<your-tailnet>.ts.net
 Password: (your serverPassword value)
 ```
+
+### Configuration
+
+See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
+
+| Section | Purpose |
+|---------|---------|
+| `providers.*` | LLM API keys (anthropic, openai, google) |
+| `serverPassword` | HTTP auth for the OpenCode server |
+| `mcp.remote[]` | Remote MCP servers (URLs) |
+| `mcp.laptopServers[]` | Laptop MCP servers (via Tailscale egress) |
+| `ingress.enabled` | Expose OpenCode UI to tailnet |
+| `kubedock.*` | Docker API → K8s Pod translation |
+| `persistence.*` | Storage for config and workspace |
+
+---
+
+## Multi-User Mode (Operator)
+
+Dynamic user provisioning via Kubernetes CRD. Each user gets an isolated
+workspace with dedicated storage, config, and network policy.
+
+### Prerequisites
+
+- Kubernetes cluster (ARM64 or amd64)
+- kubectl configured
+- Tailscale Kubernetes Operator installed
+
+### Install the Operator
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/operator/dist/install.yaml
+```
+
+Or build from source:
+
+```bash
+cd operator
+make deploy IMG=ghcr.io/timothyclin/k8s-opencode/operator:latest
+```
+
+### Create a Workspace
+
+```yaml
+apiVersion: opencode.opencode.io/v1alpha1
+kind: OpenCodeWorkspace
+metadata:
+  name: alice
+spec:
+  email: "alice@example.com"
+  providers:
+    anthropic:
+      enabled: true
+      apiKeySecretRef:
+        name: alice-api-keys
+        namespace: opencode-system
+        key: anthropic
+    openai:
+      enabled: false
+    openrouter:
+      enabled: false
+  storage:
+    workspace: "20Gi"
+    data: "5Gi"
+```
+
+```bash
+kubectl apply -f alice-workspace.yaml
+```
+
+### What the Operator Creates
+
+For each `OpenCodeWorkspace` CR, the operator reconciles:
+
+- **Namespace** — `opencode-<name>` (isolated per user)
+- **PVCs** — `workspace-pvc` and `data-pvc` for persistent storage
+- **ConfigMap** — `opencode-config` with `opencode.json` configuration
+- **NetworkPolicy** — isolates user workloads
+- **Service** — ClusterIP on port 4096
+- **StatefulSet** — single-replica OpenCode pod
+
+### API Key Management
+
+API keys can be provided via a Secret reference:
+
+```yaml
+spec:
+  providers:
+    anthropic:
+      enabled: true
+      apiKeySecretRef:
+        name: my-secret       # Secret name
+        namespace: default    # Secret namespace
+        key: anthropic-key    # Key within the Secret
+```
+
+Or use OAuth (no API key needed):
+
+```yaml
+spec:
+  providers:
+    anthropic:
+      enabled: true
+      # No apiKeySecretRef — uses OAuth
+```
+
+### Access User Workspace
+
+Each workspace gets its own namespace. Access via port-forward or Tailscale
+ingress:
+
+```bash
+kubectl port-forward -n opencode-alice svc/opencode 4096:4096
+```
+
+### Delete a Workspace
+
+```bash
+kubectl delete opencodeworkspace alice
+```
+
+The operator's finalizer automatically cleans up the user namespace and all
+resources.
+
+---
 
 ## Tailscale Setup
 
@@ -106,10 +217,11 @@ Get your OAuth client from
 [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth).
 Required scopes: `devices`, `services`, `keys`.
 
-### Enable Ingress
+### Enable Ingress (Single-User Helm)
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f my-values.yaml \
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode \
+  -f my-values.yaml \
   --set ingress.enabled=true
 ```
 
@@ -118,7 +230,7 @@ helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 For each MCP server running on your laptop:
 
 ```yaml
-# my-values.yaml
+# my-values.yaml (Helm) or in CRD spec (Operator)
 mcp:
   laptopServers:
     - name: playwright
@@ -126,162 +238,10 @@ mcp:
       port: 3000
 ```
 
-The chart creates a Tailscale egress proxy so the cluster can reach your
-laptop's MCP server.
+The chart/operator creates a Tailscale egress proxy so the cluster can reach
+your laptop's MCP server.
 
-## Configuration
-
-See [values.yaml](chart/values.yaml) for all options. Key sections:
-
-| Section               | Purpose                                                  |
-| --------------------- | -------------------------------------------------------- |
-| `mode`                | `"single"` (Deployment) or `"multi"` (StatefulSet)       |
-| `users[]`             | Per-user config (multi-user mode only)                   |
-| `sharedMcp[]`         | MCP servers shared across all users                      |
-| `sharedSkills`        | Skills shared across all users                           |
-| `providers.*`         | LLM API keys (anthropic, openai, google)                 |
-| `serverPassword`      | HTTP auth for the OpenCode server                        |
-| `auth.oidc.*`         | OIDC authentication via oauth2-proxy (multi-user mode)   |
-| `omo.*`               | Oh-My-OpenCode agent config                              |
-| `mcp.remote[]`        | Remote MCP servers (URLs)                                |
-| `mcp.laptopServers[]` | Laptop MCP servers (via Tailscale cluster egress)        |
-| `ingress.enabled`     | Expose OpenCode UI to tailnet                            |
-| `secrets.backend`     | Secret management: `plain`, `sealed`, `sops`, `external` |
-| `kubedock.*`          | Docker API → K8s Pod translation for test containers     |
-| `identity.*`          | Default identity files (AGENTS.md, .cursorrules, etc.)   |
-| `persistence.*`       | Storage for config data and workspace                    |
-
-## Architecture
-
-### Single-user mode
-
-```
-Your Tail net
-├── Laptop (Tailscale node)
-│   └── Local MCP servers (Playwright, browser tools, etc.)
-│
-└── ARM64 k8s Cluster
-    ├── Tailscale Operator
-    │   ├── Ingress proxy  ← exposes OpenCode UI to tailnet
-    │   └── Egress proxies ← routes cluster traffic to laptop MCPs
-    │
-    └── OpenCode Pod
-        ├── opencode serve :4096
-        ├── oh-my-opencode plugin
-        ├── kubedock (optional) ← Docker API → K8s Pod translation
-        └── MCP config (remote + laptop)
-```
-
-### Multi-user mode (StatefulSet + oauth2-proxy)
-
-In multi-user mode (`mode: "multi"`), each user gets:
-
-- **Dedicated StatefulSet** — one replica per user, fully isolated
-- **Per-user ConfigMap** — `opencode.jsonc` and `oh-my-opencode.jsonc`
-- **Per-user Secret** — server password and API keys
-- **Per-user PVCs** — data and workspace storage
-- **Per-user Ingress** — Tailscale ingress with user-specific hostname
-- **Shared oauth2-proxy** — single OIDC proxy in front of all users
-
-```
-Your Tailnet
-├── Laptop (Tailscale node)
-│   └── Local MCP servers (Playwright, browser tools, etc.)
-│
-└── ARM64 k8s Cluster
-    ├── Tailscale Operator
-    │   ├── Ingress proxies  ← one per user (e.g., opencode-alice-<ns>.ts.net)
-    │   └── Egress proxies   ← routes cluster traffic to laptop MCPs
-    │
-    ├── oauth2-proxy (shared)
-    │   └── OIDC authentication for all users
-    ├── Nginx router
-    │   └── Host-based routing to per-user services
-    │
-    ├── alice StatefulSet
-    │   ├── ConfigMap (opencode.jsonc)
-    │   ├── Secret (alice API keys)
-    │   ├── kubedock Deployment (optional)
-    │   └── PVCs (data + workspace)
-    │
-    └── bob StatefulSet
-        ├── ConfigMap (opencode.jsonc)
-        ├── Secret (bob API keys)
-        ├── kubedock Deployment (optional)
-        └── PVCs (data + workspace)
-```
-
-## Multi-User Setup
-
-### Enable multi-user mode
-
-```yaml
-mode: "multi"
-users:
-  - name: alice
-    password: "secure-password"
-    workspaceSize: 20Gi
-    providers:
-      anthropic:
-        enabled: true
-        apiKey: "sk-ant-..."
-```
-
-Each user gets their own URL:
-- Alice: `https://opencode-alice-<namespace>.<tailnet>.ts.net`
-- Bob: `https://opencode-bob-<namespace>.<tailnet>.ts.net`
-
-### oauth2-proxy OIDC configuration
-
-See [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode) for full setup instructions.
-
-Quick config reference:
-
-```yaml
-auth:
-  oidc:
-    enabled: true
-    provider: "https://accounts.google.com"        # OIDC issuer URL
-    clientId: "your-client-id"
-    clientSecret: "your-client-secret"
-    cookieSecret: "base64-32-byte-secret"
-    emailDomain: "example.com"                     # Or "*" for any domain
-    hostname: "ok8s-auth"                          # Single auth hostname (default)
-    cookieDomain: ".<tailnet>.ts.net"              # REQUIRED — your tailnet domain with leading dot
-    ingress:
-      enabled: true                                # Creates Tailscale ingress for auth
-```
-
-> **One callback URL for ALL users:** `https://ok8s-auth-<namespace>.<tailnet>.ts.net/oauth2/callback`
-
-### Maintenance operations
-
-Add user:
-
-```bash
-./scripts/add-user.sh alice | tee -a my-values.yaml
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f my-values.yaml
-```
-
-Remove user:
-
-```bash
-./scripts/remove-user.sh my-values.yaml alice default
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f my-values.yaml
-```
-
-Backup and restore:
-
-```bash
-./scripts/backup-user.sh opencode alice default ./alice-workspace.tar.gz
-./scripts/restore-user.sh opencode alice default ./alice-workspace.tar.gz
-```
-
-List users:
-
-```bash
-./scripts/list-users.sh opencode default
-```
+---
 
 ## Kubedock: Test Containers as Kubernetes Pods
 
@@ -289,27 +249,16 @@ Kubedock translates the Docker API into Kubernetes Pod creation. This prevents
 OOM kills from running Docker-in-Docker (DinD) sidecars by spawning test
 containers as native K8s Pods instead.
 
-### Enable Kubedock
+### Enable Kubedock (Single-User)
 
 ```yaml
 kubedock:
   enabled: true
-  # Optional: extra arguments for kubedock
-  extraArgs: []
-  # - "--port-forward"
 ```
-
-When enabled, the chart:
-- **Single-user mode**: Deploys a shared kubedock instance
-- **Multi-user mode**: Deploys per-user kubedock instances with NetworkPolicy
-  isolation between users
-- Injects `DOCKER_HOST`, `TESTCONTAINERS_RYUK_DISABLED`, and
-  `TESTCONTAINERS_CHECKS_DISABLE` env vars into agent pods
 
 ### Testcontainers Configuration
 
-Set these environment variables in your test framework (auto-injected when
-kubedock is enabled):
+These environment variables are auto-injected when kubedock is enabled:
 
 ```yaml
 DOCKER_HOST: "tcp://<kubedock-service>:2475"
@@ -317,7 +266,56 @@ TESTCONTAINERS_RYUK_DISABLED: "true"
 TESTCONTAINERS_CHECKS_DISABLE: "true"
 ```
 
-## Secret Management
+---
+
+## Architecture
+
+### Single-user mode (Helm)
+
+```
+Your Tailnet
+├── Laptop (Tailscale node)
+│   └── Local MCP servers (Playwright, browser tools, etc.)
+│
+└── Kubernetes Cluster
+    ├── Tailscale Operator
+    │   ├── Ingress proxy  ← exposes OpenCode UI to tailnet
+    │   └── Egress proxies ← routes cluster traffic to laptop MCPs
+    │
+    └── OpenCode Pod (Deployment)
+        ├── opencode serve :4096
+        ├── kubedock (optional)
+        └── MCP config
+```
+
+### Multi-user mode (Operator)
+
+```
+Your Tailnet
+├── Laptop (Tailscale node)
+│   └── Local MCP servers
+│
+└── Kubernetes Cluster
+    ├── Tailscale Operator
+    │   └── Per-user ingress proxies
+    │
+    ├── OpenCode Operator (operator-system namespace)
+    │   └── Watches OpenCodeWorkspace CRs
+    │
+    ├── opencode-alice namespace
+    │   ├── StatefulSet (1 replica)
+    │   ├── PVCs (workspace + data)
+    │   ├── ConfigMap (opencode.json)
+    │   ├── NetworkPolicy
+    │   └── Service
+    │
+    └── opencode-bob namespace
+        └── (same structure)
+```
+
+---
+
+## Secret Management (Single-User Helm)
 
 Four backends supported:
 
@@ -340,12 +338,33 @@ secrets:
   externalSecretStore: "my-secret-store"
 ```
 
-## Roadmap
+---
 
-- [ ] **Dynamic user management** — Replace static values.yaml user definitions
-  with an external identity provider (Authentik, Keycloak, Authelia) or custom
-  CRD + operator for Kubernetes-native user lifecycle management. See
-  [docs/maintenance.md](docs/maintenance.md) for current procedures.
+## Development
+
+### Build Operator Locally
+
+```bash
+cd operator
+make manifests generate  # Regenerate CRDs and code
+make test                # Run unit tests
+make run                 # Run locally against current kubeconfig
+```
+
+### Build and Push Operator Image
+
+```bash
+cd operator
+make docker-build docker-push IMG=ghcr.io/timothyclin/k8s-opencode/operator:dev
+```
+
+### Test in Kind
+
+```bash
+kind create cluster --name opencode-test
+make deploy IMG=ghcr.io/timothyclin/k8s-opencode/operator:dev
+kubectl apply -f config/samples/
+```
 
 ---
 
@@ -353,130 +372,63 @@ secrets:
 
 ## Context
 
-This is a Helm chart for deploying OpenCode with Oh-My-OpenCode on Kubernetes.
-The chart is designed to be open-source and reusable, with all user-specific
-decisions templatized through `values.yaml`.
+This repository provides two ways to deploy OpenCode on Kubernetes:
+
+1. **Helm chart** (`chart/`) — for single-user deployments
+2. **Kubernetes operator** (`operator/`) — for multi-user deployments with CRD
 
 ## Key Architecture Facts
 
 - OpenCode runs as `opencode serve` — a headless HTTP server on port 4096
 - Single replica per user (stateful — stores sessions and workspace on disk)
 - Tailscale handles all external connectivity (no public ingress)
-- Two Tailscale directions: **ingress** (laptop→cluster UI) and **egress**
-  (cluster→laptop MCPs)
-- Default Docker image: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace` (multi-arch)
-- Oh-My-OpenCode is configured via `oh-my-opencode.jsonc` in a ConfigMap
-- MCP servers are configured in `opencode.jsonc` — both remote (URLs) and laptop
-  (Tailscale egress)
-- Multi-user mode uses per-user StatefulSets with shared oauth2-proxy + auth router for OIDC
-- Auth router validates OIDC sessions and enforces email→user binding — users can only access their own workspace
-- Each user must have an `email` field matching their Google Workspace email
-- `cookieDomain` must be set to the tailnet domain (e.g. `.lynx-beta.ts.net`)
+- Default Docker image: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`
+- Operator image: `ghcr.io/timothyclin/k8s-opencode/operator`
 
 ## File Structure
 
 ```
-chart/
+chart/                           # Helm chart for single-user mode
 ├── Chart.yaml
-├── values.yaml                    # All configurable values with descriptions
-├── templates/
-│   ├── _helpers.tpl               # Named templates for config generation
-│   ├── namespace.yaml
-│   ├── deployment.yaml            # Single-user Deployment
-│   ├── statefulset.yaml           # Multi-user per-user StatefulSets
-│   ├── service.yaml               # ClusterIP :4096
-│   ├── configmap.yaml             # Single-user: opencode.jsonc + oh-my-opencode.jsonc
-│   ├── user-configmap.yaml        # Multi-user: per-user configs
-│   ├── user-secret.yaml           # Multi-user: per-user secrets
-│   ├── user-ingress.yaml          # Multi-user: per-user Tailscale ingress
-│   ├── resourcequota.yaml         # Multi-user: namespace resource quota
-│   ├── identity-configmap.yaml    # Identity files (AGENTS.md, etc.)
-│   ├── pvc.yaml                   # Single-user: Data + workspace PVCs
-│   ├── secrets/
-│   │   ├── plain-secrets.yaml     # Standard K8s secrets
-│   │   ├── sealed-secrets.yaml    # Bitnami sealed-secrets (conditional)
-│   │   └── external-secrets.yaml  # external-secrets-operator (conditional)
-│   ├── ingress/
-│   │   └── tailscale-ingress.yaml # Tailscale Ingress (conditional)
-│   ├── tailscale/
-│   │   ├── proxyclass.yaml        # ProxyClass for route acceptance
-│   │   └── egress-services.yaml   # ExternalName Services per laptop MCP
-│   ├── kubedock/
-│   │   ├── serviceaccount.yaml    # Kubedock service account
-│   │   ├── role.yaml              # RBAC role for pod creation
-│   │   ├── rolebinding.yaml       # Role binding
-│   │   ├── deployment.yaml        # Single-user kubedock Deployment
-│   │   ├── service.yaml           # Single-user kubedock Service
-│   │   ├── user-deployment.yaml   # Multi-user per-user kubedock Deployments
-│   │   ├── user-service.yaml      # Multi-user per-user kubedock Services
-│   │   └── networkpolicy.yaml     # NetworkPolicy for user isolation
-│   ├── oauth2-proxy/
-│   │   ├── configmap.yaml         # oauth2-proxy configuration
-│   │   ├── deployment.yaml        # oauth2-proxy deployment
-│   │   ├── service.yaml           # oauth2-proxy service
-│   │   ├── router-configmap.yaml  # host-based router config
-│   │   ├── router-deployment.yaml # host-based router deployment
-│   │   └── router-service.yaml    # host-based router service
-│   └── tests/
-│       └── connection-test.yaml   # helm test
+├── values.yaml
+└── templates/
+
+operator/                        # Kubernetes operator for multi-user mode
+├── api/v1alpha1/               # CRD types (OpenCodeWorkspace)
+├── internal/controller/        # Reconciliation logic
+├── config/crd/                 # Generated CRDs
+├── config/samples/             # Example CRs
+├── Dockerfile
+└── Makefile
+```
+
+## CRD Spec (OpenCodeWorkspace)
+
+```yaml
+spec:
+  email: string                  # Required, must match ^[^@]+@[^@]+$
+  providers:
+    anthropic/openai/openrouter:
+      enabled: boolean
+      apiKeySecretRef:           # Optional — omit for OAuth
+        name: string
+        namespace: string
+        key: string
+  storage:
+    workspace: string            # e.g., "20Gi"
+    data: string                 # e.g., "5Gi"
+    storageClassName: string     # Optional
 ```
 
 ## How to Help
 
-When asked to modify this chart:
+**For Helm chart changes:**
+1. Edit `chart/values.yaml` first
+2. Add templates in `chart/templates/`
+3. Test with `helm template`
 
-1. **Always edit `values.yaml` first** if adding new configuration — add the
-   value with a `# --` comment prefix (for helm-docs)
-2. **Add the template** in the appropriate `templates/` subdirectory
-3. **Use conditional rendering** — every optional feature must be gated by a
-   values flag
-4. **Follow existing patterns** — look at how `ingress.enabled` or
-   `secrets.backend` gates work
-5. **Never hardcode** — all user-specific values (API keys, IPs, hostnames,
-   sizes) must be in values.yaml
-6. **Test with `helm template`** — verify rendered output before claiming
-   completion
-
-When asked to deploy or configure:
-
-1. Start from `examples/values-minimal.yaml` and add only what's needed
-2. **Always use `-n <namespace>`** — the chart rejects installation into `default`
-   ```bash
-   helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace -f my-values.yaml
-   ```
-3. Tailscale operator must be installed separately — this chart does not install
-   it
-4. For laptop MCPs: user needs to provide their laptop's Tailscale IP or
-   MagicDNS name
-5. Secret backend choice depends on their GitOps setup — `plain` for personal,
-   `sealed`/`external` for teams
-
-When asked to set up OIDC for multi-user mode:
-
-1. There is ONE shared OAuth client for ALL users — do NOT create per-user OAuth clients
-2. Register exactly ONE callback URL on that OAuth client:
-   `https://ok8s-auth-<namespace>.<tailnet>.ts.net/oauth2/callback`
-   (e.g. `https://ok8s-auth-opencode.lynx-beta.ts.net/oauth2/callback`)
-3. Generate a cookie secret: `python3 -c "import base64,os; print(base64.b64encode(os.urandom(32)).decode())"`
-4. Set `auth.oidc.cookieDomain` to the tailnet domain with a leading dot (e.g. `.lynx-beta.ts.net`)
-5. The auth Tailscale ingress is created automatically when `auth.oidc.enabled: true` in multi-user mode
-6. See [docs/maintenance.md#oidc-authentication-multi-user-mode](docs/maintenance.md#oidc-authentication-multi-user-mode) for full provider setup steps
-
-## Common Tasks
-
-### Add a new LLM provider
-
-1. Add to `values.yaml` under `providers.*` with `enabled` and `apiKey` fields
-2. Add env var block in `templates/deployment.yaml` (follow existing pattern)
-3. Add secret key in `templates/secrets/plain-secrets.yaml`
-
-### Add a new optional component
-
-1. Add values under a new key in `values.yaml` with `# --` description
-2. Create template with `{{- if .Values.yourKey.enabled }}` guard
-3. Add to an example values file if it's a user-facing feature
-
-### Change the OpenCode image
-
-- User overrides via `image.repository` and `image.tag` in their values file
-- Default image is `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`
+**For operator changes:**
+1. Edit types in `operator/api/v1alpha1/`
+2. Run `make manifests generate`
+3. Implement reconciler logic in `operator/internal/controller/`
+4. Test with `make test`
