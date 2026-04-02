@@ -1,7 +1,7 @@
 # -- OpenCode container image
 image:
   repository: ghcr.io/timothyclin/k8s-opencode/opencode-workspace
-  tag: "0.1.0"
+  tag: "0.1.1"
   pullPolicy: IfNotPresent
 
 # -- Create the release namespace (set to false if installing into an existing namespace)
