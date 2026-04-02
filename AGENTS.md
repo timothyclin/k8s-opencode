@@ -6,47 +6,79 @@ Guidelines for AI agents and human contributors working in this repository.
 
 ## Git Workflow
 
+### MANDATORY: Worktrees for ALL Edits
+
+**Every code edit MUST use a worktree.** No exceptions.
+
+**Why:** Multiple agent sessions may be working concurrently on this repository. Even a "trivial" single-file edit is a potential race condition with another session's work. Worktrees provide complete isolation.
+
+```bash
+# BEFORE making ANY code change:
+cd /path/to/main/repo
+git worktree list                                    # Check for other active sessions
+git worktree add ../k8s-opencode-<task> -b agent/<task>  # Create isolated worktree
+cd ../k8s-opencode-<task>                            # Work here, NOT in main repo
+
+# Make changes, commit frequently
+git add . && git commit -m "feat: description"
+
+# BEFORE removing worktree: INTEGRATE the work
+cd /path/to/main/repo
+git checkout <target-branch>
+git merge agent/<task>                               # Or cherry-pick
+
+# ONLY THEN clean up
+git worktree remove ../k8s-opencode-<task>
+```
+
 ### Branch-First Development
 
-Never commit directly to `main`. Always work on a feature branch.
+Never commit directly to `main`. Always work on a feature branch (via worktree).
+
+### Worktree Conventions
+
+- **Directory naming**: `../<repo>-<short-task-description>`
+- **Branch naming**: `agent/<short-task-description>`
+- **Location**: Always OUTSIDE the main repo (use `../`)
+- **Cleanup**: ALWAYS integrate work before removing worktree
+- **Check first**: Run `git worktree list` before starting — another session may be active
+
+### Integration Before Cleanup (CRITICAL)
+
+Work in a worktree is NOT in the main codebase until merged. If you remove a worktree without integrating:
+- Commits exist only in the branch
+- Branch may be deleted
+- **WORK IS EFFECTIVELY LOST**
 
 ```bash
-git checkout -b feat/my-feature
-# ... make changes ...
-git add -A && git commit -m "feat: add my feature"
-git push -u origin feat/my-feature
+# WRONG: Destroys work
+git worktree remove ../k8s-opencode-task
+
+# CORRECT: Integrate first
+cd /path/to/main/repo
+git checkout target-branch
+git merge agent/task
+git log --oneline -5  # Verify commits present
+git worktree remove ../k8s-opencode-task
 ```
 
-### Git Worktree
+### Conflict Detection = STOP and Verify
 
-Use `git worktree` for parallel work streams — reviewing PRs, hotfixes, or running tests on another branch without stashing or switching context.
+**If you see ANY sign of concurrent work, STOP.** Do not dismiss it as "not my concern."
 
-```bash
-# Add a worktree for a feature branch
-git worktree add ../k8s-opencode-feat-xyz feat/xyz
+Signs of concurrent work:
+- Stash conflicts or unexpected stash entries
+- Merge conflicts when pulling/merging
+- "Your branch has diverged" messages
+- Uncommitted changes you didn't make
 
-# Add a worktree for reviewing a PR
-git worktree add ../k8s-opencode-pr-review pr-branch
+**Required response:**
+1. Check `git worktree list` — are you in a worktree?
+2. Check if other sessions are in worktrees
+3. If BOTH in separate worktrees → safe to proceed
+4. If EITHER in main repo → **STOP and coordinate with user**
 
-# List active worktrees
-git worktree list
-
-# Remove when done
-git worktree remove ../k8s-opencode-feat-xyz
-```
-
-**When to use worktrees:**
-
-- Reviewing a PR while your current branch has uncommitted work
-- Running long tests on one branch while developing on another
-- Hotfixing `main` without disrupting your feature branch
-- Comparing behavior across branches side-by-side
-
-**Worktree conventions:**
-
-- Name worktree directories with a clear suffix: `<repo>-<purpose>`
-- Clean up worktrees promptly after use (`git worktree prune`)
-- Never nest worktrees inside the main repo directory
+"Not my concern" when seeing conflicts is **NEVER acceptable**. The other session's work IS your concern if you're about to overwrite it.
 
 ### Commit Messages
 
