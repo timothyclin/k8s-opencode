@@ -39,14 +39,292 @@ spec:
           spec:
             description: spec defines the desired state of OpenCodeWorkspace
             properties:
-              foo:
-                description: foo is an example field of OpenCodeWorkspace. Edit opencodeworkspace_types.go
-                  to remove/update
+              email:
+                description: Email is the identity email address for the workspace
+                  owner.
+                pattern: ^[^@]+@[^@]+$
                 type: string
+              kubedock:
+                description: Kubedock configures the optional kubedock sidecar.
+                properties:
+                  enabled:
+                    description: Enabled turns on the kubedock sidecar.
+                    type: boolean
+                  resources:
+                    description: Resources defines CPU/memory requests and limits
+                      for kubedock.
+                    properties:
+                      claims:
+                        description: |-
+                          Claims lists the names of resources, defined in spec.resourceClaims,
+                          that are used by this container.
+
+                          This field depends on the
+                          DynamicResourceAllocation feature gate.
+
+                          This field is immutable. It can only be set for containers.
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: |-
+                                Name must match the name of one entry in pod.spec.resourceClaims of
+                                the Pod where this field is used. It makes that resource available
+                                inside a container.
+                              type: string
+                            request:
+                              description: |-
+                                Request is the name chosen for a request in the referenced claim.
+                                If empty, everything from the claim is made available, otherwise
+                                only the result of this request.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Limits describes the maximum amount of compute resources allowed.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Requests describes the minimum amount of compute resources required.
+                          If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                          otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                    type: object
+                type: object
+              providers:
+                description: Providers configures one or more AI providers.
+                properties:
+                  anthropic:
+                    description: Anthropic config.
+                    properties:
+                      apiKeySecretRef:
+                        description: APIKeySecretRef references a Secret containing
+                          the provider API key.
+                        properties:
+                          name:
+                            description: Name is the Secret name.
+                            type: string
+                          namespace:
+                            description: Namespace is the Secret namespace.
+                            type: string
+                        type: object
+                      enabled:
+                        description: Enabled toggles whether this provider is enabled
+                          for the workspace.
+                        type: boolean
+                      model:
+                        default: claude-sonnet-4-20250514
+                        description: Model is the Anthropic model identifier.
+                        type: string
+                    type: object
+                  openai:
+                    description: OpenAI config.
+                    properties:
+                      apiKeySecretRef:
+                        description: APIKeySecretRef references a Secret containing
+                          the provider API key.
+                        properties:
+                          name:
+                            description: Name is the Secret name.
+                            type: string
+                          namespace:
+                            description: Namespace is the Secret namespace.
+                            type: string
+                        type: object
+                      enabled:
+                        description: Enabled toggles whether this provider is enabled
+                          for the workspace.
+                        type: boolean
+                      model:
+                        description: Model is the provider-specific model identifier.
+                        type: string
+                    type: object
+                  openrouter:
+                    description: OpenRouter config.
+                    properties:
+                      apiKeySecretRef:
+                        description: APIKeySecretRef references a Secret containing
+                          the provider API key.
+                        properties:
+                          name:
+                            description: Name is the Secret name.
+                            type: string
+                          namespace:
+                            description: Namespace is the Secret namespace.
+                            type: string
+                        type: object
+                      enabled:
+                        description: Enabled toggles whether this provider is enabled
+                          for the workspace.
+                        type: boolean
+                      model:
+                        description: Model is the provider-specific model identifier.
+                        type: string
+                    type: object
+                type: object
+              resources:
+                description: Resources defines CPU/memory requests and limits for
+                  the workspace workload.
+                properties:
+                  claims:
+                    description: |-
+                      Claims lists the names of resources, defined in spec.resourceClaims,
+                      that are used by this container.
+
+                      This field depends on the
+                      DynamicResourceAllocation feature gate.
+
+                      This field is immutable. It can only be set for containers.
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: |-
+                            Name must match the name of one entry in pod.spec.resourceClaims of
+                            the Pod where this field is used. It makes that resource available
+                            inside a container.
+                          type: string
+                        request:
+                          description: |-
+                            Request is the name chosen for a request in the referenced claim.
+                            If empty, everything from the claim is made available, otherwise
+                            only the result of this request.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  limits:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: |-
+                      Limits describes the maximum amount of compute resources allowed.
+                      More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    type: object
+                  requests:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: |-
+                      Requests describes the minimum amount of compute resources required.
+                      If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                      otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                      More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    type: object
+                type: object
+              storage:
+                description: Storage defines persistent volume sizes for the workspace.
+                properties:
+                  data:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: Data is the PVC size for ~/.opencode.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  storageClassName:
+                    description: StorageClassName is the StorageClass used for PVCs.
+                      Empty means the cluster default.
+                    type: string
+                  workspace:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: Workspace is the PVC size for /workspace.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                type: object
+              tailscale:
+                description: Tailscale configures tailnet ingress and optional egress
+                  connectivity.
+                properties:
+                  egress:
+                    description: Egress configures optional egress connectivity (e.g.,
+                      to laptop MCP servers).
+                    properties:
+                      enabled:
+                        description: Enabled turns on egress connectivity.
+                        type: boolean
+                      laptopHostname:
+                        description: LaptopHostname is the MagicDNS hostname for the
+                          user's laptop.
+                        type: string
+                      mcpPorts:
+                        description: MCPPorts lists MCP services exposed from the
+                          laptop via ExternalName Services.
+                        items:
+                          description: MCPPort defines a single MCP server port.
+                          properties:
+                            name:
+                              description: Name is a short identifier for the MCP
+                                server.
+                              minLength: 1
+                              type: string
+                            port:
+                              description: Port is the TCP port exposed by the MCP
+                                server.
+                              format: int32
+                              maximum: 65535
+                              minimum: 1
+                              type: integer
+                          required:
+                          - name
+                          - port
+                          type: object
+                        type: array
+                      tags:
+                        description: Tags are tags applied to the egress proxy identity.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  ingressTags:
+                    description: IngressTags are tags applied to the Tailscale ingress
+                      identity.
+                    items:
+                      type: string
+                    type: array
+                type: object
+            required:
+            - email
             type: object
           status:
             description: status defines the observed state of OpenCodeWorkspace
             properties:
+              aclSnippet:
+                description: ACLSnippet is a recommended ACL policy snippet for tailnet
+                  configuration.
+                type: string
               conditions:
                 description: |-
                   conditions represent the current state of the OpenCodeWorkspace resource.
@@ -116,6 +394,26 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              ingressHostname:
+                description: IngressHostname is the tailnet hostname used to reach
+                  the workspace.
+                type: string
+              message:
+                description: Message is a human-readable status message.
+                type: string
+              namespace:
+                description: Namespace is the namespace created/managed for this workspace.
+                type: string
+              phase:
+                description: Phase is a high-level summary of the workspace lifecycle.
+                enum:
+                - Pending
+                - Creating
+                - Reconciling
+                - Running
+                - Failed
+                - Terminating
+                type: string
             type: object
         required:
         - spec
