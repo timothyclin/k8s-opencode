@@ -54,6 +54,10 @@ spec:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+          # Override pod-level runAsNonRoot to allow root in init container
+          {{- if .Values.securityContext.enabled }}
+          runAsNonRoot: false
+          {{- end }}
         volumeMounts:
         - name: workspace
           mountPath: /home/opencode/workspace
