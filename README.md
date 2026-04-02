@@ -55,10 +55,10 @@ users:
 ### 1. Install
 
 ```bash
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace \
-  --version 0.1.0 \
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.1 \
   --set image.repository=ghcr.io/timothyclin/k8s-opencode/opencode-workspace \
-  --set image.tag=0.1.0 \
+  --set image.tag=0.1.1 \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
@@ -67,8 +67,8 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --cre
 Or with a values file:
 
 ```bash
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace \
-  --version 0.1.0 \
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.1 \
   -f my-values.yaml
 ```
 
@@ -109,7 +109,7 @@ Required scopes: `devices`, `services`, `keys`.
 ### Enable Ingress
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f my-values.yaml \
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f my-values.yaml \
   --set ingress.enabled=true
 ```
 
@@ -260,14 +260,14 @@ Add user:
 
 ```bash
 ./scripts/add-user.sh alice | tee -a my-values.yaml
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f my-values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f my-values.yaml
 ```
 
 Remove user:
 
 ```bash
 ./scripts/remove-user.sh my-values.yaml alice default
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f my-values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f my-values.yaml
 ```
 
 Backup and restore:
@@ -442,7 +442,7 @@ When asked to deploy or configure:
 1. Start from `examples/values-minimal.yaml` and add only what's needed
 2. **Always use `-n <namespace>`** — the chart rejects installation into `default`
    ```bash
-   helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace -f my-values.yaml
+   helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace -f my-values.yaml
    ```
 3. Tailscale operator must be installed separately — this chart does not install
    it
