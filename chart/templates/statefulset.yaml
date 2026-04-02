@@ -70,10 +70,8 @@ spec:
           mountPath: /home/opencode/workspace
         - name: data
           mountPath: /home/opencode/.local/share/opencode
-          subPath: ..
         - name: config
           mountPath: /home/opencode/.config/opencode
-          subPath: ..
       {{- if $root.Values.identity.enabled }}
       initContainers:
       - name: init-identity
