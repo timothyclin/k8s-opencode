@@ -37,8 +37,7 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 		ctx := context.Background()
 
 		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Name: resourceName,
 		}
 		opencodeworkspace := &opencodev1alpha1.OpenCodeWorkspace{}
 
@@ -48,10 +47,11 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 			if err != nil && errors.IsNotFound(err) {
 				resource := &opencodev1alpha1.OpenCodeWorkspace{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
+						Name: resourceName,
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: opencodev1alpha1.OpenCodeWorkspaceSpec{
+						Email: "test@example.com",
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

@@ -201,7 +201,7 @@ type OpenCodeWorkspaceStatus struct {
 
 	// Phase is a high-level summary of the workspace lifecycle.
 	//
-	// +kubebuilder:validation:Enum=Pending;Creating;Running;Failed;Terminating
+	// +kubebuilder:validation:Enum=Pending;Creating;Reconciling;Running;Failed;Terminating
 	// +optional
 	Phase string `json:"phase,omitempty"`
 
