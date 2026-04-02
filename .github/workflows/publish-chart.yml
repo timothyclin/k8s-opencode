@@ -33,3 +33,11 @@ jobs:
 
       - name: Push chart
         run: helm push ok8s-*.tgz oci://ghcr.io/timothyclin/k8s-opencode/chart
+
+      - name: Verify chart is fetchable
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
+          echo "Verifying chart version $VERSION is fetchable..."
+          helm pull oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s --version $VERSION --untar-only --untar-dir verify-test || exit 1
+          rm -rf verify-test
+          echo "Chart verified successfully"
