@@ -86,4 +86,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            OPENCODE_VERSION=${{ github.ref_name }}
+            OPENCODE_VERSION=v1.3.13

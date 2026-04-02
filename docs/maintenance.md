@@ -37,7 +37,7 @@ users:
 2. Upgrade the release:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 3. A new StatefulSet will be created for the user.
@@ -48,7 +48,7 @@ helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f va
 2. Upgrade the release:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 3. The user's StatefulSet will be deleted. To reclaim PVC storage:
@@ -63,7 +63,7 @@ kubectl delete pvc -l app.kubernetes.io/instance=opencode,app.kubernetes.io/user
 2. Upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 > **Note**: The password is stored in the per-user Secret. Upgrading will update the Secret, and the pod will restart with the new credentials.
@@ -85,7 +85,7 @@ image:
 2. Upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 > **Recommendation**: Always pin to a specific version tag, not `latest`, for reproducible deployments.
@@ -99,7 +99,7 @@ Oh-My-OpenCode is configured via `oh-my-opencode.jsonc` in the ConfigMap. To upd
 3. Upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 ---
@@ -144,7 +144,7 @@ mcp:
 Remove the entry from `values.yaml` and upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 ---
@@ -209,7 +209,7 @@ identity:
 Then upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 ### Update Identity Files
@@ -218,7 +218,7 @@ helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f va
 2. Upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 3. **Important**: Existing files in `/workspace/` are NOT overwritten. To push
@@ -254,7 +254,7 @@ providers:
 Then upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 ### Multi-User Mode
@@ -390,7 +390,7 @@ spec:
 ### Step 5: Upgrade
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 ### Adding a New User After OIDC is Configured
@@ -398,7 +398,7 @@ helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f va
 No OAuth changes needed — just add the user to `values.yaml` and upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 The single auth hostname handles all users automatically.
@@ -440,7 +440,7 @@ kubedock:
 Then upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 When enabled:
@@ -463,7 +463,7 @@ kubedock:
 Then upgrade:
 
 ```bash
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 ### Testcontainers Configuration

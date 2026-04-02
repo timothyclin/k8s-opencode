@@ -130,11 +130,11 @@ The chart is published to GHCR as an OCI artifact. Use these for actual deployme
 
 ```bash
 # Install from GHCR (production)
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode --create-namespace \
-  --version 0.1.0 -f values.yaml
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version 0.1.1 -f values.yaml
 
 # Upgrade from GHCR (production)
-helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart -n opencode -f values.yaml
+helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode -f values.yaml
 ```
 
 > **Local `./chart` paths** are for development and testing only — they require a clone of the repository. Published deployments should always use the OCI URI.

@@ -4,7 +4,7 @@ OpenCode + Oh-My-OpenCode on Kubernetes with Tailscale connectivity and Kubedock
 
 The chart and container images are published to GitHub Container Registry (GHCR):
 
-- **Chart**: `oci://ghcr.io/timothyclin/k8s-opencode/chart`
+- **Chart**: `oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s/ok8s`
 - **Workspace image**: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`
 - **Auth router image**: `ghcr.io/timothyclin/k8s-opencode/auth-router`
 
