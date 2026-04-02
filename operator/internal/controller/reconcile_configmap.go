@@ -30,36 +30,55 @@ import (
 
 const opencodeConfigMapName = "opencode-config"
 
+// opencodeConfig matches the anomalyco/opencode config schema
+// (NOT opencode-ai/opencode which uses "providers" plural)
 type opencodeConfig struct {
-	Schema    string            `json:"$schema,omitempty"`
-	Providers opencodeProviders `json:"providers"`
+	Schema           string                      `json:"$schema,omitempty"`
+	EnabledProviders []string                    `json:"enabled_providers,omitempty"`
+	Provider         map[string]*providerOptions `json:"provider,omitempty"`
 }
 
-type opencodeProviders struct {
-	Anthropic  opencodeProvider `json:"anthropic"`
-	OpenAI     opencodeProvider `json:"openai"`
-	OpenRouter opencodeProvider `json:"openrouter"`
+// providerOptions holds per-provider configuration
+type providerOptions struct {
+	Options *providerOptionsInner `json:"options,omitempty"`
 }
 
-type opencodeProvider struct {
-	Enabled         bool               `json:"enabled"`
-	Model           string             `json:"model,omitempty"`
-	APIKeySecretRef *opencodeSecretRef `json:"apiKeySecretRef,omitempty"`
+type providerOptionsInner struct {
+	APIKey string `json:"apiKey,omitempty"`
 }
 
-type opencodeSecretRef struct {
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-}
+func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string, apiKeys map[string]string) error {
+	var enabledProviders []string
+	provider := make(map[string]*providerOptions)
 
-func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) error {
+	if workspace.Spec.Providers.Anthropic.Enabled {
+		enabledProviders = append(enabledProviders, "anthropic")
+		if key := apiKeys["anthropic"]; key != "" {
+			provider["anthropic"] = &providerOptions{Options: &providerOptionsInner{APIKey: key}}
+		}
+	}
+
+	if workspace.Spec.Providers.OpenAI.Enabled {
+		enabledProviders = append(enabledProviders, "openai")
+		if key := apiKeys["openai"]; key != "" {
+			provider["openai"] = &providerOptions{Options: &providerOptionsInner{APIKey: key}}
+		}
+	}
+
+	if workspace.Spec.Providers.OpenRouter.Enabled {
+		enabledProviders = append(enabledProviders, "openrouter")
+		if key := apiKeys["openrouter"]; key != "" {
+			provider["openrouter"] = &providerOptions{Options: &providerOptionsInner{APIKey: key}}
+		}
+	}
+
 	config := opencodeConfig{
-		Schema: "https://opencode.ai/config.json",
-		Providers: opencodeProviders{
-			Anthropic:  providerConfig(workspace.Spec.Providers.Anthropic.Enabled, workspace.Spec.Providers.Anthropic.Model, workspace.Spec.Providers.Anthropic.APIKeySecretRef),
-			OpenAI:     providerConfig(workspace.Spec.Providers.OpenAI.Enabled, workspace.Spec.Providers.OpenAI.Model, workspace.Spec.Providers.OpenAI.APIKeySecretRef),
-			OpenRouter: providerConfig(workspace.Spec.Providers.OpenRouter.Enabled, workspace.Spec.Providers.OpenRouter.Model, workspace.Spec.Providers.OpenRouter.APIKeySecretRef),
-		},
+		Schema:           "https://opencode.ai/config.json",
+		EnabledProviders: enabledProviders,
+	}
+
+	if len(provider) > 0 {
+		config.Provider = provider
 	}
 
 	payload, err := json.MarshalIndent(config, "", "  ")
@@ -76,7 +95,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, wo
 		if configMap.Data == nil {
 			configMap.Data = map[string]string{}
 		}
-		configMap.Data["opencode.jsonc"] = string(payload)
+		configMap.Data["opencode.json"] = string(payload)
 		return nil
 	})
 	if err != nil {
@@ -84,19 +103,4 @@ func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, wo
 	}
 
 	return nil
-}
-
-func providerConfig(enabled bool, model string, secretRef opencodev1alpha1.SecretKeyRef) opencodeProvider {
-	return opencodeProvider{
-		Enabled:         enabled,
-		Model:           model,
-		APIKeySecretRef: convertSecretRef(secretRef),
-	}
-}
-
-func convertSecretRef(secretRef opencodev1alpha1.SecretKeyRef) *opencodeSecretRef {
-	if secretRef.Name == "" && secretRef.Namespace == "" {
-		return nil
-	}
-	return &opencodeSecretRef{Name: secretRef.Name, Namespace: secretRef.Namespace}
 }

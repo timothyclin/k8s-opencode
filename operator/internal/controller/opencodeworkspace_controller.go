@@ -121,11 +121,18 @@ func (r *OpenCodeWorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return r.handleReconcileError(ctx, workspace, "NetworkPolicy", err)
 	}
 
-	if err := r.reconcileSecrets(ctx, workspace, namespaceName); err != nil {
+	apiKeys, err := r.reconcileSecrets(ctx, workspace, namespaceName)
+	if err != nil {
 		return r.handleReconcileError(ctx, workspace, "Secrets", err)
 	}
 
-	if err := r.reconcileConfigMap(ctx, workspace, namespaceName); err != nil {
+	apiKeysMap := map[string]string{
+		"anthropic":  apiKeys.Anthropic,
+		"openai":     apiKeys.OpenAI,
+		"openrouter": apiKeys.OpenRouter,
+	}
+
+	if err := r.reconcileConfigMap(ctx, workspace, namespaceName, apiKeysMap); err != nil {
 		return r.handleReconcileError(ctx, workspace, "ConfigMap", err)
 	}
 
