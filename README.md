@@ -60,12 +60,25 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
 
-# Specific version (only if you need an exact version)
+# Specific version (only if you need an exact version - check GitHub releases)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version 0.1.5 \
+  --version <version> \
   --set providers.anthropic.enabled=true \
   --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
+```
+
+Or with a values file:
+
+```bash
+# Latest version (recommended)
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  -f my-values.yaml
+
+# Specific version (check GitHub releases for available versions)
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version <version> \
+  -f my-values.yaml
 ```
 
 Or with a values file:

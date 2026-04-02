@@ -30,6 +30,15 @@ persistence:
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace -f values.yaml
 ```
 
+## Specific Version (if needed)
+
+Check GitHub releases for available versions: https://github.com/timothyclin/k8s-opencode/releases
+
+```bash
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  --version <version> -f values.yaml
+```
+
 ## Key Facts
 
 - **Chart OCI**: `oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s`
