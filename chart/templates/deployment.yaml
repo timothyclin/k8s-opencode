@@ -1,4 +1,5 @@
 {{- if eq .Values.mode "single" }}
+{{- $username := .Values.opencode.username | default "opencode" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -39,9 +40,8 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      # Always run init container to fix PVC permissions (runs as root)
       initContainers:
-      - name: init-permissions
+      - name: init-config
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
@@ -49,37 +49,36 @@ spec:
         - -c
         - |
           set -e
-          # Fix ownership on all mounted directories
-          chown -R 1000:1000 /home/opencode/workspace /home/opencode/.local /home/opencode/.config 2>/dev/null || true
-          # Create opencode subdirectory if it doesn't exist (main app needs it)
-          mkdir -p /home/opencode/.config/opencode 2>/dev/null || true
-          chown -R 1000:1000 /home/opencode/.config/opencode 2>/dev/null || true
-          # Copy config files from ConfigMap to PVC (ConfigMap is read-only, need to copy to writable PVC)
-          if [ -f /etc/opencode-config/opencode.jsonc ]; then
-            cp /etc/opencode-config/opencode.jsonc /home/opencode/.config/opencode/
-            chown 1000:1000 /home/opencode/.config/opencode/opencode.jsonc
+          mkdir -p /home/{{ $username }}/.config/opencode
+          # Copy config from ConfigMap to opencode subdirectory
+          if [ -d /tmp/config-source ] && [ "$(ls -A /tmp/config-source 2>/dev/null)" ]; then
+            for f in /tmp/config-source/*; do
+              [ -f "$f" ] || continue
+              filename=$(basename "$f")
+              target="/home/{{ $username }}/.config/opencode/$filename"
+              # Copy if target doesn't exist OR if source is newer
+              if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
+                cp "$f" "$target"
+              fi
+            done
           fi
-          if [ -f /etc/opencode-config/oh-my-opencode.jsonc ]; then
-            cp /etc/opencode-config/oh-my-opencode.jsonc /home/opencode/.config/opencode/
-            chown 1000:1000 /home/opencode/.config/opencode/oh-my-opencode.jsonc
-          fi
+          # Best-effort chown (NFS with root_squash may fail)
+          chown -R 1000:1000 /home/{{ $username }} 2>/dev/null || true
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-          # Override pod-level runAsNonRoot to allow root in init container
           {{- if .Values.securityContext.enabled }}
           runAsNonRoot: false
           {{- end }}
         volumeMounts:
-        - name: config-src
-          mountPath: /etc/opencode-config
-          readOnly: true
-        - name: workspace
-          mountPath: /home/opencode/workspace
         - name: data
-          mountPath: /home/opencode/.local
-        - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /home/{{ $username }}
+        - name: config-init
+          mountPath: /tmp/config-source
+          readOnly: true
+        - name: omo-init
+          mountPath: /tmp/omo-source
+          readOnly: true
       {{- if .Values.identity.enabled }}
       - name: init-identity
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -89,15 +88,10 @@ spec:
         - -c
         - |
           set -e
-          # Ensure workspace directory exists and has correct permissions
-          if [ -d /home/opencode/workspace ]; then
-            chown -R 1000:1000 /home/opencode/workspace
-          fi
-          # Copy identity files if present
           if [ -d /identity ]; then
             for f in /identity/*; do
               filename=$(basename "$f")
-              target="/home/opencode/$filename"
+              target="/home/{{ $username }}/$filename"
               if [ ! -e "$target" ]; then
                 cp -r "$f" "$target"
                 chown -R 1000:1000 "$target"
@@ -108,32 +102,25 @@ spec:
           runAsUser: 0
           runAsGroup: 0
         volumeMounts:
-        - name: config-src
-          mountPath: /etc/opencode-config
-          readOnly: true
         - name: identity
           mountPath: /identity
           readOnly: true
-        - name: workspace
-          mountPath: /home/opencode/workspace
         - name: data
-          mountPath: /home/opencode/.local
-        - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /home/{{ $username }}
       {{- end }}
       containers:
       - name: opencode
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]
-        workingDir: /home/opencode
+        workingDir: /home/{{ $username }}
         ports:
         - containerPort: 4096
           name: http
           protocol: TCP
         env:
         - name: HOME
-          value: "/home/opencode"
+          value: "/home/{{ $username }}"
         - name: OPENCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -174,15 +161,10 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         volumeMounts:
-        - name: config-src
-          mountPath: /etc/opencode-config
-          readOnly: true
-        - name: workspace
-          mountPath: /home/opencode/workspace
         - name: data
-          mountPath: /home/opencode/.local
-        - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /home/{{ $username }}
+        - name: workspace
+          mountPath: /home/{{ $username }}/workspace
         {{- with .Values.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -201,18 +183,27 @@ spec:
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
       volumes:
-      - name: config-src
-        configMap:
-          name: {{ include "ok8s.fullname" . }}-config
-      - name: config
-        persistentVolumeClaim:
-          claimName: {{ include "ok8s.fullname" . }}-config
       - name: data
+        {{- if .Values.persistence.data.emptyDir }}
+        emptyDir: {}
+        {{- else }}
         persistentVolumeClaim:
           claimName: {{ include "ok8s.fullname" . }}-data
+        {{- end }}
       - name: workspace
+        {{- if .Values.persistence.workspace.emptyDir }}
+        emptyDir: {}
+        {{- else }}
         persistentVolumeClaim:
           claimName: {{ include "ok8s.fullname" . }}-workspace
+        {{- end }}
+      - name: config-init
+        configMap:
+          name: {{ include "ok8s.fullname" . }}-config
+      - name: omo-init
+        configMap:
+          name: {{ include "ok8s.fullname" . }}-config
+          optional: true
       {{- if .Values.identity.enabled }}
       - name: identity
         configMap:
