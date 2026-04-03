@@ -29,7 +29,7 @@ spec:
         imagePullPolicy: {{ .Values.kubedock.image.pullPolicy }}
         command: ["kubedock", "server"]
         args:
-        - "--port={{ .Values.kubedock.port }}"
+        - "--listen-addr=:{{ .Values.kubedock.port }}"
         {{- range .Values.kubedock.extraArgs }}
         - {{ . | quote }}
         {{- end }}
