@@ -51,12 +51,27 @@ spec:
         - |
           set -e
           mkdir -p /home/{{ $username }}/.config
-          if [ -d /tmp/config-source ] && [ ! -f /home/{{ $username }}/.config/opencode.jsonc ]; then
-            cp -r /tmp/config-source/* /home/{{ $username }}/.config/
+          # Copy config from ConfigMap if not already present (check target file, not symlink)
+          if [ -d /tmp/config-source ]; then
+            for f in /tmp/config-source/*; do
+              filename=$(basename "$f")
+              target="/home/{{ $username }}/.config/$filename"
+              # Copy if target doesn't exist OR if source is newer
+              if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
+                cp "$f" "$target"
+              fi
+            done
           fi
-          if [ -d /tmp/omo-source ] && [ ! -d /home/{{ $username }}/.config/opencode ]; then
+          # Copy omo config if present
+          if [ -d /tmp/omo-source ]; then
             mkdir -p /home/{{ $username }}/.config/opencode
-            cp -r /tmp/omo-source/* /home/{{ $username }}/.config/opencode/
+            for f in /tmp/omo-source/*; do
+              filename=$(basename "$f")
+              target="/home/{{ $username }}/.config/opencode/$filename"
+              if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
+                cp "$f" "$target"
+              fi
+            done
           fi
           chown -R 1000:1000 /home/{{ $username }}
         securityContext:
