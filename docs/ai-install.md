@@ -44,13 +44,13 @@ If they choose single-user, ask for:
 
 > **API key is optional** — Don't ask for it. After logging in, run `/connect` to authenticate with 75+ providers.
 > 
-> **Note:** The Tailscale tailnet name is automatically derived — don't ask.
+> **Note:** Username determines ingress hostname. If username is "timothy", the URL will be `https://oc-timothy.<tailnet>.ts.net`. You don't need to ask for the tailnet name.
 
 **Prompt:**
 > "I need 1 value to install single-user k8s-opencode:
 > - `serverPassword` - What password should I set for the OpenCode web UI?
 > 
-> (Optional: What username should I use? Defaults to 'opencode'. This determines your home directory name.)"
+> (Optional: What username should I use? Defaults to 'opencode'. This determines your home directory name and your access URL.)"
 
 ### Multi-User Mode
 

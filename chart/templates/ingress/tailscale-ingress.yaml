@@ -1,4 +1,5 @@
 {{- if and (eq .Values.mode "single") .Values.ingress.enabled }}
+{{- $hostname := .Values.ingress.hostname | default (include "ok8s.ingressHostname" .) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,7 +8,7 @@ metadata:
   labels:
     {{- include "ok8s.labels" . | nindent 4 }}
   annotations:
-    tailscale.com/hostname: {{ .Values.ingress.hostname | quote }}
+    tailscale.com/hostname: {{ $hostname | quote }}
 spec:
   ingressClassName: tailscale
   defaultBackend:
@@ -17,5 +18,5 @@ spec:
         number: 4096
   tls:
     - hosts:
-        - {{ .Values.ingress.hostname }}
+        - {{ $hostname }}
 {{- end }}

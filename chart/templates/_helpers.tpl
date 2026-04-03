@@ -52,6 +52,15 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Derive ingress hostname from username
+Usage: {{ include "ok8s.ingressHostname" . }}
+*/}}
+{{- define "ok8s.ingressHostname" -}}
+{{- $username := .Values.opencode.username | default "opencode" -}}
+oc-{{ $username }}
+{{- end }}
+
+{{/*
 Generate opencode.jsonc config
 */}}
 {{- define "ok8s.opencodeConfig" -}}

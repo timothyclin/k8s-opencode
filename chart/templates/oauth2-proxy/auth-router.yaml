@@ -35,7 +35,7 @@ spec:
         - name: EMAIL_MAP_PATH
           value: /etc/email-map/email-map.json
         - name: HOST_PREFIX
-          value: {{ .Values.ingress.hostname }}
+          value: {{ .Values.ingress.hostname | default (include "ok8s.ingressHostname" .) }}
         volumeMounts:
         - name: email-map
           mountPath: /etc/email-map
