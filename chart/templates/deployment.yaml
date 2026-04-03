@@ -1,5 +1,4 @@
 {{- if eq .Values.mode "single" }}
-{{- $root := . }}
 {{- $username := .Values.opencode.username | default "opencode" }}
 apiVersion: apps/v1
 kind: Deployment
@@ -50,32 +49,21 @@ spec:
         - -c
         - |
           set -e
-          mkdir -p /home/{{ $username }}/.config
-          # Copy config from ConfigMap if not already present (check target file, not symlink)
+          mkdir -p /home/{{ $username }}/.config/opencode
+          # Copy config from ConfigMap to opencode subdirectory
           if [ -d /tmp/config-source ] && [ "$(ls -A /tmp/config-source 2>/dev/null)" ]; then
             for f in /tmp/config-source/*; do
               [ -f "$f" ] || continue
               filename=$(basename "$f")
-              target="/home/{{ $username }}/.config/$filename"
+              target="/home/{{ $username }}/.config/opencode/$filename"
               # Copy if target doesn't exist OR if source is newer
               if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
                 cp "$f" "$target"
               fi
             done
           fi
-          # Copy omo config if present
-          if [ -d /tmp/omo-source ] && [ "$(ls -A /tmp/omo-source 2>/dev/null)" ]; then
-            mkdir -p /home/{{ $username }}/.config/opencode
-            for f in /tmp/omo-source/*; do
-              [ -f "$f" ] || continue
-              filename=$(basename "$f")
-              target="/home/{{ $username }}/.config/opencode/$filename"
-              if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
-                cp "$f" "$target"
-              fi
-            done
-          fi
-          chown -R 1000:1000 /home/{{ $username }}
+          # Best-effort chown (NFS with root_squash may fail)
+          chown -R 1000:1000 /home/{{ $username }} 2>/dev/null || true
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -214,7 +202,7 @@ spec:
           name: {{ include "ok8s.fullname" . }}-config
       - name: omo-init
         configMap:
-          name: {{ include "ok8s.fullname" . }}-omo
+          name: {{ include "ok8s.fullname" . }}-config
           optional: true
       {{- if .Values.identity.enabled }}
       - name: identity
