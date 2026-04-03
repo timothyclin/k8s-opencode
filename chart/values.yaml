@@ -283,7 +283,7 @@ identity:
 # -- Kubedock: Docker API to Kubernetes Pod translation layer
 # -- Prevents OOM kills by running test containers as separate Pods instead of DinD sidecars
 kubedock:
-  enabled: false
+  enabled: true
   image:
     repository: joyrex2001/kubedock
     tag: "0.20.3"
