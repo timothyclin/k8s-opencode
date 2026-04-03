@@ -61,7 +61,8 @@ spec:
         - |
           set -e
           USER_NAME="{{ $user.name }}"
-          USER_ID=1000
+          USER_ID="{{ $root.Values.securityContext.runAsUser | default 1000 }}"
+          USER_GID="{{ $root.Values.securityContext.runAsGroup | default 1000 }}"
           
           # Create user with provided name
           id "$USER_NAME" 2>/dev/null || useradd -u $USER_ID -g $USER_ID -m -d /home/$USER_NAME -s /bin/bash "$USER_NAME"
@@ -72,21 +73,20 @@ spec:
           
           # Build /etc/passwd with dynamic user entry for whoami support
           cp /etc/passwd /mnt/passwd/passwd
-          echo "$USER_NAME:x:$USER_ID:$USER_ID::/home/$USER_NAME:/bin/bash" >> /mnt/passwd/passwd
-          
+
           # Fix ownership on all mounted directories
-          chown -R $USER_ID:$USER_ID /home/$USER_NAME/workspace /home/$USER_NAME/.local /home/$USER_NAME/.config 2>/dev/null || true
+          chown -R $USER_ID:$USER_GID /home/$USER_NAME/workspace /home/$USER_NAME/.local /home/$USER_NAME/.config 2>/dev/null || true
           # Create user subdirectory if it doesn't exist (main app needs it)
           mkdir -p /home/$USER_NAME/.config/opencode 2>/dev/null || true
-          chown -R $USER_ID:$USER_ID /home/$USER_NAME/.config/opencode 2>/dev/null || true
+          chown -R $USER_ID:$USER_GID /home/$USER_NAME/.config/opencode 2>/dev/null || true
           # Copy config files from ConfigMap to PVC (ConfigMap is read-only, need to copy to writable PVC)
           if [ -f /etc/opencode-config/opencode.jsonc ]; then
             cp /etc/opencode-config/opencode.jsonc /home/$USER_NAME/.config/opencode/
-            chown $USER_ID:$USER_ID /home/$USER_NAME/.config/opencode/opencode.jsonc
+            chown $USER_ID:$USER_GID /home/$USER_NAME/.config/opencode/opencode.jsonc
           fi
           if [ -f /etc/opencode-config/oh-my-opencode.jsonc ]; then
             cp /etc/opencode-config/oh-my-opencode.jsonc /home/$USER_NAME/.config/opencode/
-            chown $USER_ID:$USER_ID /home/$USER_NAME/.config/opencode/oh-my-opencode.jsonc
+            chown $USER_ID:$USER_GID /home/$USER_NAME/.config/opencode/oh-my-opencode.jsonc
           fi
         securityContext:
           runAsUser: 0
@@ -98,6 +98,8 @@ spec:
         - name: config-src
           mountPath: /etc/opencode-config
           readOnly: true
+        - name: home-dir
+          mountPath: /home/{{ $user.name }}
         - name: workspace
           mountPath: /home/{{ $user.name }}/workspace
         - name: data
@@ -119,7 +121,7 @@ spec:
           set -e
           # Ensure workspace directory exists and has correct permissions
           if [ -d /home/{{ $user.name }}/workspace ]; then
-            chown -R 1000:1000 /home/{{ $user.name }}/workspace
+            chown -R {{ $root.Values.securityContext.runAsUser }}:{{ $root.Values.securityContext.runAsGroup }} /home/{{ $user.name }}/workspace
           fi
           # Copy identity files if present
           if [ -d /identity ]; then
@@ -128,7 +130,7 @@ spec:
               target="/home/{{ $user.name }}/$filename"
               if [ ! -e "$target" ]; then
                 cp -r "$f" "$target"
-                chown -R 1000:1000 "$target"
+                chown -R {{ $root.Values.securityContext.runAsUser }}:{{ $root.Values.securityContext.runAsGroup }} "$target"
               fi
             done
           fi
@@ -142,6 +144,8 @@ spec:
         - name: identity
           mountPath: /identity
           readOnly: true
+        - name: home-dir
+          mountPath: /home/{{ $user.name }}
         - name: workspace
           mountPath: /home/{{ $user.name }}/workspace
         - name: data
@@ -202,6 +206,8 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         volumeMounts:
+        - name: home-dir
+          mountPath: /home/{{ $user.name }}
         - name: config
           mountPath: /home/{{ $user.name }}/.config
           subPath: opencode
@@ -209,9 +215,13 @@ spec:
           mountPath: /home/{{ $user.name }}/.local
         - name: workspace
           mountPath: /home/{{ $user.name }}/workspace
+        - name: sudoers
+          mountPath: /etc/sudoers.d
+          readOnly: true
         - name: passwd
           mountPath: /etc/passwd
           subPath: passwd
+          readOnly: true
         {{- with $root.Values.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -233,6 +243,10 @@ spec:
       - name: config-src
         configMap:
           name: {{ include "ok8s.fullname" $root }}-user-{{ $user.name }}-config
+      - name: config
+        emptyDir: {}
+      - name: home-dir
+        emptyDir: {}
       - name: sudoers
         emptyDir: {}
       - name: passwd

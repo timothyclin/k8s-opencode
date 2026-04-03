@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Runtime / scripting
     python3 \
     python3-venv \
+    python3-pip \
     # Network / download
     curl \
     wget \
@@ -71,6 +72,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     zip \
     xz-utils \
+    # Editor / dev tools
+    nano \
+    vim-tiny \
     # Misc utilities
     sudo \
     lsof \
@@ -78,6 +82,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=opencode-bin /usr/local/bin/opencode /usr/local/bin/opencode
 RUN chmod +x /usr/local/bin/opencode && opencode --version
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    ln -s /root/.local/bin/uv /usr/local/bin/uv
 
 RUN groupadd -g 1000 appgroup && \
     mkdir -p /home && \
