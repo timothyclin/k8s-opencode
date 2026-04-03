@@ -16,6 +16,22 @@ Makefile                       Build/test/deploy commands
 PROJECT                        Kubebuilder metadata Auto-generated (DO NOT EDIT)
 ```
 
+## Pre-Commit Hooks (REQUIRED)
+
+Before committing, run pre-commit hooks to catch issues locally:
+
+```bash
+# From repo root
+pip install pre-commit   # or: brew install pre-commit
+pre-commit install
+
+# Run manually to test before commit
+pre-commit run --all-files
+
+# Or from operator directory
+cd operator && make test
+```
+
 **Multi-group layout** (for projects with multiple API groups):
 ```
 api/<group>/<version>/*_types.go       CRD schemas by group

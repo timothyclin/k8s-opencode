@@ -46,6 +46,23 @@ git worktree remove ../k8s-opencode-<task>
 
 Never commit directly to `main`. Always work on a feature branch (via worktree).
 
+> **Note:** This repository requires Pull Requests to merge into main. Direct pushes are blocked.
+
+### Pre-Commit Hooks (REQUIRED)
+
+Before committing, run pre-commit hooks to catch issues locally:
+
+```bash
+# Install pre-commit (one-time)
+pip install pre-commit   # or: brew install pre-commit
+
+# Install hooks into this repo
+pre-commit install
+
+# Run manually to test before commit
+pre-commit run --all-files
+```
+
 ### Worktree Conventions
 
 - **Directory naming**: `../<repo>-<short-task-description>`
