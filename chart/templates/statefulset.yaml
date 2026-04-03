@@ -62,6 +62,18 @@ spec:
           set -e
           # Fix ownership on all mounted directories
           chown -R 1000:1000 /home/opencode/workspace /home/opencode/.local /home/opencode/.config 2>/dev/null || true
+          # Create opencode subdirectory if it doesn't exist (main app needs it)
+          mkdir -p /home/opencode/.config/opencode 2>/dev/null || true
+          chown -R 1000:1000 /home/opencode/.config/opencode 2>/dev/null || true
+          # Copy config files from ConfigMap to PVC (ConfigMap is read-only, need to copy to writable PVC)
+          if [ -f /etc/opencode-config/opencode.jsonc ]; then
+            cp /etc/opencode-config/opencode.jsonc /home/opencode/.config/opencode/
+            chown 1000:1000 /home/opencode/.config/opencode/opencode.jsonc
+          fi
+          if [ -f /etc/opencode-config/oh-my-opencode.jsonc ]; then
+            cp /etc/opencode-config/oh-my-opencode.jsonc /home/opencode/.config/opencode/
+            chown 1000:1000 /home/opencode/.config/opencode/oh-my-opencode.jsonc
+          fi
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -69,12 +81,16 @@ spec:
           runAsNonRoot: false
           {{- end }}
         volumeMounts:
+        - name: config-src
+          mountPath: /etc/opencode-config
+          readOnly: true
         - name: workspace
           mountPath: /home/opencode/workspace
         - name: data
           mountPath: /home/opencode/.local
+        - name: config
+          mountPath: /home/opencode/.config
       {{- if $root.Values.identity.enabled }}
-      initContainers:
       - name: init-identity
         image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
         imagePullPolicy: {{ $root.Values.image.pullPolicy }}
@@ -102,6 +118,9 @@ spec:
           runAsUser: 0
           runAsGroup: 0
         volumeMounts:
+        - name: config-src
+          mountPath: /etc/opencode-config
+          readOnly: true
         - name: identity
           mountPath: /identity
           readOnly: true
@@ -111,7 +130,6 @@ spec:
           mountPath: /home/opencode/.local
         - name: config
           mountPath: /home/opencode/.config
-          subPath: opencode
       {{- end }}
       containers:
       - name: opencode
@@ -191,7 +209,7 @@ spec:
         resources:
           {{- toYaml (default $root.Values.resources $user.resources) | nindent 10 }}
       volumes:
-      - name: config
+      - name: config-src
         configMap:
           name: {{ include "ok8s.fullname" $root }}-user-{{ $user.name }}-config
       {{- if $root.Values.identity.enabled }}
