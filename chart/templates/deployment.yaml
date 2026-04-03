@@ -50,6 +50,7 @@ spec:
         - -c
         - |
           set -e
+          shopt -s nullglob
           mkdir -p /home/{{ $username }}/.config
           # Copy config from ConfigMap if not already present (check target file, not symlink)
           if [ -d /tmp/config-source ]; then
