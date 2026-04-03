@@ -129,12 +129,12 @@ See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
 
 ### Enabling Oh-My-OpenCode, Skills, MCPs, and Plugins
 
-By default, the chart installs OpenCode with **no plugins, skills, or MCP servers**. To enable them, add the following to your values file:
+By default, the chart enables Oh-My-OpenCode, Context7 MCP, and user skills. To disable or customize, add the following to your values file:
 
 ```yaml
-# Enable Oh-My-OpenCode (task orchestration, specialized agents)
+# Disable Oh-My-OpenCode (task orchestration, specialized agents)
 omo:
-  enabled: true
+  enabled: false
   sisyphus:
     maxConcurrentTasks: 2
     taskTimeout: 300
@@ -150,30 +150,19 @@ omo:
     visualEngineering:
       model: "github-copilot/claude-sonnet-4.6"
 
-# Install npm skills (optional)
+# Override default skills (defaults: CORE, Prompting, Art, CreateSkill, Agents, GitWorkflow)
 skills:
   npm: []
-  # Example: ["@my-org/skills@latest"]
   config: []
 
-# Configure MCP servers (optional)
+# Override default MCP servers (default: context7)
 mcp:
   remote: []
-  # Example:
-  # - name: context7
-  #   url: https://mcp.context7.com/mcp
-  #   enabled: true
   laptopServers: []
-  # Example:
-  # - name: playwright
-  #   tailscaleIP: "100.x.x.x"
-  #   port: 3000
 
-# Additional plugins (optional)
+# Disable plugins (default: oh-my-opencode, @tarquinen/opencode-dcp)
 plugins:
-  enabled: true
-  npm: []
-  # Example: ["@tarquinen/opencode-dcp@latest"]
+  enabled: false
 ```
 
 ---
