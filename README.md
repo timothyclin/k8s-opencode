@@ -9,10 +9,11 @@ For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full install
 
 **Quick summary for AI agents:**
 
-1. **Ask human first** — You need 3 values before running `helm install`:
+1. **Ask human first** — You need 2 values before running `helm install`:
    - `serverPassword` — password for OpenCode web UI
-   - `providers.anthropic.apiKey` — their Anthropic API key (starts with `sk-ant-`)
    - Username — used as workspace name, determines namespace `oc-<username>`
+
+   > **API key is optional** — Don't ask for it. After logging in, the human can run `/connect` to authenticate with 75+ providers (Anthropic, OpenAI, Google, etc.) without pre-configuring secrets.
 
 2. **Then deploy** — Use the recommended values from `docs/ai-install.md`
 
@@ -58,7 +59,8 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 - Kubernetes cluster (ARM64 or amd64)
 - Helm 3.x
 - Tailscale account (free tier works)
-- At least one LLM provider API key
+
+> No API key required at install time. After logging in, run `/connect` to authenticate.
 
 ### Install
 
@@ -67,15 +69,11 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 ```bash
 # Latest version (recommended - no --version flag needed)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --set providers.anthropic.enabled=true \
-  --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
 
 # Specific version (only if you need an exact version - check GitHub releases)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
   --version <version> \
-  --set providers.anthropic.enabled=true \
-  --set providers.anthropic.apiKey=sk-ant-your-key \
   --set serverPassword=your-secure-password
 ```
 
@@ -115,7 +113,6 @@ See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
 
 | Section | Purpose |
 |---------|---------|
-| `providers.*` | LLM API keys (anthropic, openai, google) |
 | `serverPassword` | HTTP auth for the OpenCode server |
 | `opencode.username` | Home directory user (default: opencode) |
 | `mcp.remote[]` | Remote MCP servers (URLs) |
@@ -123,6 +120,8 @@ See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
 | `ingress.enabled` | Expose OpenCode UI to tailnet |
 | `kubedock.*` | Docker API → K8s Pod translation |
 | `persistence.*` | Storage for home dir and workspace |
+
+> **Note:** LLM API keys are optional. After logging in, run `/connect` to authenticate with 75+ providers.
 
 ### Enabling Oh-My-OpenCode, Skills, MCPs, and Plugins
 
@@ -535,8 +534,9 @@ When a human asks you to install or configure k8s-opencode:
 
 **1. Gather required values first** — Ask the human:
 - `serverPassword` — password for the web UI
-- `providers.anthropic.apiKey` — their Anthropic API key (starts with `sk-ant-`)
 - `<your-tailnet>` — their Tailscale tailnet name (e.g., `example` in `opencode.example.ts.net`)
+
+> API key is optional — don't ask. After login, run `/connect` to authenticate.
 
 **2. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
 

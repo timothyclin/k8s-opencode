@@ -17,16 +17,16 @@ Before running the install command, you **MUST** get these values from the human
 | Value | How to Get | Example |
 |-------|-----------|---------|
 | `serverPassword` | Ask human | `"my-secret-password"` |
-| `providers.anthropic.apiKey` | Ask human for their Anthropic API key | `"sk-ant-api03-..."` |
 | Username (workspace name) | Ask human — determines namespace as `oc-<username>` | `"timothy"` |
 
+> **API key is optional** — Don't ask for it. After logging in, the human can run `/connect` to authenticate with 75+ providers (Anthropic, OpenAI, Google, etc.) without pre-configuring secrets.
+> 
 > **Note:** The Tailscale tailnet name is automatically derived — don't ask the human for it.
 
 **Prompt to send to human:**
-> "I need 3 values to install k8s-opencode:
+> "I need 2 values to install k8s-opencode:
 > 1. `serverPassword` - What password should I set for the OpenCode web UI?
-> 2. Your Anthropic API key - What's your API key (starts with `sk-ant-`)?
-> 3. What username should I use? (This determines your namespace: `oc-<username>`)
+> 2. What username should I use? (This determines your namespace: `oc-<username>`)
 > 
 > Also: Do you already have the Tailscale Kubernetes Operator installed in your cluster?"
 
@@ -35,10 +35,12 @@ Before running the install command, you **MUST** get these values from the human
 ```yaml
 # values.yaml — copy this and fill in the values you got from human
 serverPassword: "CHANGE_ME"           # REQUIRED — get from human
-providers:
-  anthropic:
-    enabled: true
-    apiKey: "CHANGE_ME"              # REQUIRED — get from human
+
+# No API key needed at install time! After logging in, run /connect to authenticate.
+# providers:                          # Optional - only if you want pre-configured keys
+#   anthropic:
+#     enabled: true
+#     apiKey: "sk-ant-your-key"
 
 # Enable Oh-My-OpenCode (task orchestration with Sisyphus, Oracle, Librarian)
 omo:
@@ -97,10 +99,12 @@ Only if you need vanilla OpenCode without Oh-My-OpenCode:
 ```yaml
 # values.yaml
 serverPassword: "your-secure-password"
-providers:
-  anthropic:
-    enabled: true
-    apiKey: "sk-ant-your-key"
+
+# API key is optional - run /connect after login to authenticate
+# providers:
+#   anthropic:
+#     enabled: true
+#     apiKey: "sk-ant-your-key"
 ```
 
 ```bash
