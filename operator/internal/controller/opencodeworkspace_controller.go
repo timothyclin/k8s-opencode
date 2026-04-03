@@ -185,7 +185,11 @@ func (r *OpenCodeWorkspaceReconciler) handleDeletion(ctx context.Context, worksp
 		log.Error(err, "Failed to remove from email map", "name", workspace.Name)
 	}
 
-	namespaceName := namespacePrefix + workspace.Name
+	nsPrefix := workspace.Spec.NamespacePrefix
+	if nsPrefix == "" {
+		nsPrefix = "oc"
+	}
+	namespaceName := nsPrefix + workspace.Name
 	ns := &corev1.Namespace{}
 	if err := r.Get(ctx, client.ObjectKey{Name: namespaceName}, ns); err == nil {
 		if err := r.Delete(ctx, ns); err != nil && !apierrors.IsNotFound(err) {
