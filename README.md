@@ -9,13 +9,17 @@ For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full install
 
 **Quick summary for AI agents:**
 
-1. **Ask human first** — You need 2 values before running `helm install`:
-   - `serverPassword` — password for OpenCode web UI
-   - Username — used as workspace name, determines namespace `oc-<username>`
+1. **First ask: Single or Multi-user?** — k8s-opencode has two modes:
+   - **Single-user**: Simple Helm install, one OpenCode for personal use
+   - **Multi-user**: Install operator first, then create workspaces per user
 
-   > **API key is optional** — Don't ask for it. After logging in, the human can run `/connect` to authenticate with 75+ providers (Anthropic, OpenAI, Google, etc.) without pre-configuring secrets.
+2. **Gather required info based on mode:**
+   - Single-user: just `serverPassword`
+   - Multi-user: operator installed first, then `name` + `email` per user
 
-2. **Then deploy** — Use the recommended values from `docs/ai-install.md`
+   > **API key is optional** — Don't ask for it. After login, run `/connect` to authenticate.
+
+3. **Then deploy** — Use the recommended values from `docs/ai-install.md`
 
 3. **After install** — Tell human the access URL (derived from their Tailscale tailnet automatically):
    ```
@@ -212,7 +216,7 @@ spec:
       enabled: true
       apiKeySecretRef:
         name: alice-api-keys
-        namespace: opencode-system
+        namespace: oc-alice
         key: anthropic
     openai:
       enabled: false
@@ -231,7 +235,7 @@ kubectl apply -f alice-workspace.yaml
 
 For each `OpenCodeWorkspace` CR, the operator reconciles:
 
-- **Namespace** — `opencode-<name>` (isolated per user)
+- **Namespace** — `oc-<name>` (isolated per user)
 - **PVCs** — `workspace-pvc` and `data-pvc` for persistent storage
 - **ConfigMap** — `opencode-config` with `opencode.json` configuration
 - **NetworkPolicy** — isolates user workloads
@@ -281,7 +285,7 @@ Each workspace gets its own namespace. Access via port-forward or Tailscale
 ingress:
 
 ```bash
-kubectl port-forward -n opencode-alice svc/opencode 4096:4096
+kubectl port-forward -n oc-alice svc/opencode 4096:4096
 ```
 
 ### Delete a Workspace
@@ -397,14 +401,14 @@ Your Tailnet
     ├── OpenCode Operator (operator-system namespace)
     │   └── Watches OpenCodeWorkspace CRs
     │
-    ├── opencode-alice namespace
+    ├── oc-alice namespace
     │   ├── StatefulSet (1 replica)
     │   ├── PVCs (workspace + data)
     │   ├── ConfigMap (opencode.json)
     │   ├── NetworkPolicy
     │   └── Service
     │
-    └── opencode-bob namespace
+    └── oc-bob namespace
         └── (same structure)
 ```
 
