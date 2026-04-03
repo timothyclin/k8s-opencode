@@ -5,12 +5,23 @@ MCP servers.
 
 ## AI Installation
 
-For AI agents, use the standalone install guide:
+For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full installation guide.
 
-```bash
-# Read: https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.md
-# Or copy/paste commands from docs/ai-install.md
-```
+**Quick summary for AI agents:**
+
+1. **Ask human first** — You need 3 values before running `helm install`:
+   - `serverPassword` — password for OpenCode web UI
+   - `providers.anthropic.apiKey` — their Anthropic API key (starts with `sk-ant-`)
+   - Username — used as workspace name, determines namespace `oc-<username>`
+
+2. **Then deploy** — Use the recommended values from `docs/ai-install.md`
+
+3. **After install** — Tell human the access URL (derived from their Tailscale tailnet automatically):
+   ```
+   https://opencode.<tailnet>.ts.net
+   Username: opencode
+   Password: (the serverPassword you set)
+   ```
 
 ## What This Is
 
@@ -506,46 +517,22 @@ spec:
 3. Implement reconciler logic in `operator/internal/controller/`
 4. Test with `make test`
 
-### Enabling Built-in Defaults (for AI)
+### How to Help (AI Agent)
 
-When the human asks you to enable built-in defaults, recommend which features to enable based on their use case:
+When a human asks you to install or configure k8s-opencode:
 
-| Feature | What It Does | Recommended For |
-|---------|--------------|------------------|
-| **Oh-My-OpenCode (omo)** | Task orchestration with specialized agents (Sisyphus, Oracle, Librarian) | Users who want multi-agent workflows, research, and complex task coordination |
-| **Skills (npm)** | Reusable prompt templates and tools | Teams with standardized practices they want AI to follow |
-| **MCP Servers** | Connect to external services (Context7, file search, etc.) | Users needing code search, web search, or external tool integration |
-| **Plugins** | Extend OpenCode functionality | Users who want design tools, additional commands, or custom integrations |
+**1. Gather required values first** — Ask the human:
+- `serverPassword` — password for the web UI
+- `providers.anthropic.apiKey` — their Anthropic API key (starts with `sk-ant-`)
+- `<your-tailnet>` — their Tailscale tailnet name (e.g., `example` in `opencode.example.ts.net`)
 
-**Recommended starting configuration for new users:**
+**2. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
 
-```yaml
-omo:
-  enabled: true
-  sisyphus:
-    maxConcurrentTasks: 2
-    taskTimeout: 300
-  agents:
-    oracle:
-      model: "github-copilot/gpt-5.2"
-      promptAppend: "Provide concise tradeoffs and a clear recommendation"
-    librarian:
-      model: "github-copilot/gpt-5-mini"
-  categories:
-    quick:
-      model: "github-copilot/gpt-4.1"
-    visualEngineering:
-      model: "github-copilot/claude-sonnet-4.6"
-
-plugins:
-  enabled: true
-  npm: []
-  # Add plugins as needed based on use case
+**3. Tell them the access URL after install:**
 ```
-
-Ask the human:
-1. Do you want Oh-My-OpenCode enabled? (enables multi-agent orchestration)
-2. Do you have any specific skills or MCP servers you want to connect?
-3. Any specific plugins you need?
+https://opencode.<tailnet>.ts.net
+Username: opencode
+Password: (the serverPassword you set)
+```
 
 

@@ -28,14 +28,16 @@ import (
 )
 
 const (
-	namespacePrefix     = "opencode-"
 	workspaceOwnerLabel = "opencode.io/workspace"
 )
 
 // reconcileNamespace ensures the workspace namespace exists.
-// Returns the namespace name.
 func (r *OpenCodeWorkspaceReconciler) reconcileNamespace(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace) (string, error) {
-	namespaceName := namespacePrefix + workspace.Name
+	prefix := workspace.Spec.NamespacePrefix
+	if prefix == "" {
+		prefix = "oc"
+	}
+	namespaceName := prefix + "-" + workspace.Name
 
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
