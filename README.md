@@ -106,11 +106,12 @@ See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
 |---------|---------|
 | `providers.*` | LLM API keys (anthropic, openai, google) |
 | `serverPassword` | HTTP auth for the OpenCode server |
+| `opencode.username` | Home directory user (default: opencode) |
 | `mcp.remote[]` | Remote MCP servers (URLs) |
 | `mcp.laptopServers[]` | Laptop MCP servers (via Tailscale egress) |
 | `ingress.enabled` | Expose OpenCode UI to tailnet |
 | `kubedock.*` | Docker API → K8s Pod translation |
-| `persistence.*` | Storage for config and workspace |
+| `persistence.*` | Storage for home dir and workspace |
 
 ### Enabling Oh-My-OpenCode, Skills, MCPs, and Plugins
 

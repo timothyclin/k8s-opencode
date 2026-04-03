@@ -86,9 +86,12 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 - **Chart OCI**: `oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s`
 - **Image**: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`
 - **Port**: 4096
-- **Storage**: PVCs mounted at `/home/opencode/workspace`, `/home/opencode/.local`, `/home/opencode/.config`
+- **Storage**: 
+  - Data PVC → `/home/{username}` (config, auth, MCP credentials)
+  - Workspace PVC → `/home/{username}/workspace` (project files)
+- **Username**: defaults to "opencode", configurable via `opencode.username`
 - **User**: UID 1000 (non-root)
-- **Init container**: Runs as root to fix PVC permissions
+- **Init container**: Copies ConfigMap to data PVC on first run (config preserved across restarts)
 - **Ingress URL**: `https://opencode.<your-tailnet>.ts.net` (when ingress.enabled=true)
 
 ## Upgrade

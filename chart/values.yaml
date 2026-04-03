@@ -163,8 +163,7 @@ plugins:
 
 # -- OpenCode runtime configuration
 opencode:
-  # -- Additional JSON config to merge into opencode.jsonc (advanced)
-  # -- Use this for arbitrary config options not covered by other values
+  username: "opencode"
   extraConfig: ""
 
 # -- Skills configuration for OpenCode
