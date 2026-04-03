@@ -23,8 +23,9 @@ For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full install
 
 3. **After install** — Tell human the access URL (derived from their Tailscale tailnet automatically):
    ```
-   https://opencode.<tailnet>.ts.net
-   Username: opencode
+   https://oc-<username>.<tailnet>.ts.net
+   # Default username: https://oc-opencode.<tailnet>.ts.net
+   Username: (username, defaults to opencode)
    Password: (the serverPassword you set)
    ```
 
@@ -107,7 +108,9 @@ helm test ok8s -n opencode
 After enabling Tailscale ingress (see [Tailscale Setup](#tailscale-setup)):
 
 ```
-https://opencode.<your-tailnet>.ts.net
+https://oc-<username>.<your-tailnet>.ts.net
+# Example (default username): https://oc-opencode.<your-tailnet>.ts.net
+# Example (username=alice): https://oc-alice.<your-tailnet>.ts.net
 Password: (your serverPassword value)
 ```
 
@@ -544,8 +547,9 @@ When a human asks you to install or configure k8s-opencode:
 
 **3. Tell them the access URL after install:**
 ```
-https://opencode.<tailnet>.ts.net
-Username: opencode
+https://oc-<username>.<tailnet>.ts.net
+# Default username: https://oc-opencode.<tailnet>.ts.net
+Username: (username, defaults to opencode)
 Password: (the serverPassword you set)
 ```
 

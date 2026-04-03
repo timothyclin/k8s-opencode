@@ -46,7 +46,7 @@ If they choose single-user, ask for:
 
 > **API key is optional** — Don't ask for it. After logging in, run `/connect` to authenticate with 75+ providers.
 > 
-> **Note:** Username determines ingress hostname. If username is "timothy", the URL will be `https://oc-timothy.<tailnet>.ts.net`. You don't need to ask for the tailnet name.
+> **Note:** Username determines ingress hostname. For username "alice", URL is `https://oc-alice.<tailnet>.ts.net`. You don't need to ask for the tailnet name.
 
 **Prompt:**
 > "I need 1 value to install single-user k8s-opencode:
@@ -260,8 +260,10 @@ charlie,charlie@example.com,10Gi,5Gi
 ### Single-User
 
 ```
-https://opencode.<your-tailnet>.ts.net
-Username: opencode
+https://oc-<username>.<your-tailnet>.ts.net
+# Example (default username): https://oc-opencode.<your-tailnet>.ts.net
+# Example (username=alice): https://oc-alice.<your-tailnet>.ts.net
+Username: (your username - defaults to opencode)
 Password: (serverPassword you set)
 ```
 
@@ -296,7 +298,7 @@ Then open `http://localhost:4096`
 | User UID | 1000 | Non-root user |
 | Storage - Data PVC | `/home/{username}` | Config, auth, MCP credentials |
 | Storage - Workspace PVC | `/home/{username}/workspace` | Project files |
-| Ingress URL | `https://opencode.<tailnet>.ts.net` | When `ingress.enabled=true` |
+| Ingress URL | `https://oc-<username>.<tailnet>.ts.net` | When `ingress.enabled=true` |
 
 ## Upgrade
 
