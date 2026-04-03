@@ -49,19 +49,20 @@ spec:
         - -c
         - |
           set -e
-          mkdir -p /home/{{ $username }}/.config
-          # Copy config from ConfigMap if not already present (check target file, not symlink)
+          mkdir -p /home/{{ $username }}/.config/opencode
+          # Copy config from ConfigMap to opencode subdirectory
           if [ -d /tmp/config-source ] && [ "$(ls -A /tmp/config-source 2>/dev/null)" ]; then
             for f in /tmp/config-source/*; do
               [ -f "$f" ] || continue
               filename=$(basename "$f")
-              target="/home/{{ $username }}/.config/$filename"
+              target="/home/{{ $username }}/.config/opencode/$filename"
               # Copy if target doesn't exist OR if source is newer
               if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
                 cp "$f" "$target"
               fi
             done
           fi
+<<<<<<< HEAD
           # Copy omo config if present
           if [ -d /tmp/omo-source ] && [ "$(ls -A /tmp/omo-source 2>/dev/null)" ]; then
             mkdir -p /home/{{ $username }}/.config/opencode
@@ -215,10 +216,14 @@ spec:
       - name: omo-init
         configMap:
 <<<<<<< HEAD
+<<<<<<< HEAD
           name: {{ include "ok8s.fullname" . }}-config
 =======
           name: {{ include "ok8s.fullname" . }}-omo
 >>>>>>> 3fe550d (fix: mount data PVC at home dir, copy config in init container)
+=======
+          name: {{ include "ok8s.fullname" . }}-config
+>>>>>>> f5d4d5a (fix: address PR comments - config to opencode subdir, fix omo ConfigMap reference, remove unused $root, best-effort chown)
           optional: true
       {{- if .Values.identity.enabled }}
       - name: identity
