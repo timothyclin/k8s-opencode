@@ -86,17 +86,34 @@ kubectl apply -f https://raw.githubusercontent.com/timothyclin/k8s-opencode/main
 
 ### Single-User Deploy
 
+Defaults now include Oh-My-OpenCode, Context7 MCP, and user skills. Just set your password:
+
 ```yaml
 # values.yaml — fill in serverPassword
 serverPassword: "CHANGE_ME"
 
-# API key optional - run /connect after login to authenticate
-# providers:
-#   anthropic:
-#     enabled: true
-#     apiKey: "sk-ant-your-key"
+# Optional: Override defaults
+# - To disable Oh-My-OpenCode: omo.enabled: false
+# - To disable MCPs: mcp.remote: []
+# - To disable skills: skills.npm: []
 
-# Enable Oh-My-OpenCode (task orchestration with Sisyphus, Oracle, Librarian)
+# Enable Tailscale ingress (recommended)
+ingress:
+  enabled: true
+```
+
+```bash
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  -f values.yaml
+```
+
+Or with all options explicitly shown (for reference):
+
+```yaml
+# values.yaml — full example with defaults
+serverPassword: "CHANGE_ME"
+
+# Oh-My-OpenCode: enabled by default
 omo:
   enabled: true
   sisyphus:
@@ -114,11 +131,28 @@ omo:
     visualEngineering:
       model: "github-copilot/claude-sonnet-4.6"
 
-# Enable plugins
+# Plugins: enabled by default (oh-my-opencode, @tarquinen/opencode-dcp)
 plugins:
   enabled: true
 
-# Enable Tailscale ingress
+# MCP servers: context7 enabled by default
+mcp:
+  remote:
+    - name: context7
+      url: https://mcp.context7.com/mcp
+      enabled: true
+
+# Skills: CORE, Prompting, Art, CreateSkill, Agents, GitWorkflow by default
+skills:
+  npm:
+    - CORE
+    - Prompting
+    - Art
+    - CreateSkill
+    - Agents
+    - GitWorkflow
+
+# Tailscale ingress
 ingress:
   enabled: true
 

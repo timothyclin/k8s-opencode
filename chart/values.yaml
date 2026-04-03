@@ -116,7 +116,7 @@ serverPassword: "change-me"
 
 # -- Oh-My-OpenCode configuration
 omo:
-  enabled: false
+  enabled: true
   sisyphus:
     maxConcurrentTasks: 2
     taskTimeout: 300
@@ -135,11 +135,13 @@ omo:
 # -- MCP server configuration
 mcp:
   # -- Remote MCP servers (URLs accessible from the cluster)
-  remote: []
-  # - name: context7
-  #   url: https://mcp.context7.com/mcp
-  #   enabled: true
-  #   headers: {}
+  remote:
+    - name: context7
+      url: https://mcp.context7.com/mcp
+      enabled: true
+  # - name: sentry
+  #   url: https://mcp.sentry.dev/mcp
+  #   enabled: false
   #   oauth: {}
 
   # -- Laptop MCP servers (reachable via Tailscale cluster egress)
@@ -169,9 +171,15 @@ opencode:
 # -- Skills configuration for OpenCode
 # -- Skills are reusable prompt templates and tool configurations
 skills:
-  # -- npm-based skills to install (array of npm package specifiers)
-  # -- Example: ["@my-org/skills@latest"]
-  npm: []
+  # -- npm-based skills to install
+  # -- These are user-installed skills that override built-in defaults
+  npm:
+    - CORE
+    - Prompting
+    - Art
+    - CreateSkill
+    - Agents
+    - GitWorkflow
   # -- Inline skill configurations (array of skill config objects)
   # -- See https://opencode.ai/docs/skills/ for format
   config: []
