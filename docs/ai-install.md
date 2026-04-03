@@ -267,8 +267,13 @@ Password: (serverPassword you set)
 
 ### Multi-User
 
-Each workspace gets its own namespace. Access via:
+Each workspace gets its own namespace. Access depends on auth configuration:
 
+**With OIDC auth enabled** (recommended for teams):
+- Users access via shared auth frontend: `https://opencode-<username>.<namespace>.<tailnet>.ts.net`
+- Auth router validates session and routes to correct user pod
+
+**Without OIDC auth** (basic mode):
 ```bash
 # Replace with workspace name
 kubectl port-forward -n oc-alice svc/opencode 4096:4096

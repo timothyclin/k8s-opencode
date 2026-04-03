@@ -271,8 +271,16 @@ spec:
 
 ### Access User Workspace
 
-Each workspace gets its own namespace. Access via port-forward or Tailscale
-ingress:
+Each workspace gets its own namespace. Access via Tailscale ingress with auth router:
+
+When OIDC auth is enabled (`auth.oidc.enabled: true`), users access via a shared auth frontend:
+```
+https://opencode-<username>.<namespace>.<tailnet>.ts.net
+```
+
+The auth router validates the OIDC session and routes to the correct user pod internally.
+
+If OIDC is not enabled, access via port-forward:
 
 ```bash
 kubectl port-forward -n oc-alice svc/opencode 4096:4096
