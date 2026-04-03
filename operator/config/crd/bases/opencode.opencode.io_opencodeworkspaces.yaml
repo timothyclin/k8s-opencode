@@ -111,6 +111,13 @@ spec:
                         type: object
                     type: object
                 type: object
+              namespacePrefix:
+                default: oc
+                description: |-
+                  NamespacePrefix is the prefix for the workspace namespace.
+                  If username is "timothy" and prefix is "oc", namespace will be "oc-timothy".
+                  Defaults to "oc".
+                type: string
               providers:
                 description: Providers configures one or more AI providers.
                 properties:

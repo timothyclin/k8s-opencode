@@ -38,6 +38,14 @@ type OpenCodeWorkspaceSpec struct {
 	// +kubebuilder:validation:Pattern=`^[^@]+@[^@]+$`
 	Email string `json:"email"`
 
+	// NamespacePrefix is the prefix for the workspace namespace.
+	// If username is "timothy" and prefix is "oc", namespace will be "oc-timothy".
+	// Defaults to "oc".
+	//
+	// +optional
+	// +kubebuilder:default="oc"
+	NamespacePrefix string `json:"namespacePrefix,omitempty"`
+
 	// Providers configures one or more AI providers.
 	// +optional
 	Providers ProvidersSpec `json:"providers,omitempty"`
