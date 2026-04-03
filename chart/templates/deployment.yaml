@@ -62,6 +62,11 @@ spec:
               fi
             done
           fi
+          # Copy OMO config if present
+          if [ -d /tmp/omo-source ] && [ ! -d /home/{{ $username }}/.config/opencode ]; then
+            mkdir -p /home/{{ $username }}/.config/opencode
+            cp -r /tmp/omo-source/* /home/{{ $username }}/.config/opencode/
+          fi
           # Best-effort chown (NFS with root_squash may fail)
           chown -R 1000:1000 /home/{{ $username }} 2>/dev/null || true
         securityContext:
@@ -202,7 +207,11 @@ spec:
           name: {{ include "ok8s.fullname" . }}-config
       - name: omo-init
         configMap:
+<<<<<<< HEAD
           name: {{ include "ok8s.fullname" . }}-config
+=======
+          name: {{ include "ok8s.fullname" . }}-omo
+>>>>>>> 3fe550d (fix: mount data PVC at home dir, copy config in init container)
           optional: true
       {{- if .Values.identity.enabled }}
       - name: identity
