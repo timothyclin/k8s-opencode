@@ -49,11 +49,11 @@ spec:
         - -c
         - |
           set -e
-          shopt -s nullglob
           mkdir -p /home/{{ $username }}/.config
           # Copy config from ConfigMap if not already present (check target file, not symlink)
-          if [ -d /tmp/config-source ]; then
+          if [ -d /tmp/config-source ] && [ "$(ls -A /tmp/config-source 2>/dev/null)" ]; then
             for f in /tmp/config-source/*; do
+              [ -f "$f" ] || continue
               filename=$(basename "$f")
               target="/home/{{ $username }}/.config/$filename"
               # Copy if target doesn't exist OR if source is newer
@@ -63,9 +63,10 @@ spec:
             done
           fi
           # Copy omo config if present
-          if [ -d /tmp/omo-source ]; then
+          if [ -d /tmp/omo-source ] && [ "$(ls -A /tmp/omo-source 2>/dev/null)" ]; then
             mkdir -p /home/{{ $username }}/.config/opencode
             for f in /tmp/omo-source/*; do
+              [ -f "$f" ] || continue
               filename=$(basename "$f")
               target="/home/{{ $username }}/.config/opencode/$filename"
               if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
