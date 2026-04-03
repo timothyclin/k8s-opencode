@@ -92,20 +92,40 @@ kubectl apply -f https://raw.githubusercontent.com/timothyclin/k8s-opencode/main
 
 ### Single-User Deploy
 
-Defaults now include Oh-My-OpenCode, Context7 MCP, and user skills. Just set your password:
+Defaults now include Oh-My-OpenCode, Context7 MCP, user skills, kubedock, and 2Gi memory. Just set your password:
 
 ```yaml
 # values.yaml — fill in serverPassword
 serverPassword: "CHANGE_ME"
 
-# Optional: Override defaults
-# - To disable Oh-My-OpenCode: omo.enabled: false
-# - To disable MCPs: mcp.remote: []
-# - To disable skills: skills.npm: []
+# All defaults are pre-configured:
+# - Oh-My-OpenCode (omo.enabled: true)
+# - Context7 MCP server
+# - Skills: CORE, Prompting, Art, CreateSkill, Agents, GitWorkflow
+# - Kubedock enabled (test containers as K8s pods)
+# - 2Gi memory limit
+# - 20Gi workspace / 5Gi data storage
 
 # Enable Tailscale ingress (recommended)
 ingress:
   enabled: true
+```
+
+Optional overrides (only if needed):
+
+```yaml
+# Disable Oh-My-OpenCode
+omo:
+  enabled: false
+
+# Or change memory limit
+resources:
+  limits:
+    memory: 4Gi
+
+# Or disable kubedock
+kubedock:
+  enabled: false
 ```
 
 ```bash
@@ -157,6 +177,15 @@ skills:
     - CreateSkill
     - Agents
     - GitWorkflow
+
+# Kubedock: enabled by default (runs test containers as K8s pods)
+kubedock:
+  enabled: true
+
+# Container resources: 2Gi memory by default
+resources:
+  limits:
+    memory: 2Gi
 
 # Tailscale ingress
 ingress:
