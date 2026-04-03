@@ -62,7 +62,6 @@ spec:
               fi
             done
           fi
-<<<<<<< HEAD
           # Copy omo config if present
           if [ -d /tmp/omo-source ] && [ "$(ls -A /tmp/omo-source 2>/dev/null)" ]; then
             mkdir -p /home/{{ $username }}/.config/opencode
@@ -215,15 +214,7 @@ spec:
           name: {{ include "ok8s.fullname" . }}-config
       - name: omo-init
         configMap:
-<<<<<<< HEAD
-<<<<<<< HEAD
-          name: {{ include "ok8s.fullname" . }}-config
-=======
           name: {{ include "ok8s.fullname" . }}-omo
->>>>>>> 3fe550d (fix: mount data PVC at home dir, copy config in init container)
-=======
-          name: {{ include "ok8s.fullname" . }}-config
->>>>>>> f5d4d5a (fix: address PR comments - config to opencode subdir, fix omo ConfigMap reference, remove unused $root, best-effort chown)
           optional: true
       {{- if .Values.identity.enabled }}
       - name: identity
