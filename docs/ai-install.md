@@ -40,6 +40,8 @@ If they choose single-user, ask for:
 | Value | How to Get | Example |
 |-------|-----------|---------|
 | `serverPassword` | Ask human | `"my-secret-password"` |
+| Memory limit | Optional — defaults to 2Gi | `"4Gi"` |
+| Kubedock | Optional — defaults to enabled | `false` to disable |
 | Username | Optional — defaults to `opencode` | `"timothy"` |
 
 > **API key is optional** — Don't ask for it. After logging in, run `/connect` to authenticate with 75+ providers.
@@ -50,7 +52,11 @@ If they choose single-user, ask for:
 > "I need 1 value to install single-user k8s-opencode:
 > - `serverPassword` - What password should I set for the OpenCode web UI?
 > 
-> (Optional: What username should I use? Defaults to 'opencode'. This determines your home directory name and your access URL.)"
+> I also have 2 optional settings with sensible defaults. Let me know if you'd like to change either:
+> - **Memory limit**: Defaults to 2Gi. Need more for large projects?
+> - **Kubedock**: Enabled by default (runs test containers as K8s pods). Want to disable?
+> 
+> (Optional: What username should I use? Defaults to 'opencode'. This determines your home directory name and access URL.)"
 
 ### Multi-User Mode
 

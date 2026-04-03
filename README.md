@@ -119,10 +119,11 @@ See [chart/values.yaml](chart/values.yaml) for all options. Key sections:
 |---------|---------|
 | `serverPassword` | HTTP auth for the OpenCode server |
 | `opencode.username` | Home directory user (default: opencode) |
+| `resources.limits.memory` | Container memory limit (default: 2Gi) |
 | `mcp.remote[]` | Remote MCP servers (URLs) |
 | `mcp.laptopServers[]` | Laptop MCP servers (via Tailscale egress) |
 | `ingress.enabled` | Expose OpenCode UI to tailnet |
-| `kubedock.*` | Docker API → K8s Pod translation |
+| `kubedock.enabled` | Enable kubedock (default: true) |
 | `persistence.*` | Storage for home dir and workspace |
 
 > **Note:** LLM API keys are optional. After logging in, run `/connect` to authenticate with 75+ providers.
