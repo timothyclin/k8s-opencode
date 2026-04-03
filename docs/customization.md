@@ -324,8 +324,17 @@ users:
 
 `OPENCODE_ENABLE_EXA=1` is always injected into every pod, enabling web search
 support via the Exa search API. This is unconditional — you don't configure it.
-If you want web search to actually work, your `extraEnv` or Oh-My-OpenCode
-skill config must supply the Exa API key separately.
+
+**API key is optional** — if not provided, Exa search silently fails but the
+pod continues running. For production web search, add the key via `extraEnv`:
+
+```yaml
+extraEnv:
+  - name: EXA_API_KEY
+    value: "exa-..."
+```
+
+Or use the `/connect` command after logging in to authenticate with Exa.
 
 ### Extra Environment Variables
 
@@ -398,6 +407,8 @@ sharedSkills:
 
 ### Inject a Secrets Manager Key
 
+This approach supplies API keys at deploy time:
+
 ```yaml
 extraEnv:
   - name: EXA_API_KEY
@@ -406,6 +417,9 @@ extraEnv:
         name: opencode-extra-secrets
         key: exa-api-key
 ```
+
+**Alternative: Use /connect** — After logging in, run `/connect` in the terminal
+to authenticate with providers (including Exa) without pre-configuring secrets.
 
 ### Disable Plugins for a Minimal Setup
 

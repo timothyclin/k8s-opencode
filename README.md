@@ -241,7 +241,9 @@ For each `OpenCodeWorkspace` CR, the operator reconciles:
 
 ### API Key Management
 
-API keys can be provided via a Secret reference:
+API keys can be provided in three ways:
+
+**1. Via Secret reference (pre-configured):**
 
 ```yaml
 spec:
@@ -254,7 +256,17 @@ spec:
         key: anthropic-key    # Key within the Secret
 ```
 
-Or use OAuth (no API key needed):
+**2. Via /connect command (after login - recommended):**
+
+After accessing the workspace, run `/connect` in the terminal to link your OpenCode
+account. OpenCode supports 75+ providers including Anthropic, OpenAI, Google,
+OpenRouter, and many more. This is the simplest approach - no secret management needed.
+
+```bash
+/connect
+```
+
+**3. OAuth (provider-specific):**
 
 ```yaml
 spec:
