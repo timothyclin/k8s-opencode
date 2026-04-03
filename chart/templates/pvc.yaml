@@ -2,6 +2,23 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  name: {{ include "ok8s.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ok8s.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.data.accessMode }}
+  {{- if .Values.persistence.data.storageClass }}
+  storageClassName: {{ .Values.persistence.data.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: {{ include "ok8s.fullname" . }}-data
   namespace: {{ .Release.Namespace }}
   labels:
