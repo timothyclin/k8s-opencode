@@ -79,14 +79,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=opencode-bin /usr/local/bin/opencode /usr/local/bin/opencode
 RUN chmod +x /usr/local/bin/opencode && opencode --version
 
-# Create non-root user for security
-RUN groupadd -g 1000 opencode && \
-    useradd -u 1000 -g 1000 -m -d /home/opencode -s /bin/bash opencode && \
-    chown -R opencode:opencode /home/opencode
+RUN groupadd -g 1000 appgroup && \
+    mkdir -p /home && \
+    chown -R 1000:1000 /home
 
-ENV HOME=/home/opencode
-
-USER opencode
-WORKDIR /home/opencode
+ENV HOME=/home
 
 ENTRYPOINT ["opencode"]

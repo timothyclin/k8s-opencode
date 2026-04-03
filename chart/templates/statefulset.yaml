@@ -60,19 +60,33 @@ spec:
         - -c
         - |
           set -e
+          USER_NAME="{{ $user.name }}"
+          USER_ID=1000
+          
+          # Create user with provided name
+          id "$USER_NAME" 2>/dev/null || useradd -u $USER_ID -g $USER_ID -m -d /home/$USER_NAME -s /bin/bash "$USER_NAME"
+          
+          # Configure sudoers for the runtime user
+          echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER_NAME
+          chmod 440 /etc/sudoers.d/$USER_NAME
+          
+          # Build /etc/passwd with dynamic user entry for whoami support
+          cp /etc/passwd /mnt/passwd/passwd
+          echo "$USER_NAME:x:$USER_ID:$USER_ID::/home/$USER_NAME:/bin/bash" >> /mnt/passwd/passwd
+          
           # Fix ownership on all mounted directories
-          chown -R 1000:1000 /home/opencode/workspace /home/opencode/.local /home/opencode/.config 2>/dev/null || true
-          # Create opencode subdirectory if it doesn't exist (main app needs it)
-          mkdir -p /home/opencode/.config/opencode 2>/dev/null || true
-          chown -R 1000:1000 /home/opencode/.config/opencode 2>/dev/null || true
+          chown -R $USER_ID:$USER_ID /home/$USER_NAME/workspace /home/$USER_NAME/.local /home/$USER_NAME/.config 2>/dev/null || true
+          # Create user subdirectory if it doesn't exist (main app needs it)
+          mkdir -p /home/$USER_NAME/.config/opencode 2>/dev/null || true
+          chown -R $USER_ID:$USER_ID /home/$USER_NAME/.config/opencode 2>/dev/null || true
           # Copy config files from ConfigMap to PVC (ConfigMap is read-only, need to copy to writable PVC)
           if [ -f /etc/opencode-config/opencode.jsonc ]; then
-            cp /etc/opencode-config/opencode.jsonc /home/opencode/.config/opencode/
-            chown 1000:1000 /home/opencode/.config/opencode/opencode.jsonc
+            cp /etc/opencode-config/opencode.jsonc /home/$USER_NAME/.config/opencode/
+            chown $USER_ID:$USER_ID /home/$USER_NAME/.config/opencode/opencode.jsonc
           fi
           if [ -f /etc/opencode-config/oh-my-opencode.jsonc ]; then
-            cp /etc/opencode-config/oh-my-opencode.jsonc /home/opencode/.config/opencode/
-            chown 1000:1000 /home/opencode/.config/opencode/oh-my-opencode.jsonc
+            cp /etc/opencode-config/oh-my-opencode.jsonc /home/$USER_NAME/.config/opencode/
+            chown $USER_ID:$USER_ID /home/$USER_NAME/.config/opencode/oh-my-opencode.jsonc
           fi
         securityContext:
           runAsUser: 0
@@ -85,11 +99,15 @@ spec:
           mountPath: /etc/opencode-config
           readOnly: true
         - name: workspace
-          mountPath: /home/opencode/workspace
+          mountPath: /home/{{ $user.name }}/workspace
         - name: data
-          mountPath: /home/opencode/.local
+          mountPath: /home/{{ $user.name }}/.local
         - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /home/{{ $user.name }}/.config
+        - name: sudoers
+          mountPath: /etc/sudoers.d/
+        - name: passwd
+          mountPath: /mnt/passwd
       {{- if $root.Values.identity.enabled }}
       - name: init-identity
         image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -100,14 +118,14 @@ spec:
         - |
           set -e
           # Ensure workspace directory exists and has correct permissions
-          if [ -d /home/opencode/workspace ]; then
-            chown -R 1000:1000 /home/opencode/workspace
+          if [ -d /home/{{ $user.name }}/workspace ]; then
+            chown -R 1000:1000 /home/{{ $user.name }}/workspace
           fi
           # Copy identity files if present
           if [ -d /identity ]; then
             for f in /identity/*; do
               filename=$(basename "$f")
-              target="/home/opencode/$filename"
+              target="/home/{{ $user.name }}/$filename"
               if [ ! -e "$target" ]; then
                 cp -r "$f" "$target"
                 chown -R 1000:1000 "$target"
@@ -125,25 +143,25 @@ spec:
           mountPath: /identity
           readOnly: true
         - name: workspace
-          mountPath: /home/opencode/workspace
+          mountPath: /home/{{ $user.name }}/workspace
         - name: data
-          mountPath: /home/opencode/.local
+          mountPath: /home/{{ $user.name }}/.local
         - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /home/{{ $user.name }}/.config
       {{- end }}
       containers:
       - name: opencode
         image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
         imagePullPolicy: {{ $root.Values.image.pullPolicy }}
         command: ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]
-        workingDir: /home/opencode
+        workingDir: /home/{{ $user.name }}
         ports:
         - containerPort: 4096
           name: http
           protocol: TCP
         env:
         - name: HOME
-          value: "/home/opencode"
+          value: "/home/{{ $user.name }}"
         - name: OPENCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -185,12 +203,15 @@ spec:
         {{- end }}
         volumeMounts:
         - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /home/{{ $user.name }}/.config
           subPath: opencode
         - name: data
-          mountPath: /home/opencode/.local
+          mountPath: /home/{{ $user.name }}/.local
         - name: workspace
-          mountPath: /home/opencode/workspace
+          mountPath: /home/{{ $user.name }}/workspace
+        - name: passwd
+          mountPath: /etc/passwd
+          subPath: passwd
         {{- with $root.Values.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -212,6 +233,10 @@ spec:
       - name: config-src
         configMap:
           name: {{ include "ok8s.fullname" $root }}-user-{{ $user.name }}-config
+      - name: sudoers
+        emptyDir: {}
+      - name: passwd
+        emptyDir: {}
       {{- if $root.Values.identity.enabled }}
       - name: identity
         configMap:
