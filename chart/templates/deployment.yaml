@@ -49,23 +49,28 @@ spec:
         - -c
         - |
           set -e
-          mkdir -p /home/{{ $username }}/.config/opencode
-          # Copy config from ConfigMap to opencode subdirectory
-          if [ -d /tmp/config-source ] && [ "$(ls -A /tmp/config-source 2>/dev/null)" ]; then
+          mkdir -p /home/{{ $username }}/.config
+          # Copy config from ConfigMap if not already present (check target file, not symlink)
+          if [ -d /tmp/config-source ]; then
             for f in /tmp/config-source/*; do
-              [ -f "$f" ] || continue
               filename=$(basename "$f")
-              target="/home/{{ $username }}/.config/opencode/$filename"
+              target="/home/{{ $username }}/.config/$filename"
               # Copy if target doesn't exist OR if source is newer
               if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
                 cp "$f" "$target"
               fi
             done
           fi
-          # Copy OMO config if present
-          if [ -d /tmp/omo-source ] && [ ! -d /home/{{ $username }}/.config/opencode ]; then
+          # Copy omo config if present
+          if [ -d /tmp/omo-source ]; then
             mkdir -p /home/{{ $username }}/.config/opencode
-            cp -r /tmp/omo-source/* /home/{{ $username }}/.config/opencode/
+            for f in /tmp/omo-source/*; do
+              filename=$(basename "$f")
+              target="/home/{{ $username }}/.config/opencode/$filename"
+              if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
+                cp "$f" "$target"
+              fi
+            done
           fi
           # Best-effort chown (NFS with root_squash may fail)
           chown -R 1000:1000 /home/{{ $username }} 2>/dev/null || true
