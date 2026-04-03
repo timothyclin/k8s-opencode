@@ -54,6 +54,18 @@ spec:
           # Create opencode subdirectory if it doesn't exist (main app needs it)
           mkdir -p /home/opencode/.config/opencode 2>/dev/null || true
           chown -R 1000:1000 /home/opencode/.config/opencode 2>/dev/null || true
+          # Copy config files from ConfigMap to writable PVC only on first run
+          # (don't overwrite user's existing config)
+          if [ -f /config/opencode.jsonc ] && [ ! -f /home/opencode/.config/opencode/opencode.jsonc ]; then
+            mkdir -p /home/opencode/.config/opencode
+            cp /config/opencode.jsonc /home/opencode/.config/opencode/
+            chown 1000:1000 /home/opencode/.config/opencode/opencode.jsonc
+          fi
+          if [ -f /config/oh-my-opencode.jsonc ] && [ ! -f /home/opencode/.config/opencode/oh-my-opencode.jsonc ]; then
+            mkdir -p /home/opencode/.config/opencode
+            cp /config/oh-my-opencode.jsonc /home/opencode/.config/opencode/
+            chown 1000:1000 /home/opencode/.config/opencode/oh-my-opencode.jsonc
+          fi
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -62,12 +74,16 @@ spec:
           runAsNonRoot: false
           {{- end }}
         volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
         - name: workspace
           mountPath: /home/opencode/workspace
         - name: data
           mountPath: /home/opencode/.local
-        - name: config
+        - name: data
           mountPath: /home/opencode/.config
+          subPath: config
       {{- if .Values.identity.enabled }}
       initContainers:
       - name: init-identity
@@ -97,6 +113,9 @@ spec:
           runAsUser: 0
           runAsGroup: 0
         volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
         - name: identity
           mountPath: /identity
           readOnly: true
@@ -104,8 +123,9 @@ spec:
           mountPath: /home/opencode/workspace
         - name: data
           mountPath: /home/opencode/.local
-        - name: config
+        - name: data
           mountPath: /home/opencode/.config
+          subPath: config
       {{- end }}
       containers:
       - name: opencode
@@ -161,14 +181,14 @@ spec:
         {{- end }}
         volumeMounts:
         - name: config
-          mountPath: /home/opencode/.config
+          mountPath: /config
+          readOnly: true
         - name: data
           mountPath: /home/opencode/.local
-        - name: workspace
-          mountPath: /home/opencode/workspace
-        {{- with .Values.extraVolumeMounts }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+          subPath: local
+        - name: data
+          mountPath: /home/opencode/.config
+          subPath: config
         readinessProbe:
           tcpSocket:
             port: 4096
