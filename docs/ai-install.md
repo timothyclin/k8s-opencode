@@ -270,8 +270,8 @@ Password: (serverPassword you set)
 Each workspace gets its own namespace. Access depends on auth configuration:
 
 **With OIDC auth enabled** (recommended for teams):
-- Users access via shared auth frontend: `https://opencode-<username>.<namespace>.<tailnet>.ts.net`
-- Auth router validates session and routes to correct user pod
+- Users access via shared endpoint: `https://<hostname>.<namespace>.<tailnet>.ts.net`
+- Auth router validates OIDC session from cookie and routes to correct user pod
 
 **Without OIDC auth** (basic mode):
 ```bash
