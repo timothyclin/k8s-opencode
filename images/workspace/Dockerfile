@@ -83,8 +83,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=opencode-bin /usr/local/bin/opencode /usr/local/bin/opencode
 RUN chmod +x /usr/local/bin/opencode && opencode --version
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    ln -s /root/.local/bin/uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+RUN chmod +x /usr/local/bin/uv
 
 RUN groupadd -g 1000 appgroup && \
     mkdir -p /home && \

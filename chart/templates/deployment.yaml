@@ -159,6 +159,8 @@ spec:
         env:
         - name: HOME
           value: "/home/{{ $username }}"
+        - name: UV_TOOL_BIN_DIR
+          value: "/usr/local/bin"
         - name: OPENCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
