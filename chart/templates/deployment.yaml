@@ -89,6 +89,20 @@ spec:
               fi
             done
           fi
+          # Seed skills: copy from ConfigMap to PVC only if not already present (preserves user edits)
+          if [ -d /tmp/skills-source ] && [ "$(ls -A /tmp/skills-source 2>/dev/null)" ]; then
+            mkdir -p /home/$USER_NAME/.config/opencode/skills
+            for f in /tmp/skills-source/*; do
+              [ -f "$f" ] || continue
+              skill_name=$(basename "$f")
+              skill_dir="/home/$USER_NAME/.config/opencode/skills/$skill_name"
+              skill_file="$skill_dir/SKILL.md"
+              if [ ! -e "$skill_file" ]; then
+                mkdir -p "$skill_dir"
+                cp "$f" "$skill_file"
+              fi
+            done
+          fi
           # Best-effort chown (NFS with root_squash may fail)
           chown -R $USER_ID:$USER_GID /home/$USER_NAME 2>/dev/null || true
         securityContext:
@@ -110,6 +124,9 @@ spec:
           mountPath: /etc/sudoers.d/
         - name: passwd
           mountPath: /mnt/passwd
+        - name: skills-init
+          mountPath: /tmp/skills-source
+          readOnly: true
       {{- if .Values.identity.enabled }}
       - name: init-identity
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -241,6 +258,10 @@ spec:
       - name: omo-init
         configMap:
           name: {{ include "ok8s.fullname" . }}-omo
+          optional: true
+      - name: skills-init
+        configMap:
+          name: {{ include "ok8s.fullname" . }}-skills
           optional: true
       {{- if .Values.identity.enabled }}
       - name: identity

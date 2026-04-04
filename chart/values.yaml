@@ -169,17 +169,37 @@ opencode:
   extraConfig: ""
 
 # -- Skills configuration for OpenCode
-# -- Skills are reusable prompt templates and tool configurations
 skills:
-  # -- npm-based skills to install
-  # -- These are user-installed skills that override built-in defaults
-  npm:
+  # -- Default skill files to seed into ~/.config/opencode/skills/ on first deploy.
+  # -- These SKILL.md files are bundled in chart/skills/ and copied to the writable PVC
+  # -- by the init container. Seeding is idempotent — existing files are never overwritten,
+  # -- so developers can freely modify skills in the pod to customize their workflow.
+  # -- To reset a skill to the chart default: kubectl exec into the pod, delete the file,
+  # -- then restart the pod (or delete the pod).
+  defaults:
     - CORE
     - Prompting
     - Art
     - CreateSkill
     - Agents
     - GitWorkflow
+    - DelegationRecovery
+  # -- Custom inline skill content for private/custom skills not bundled in the chart.
+  # -- Map of skill name to SKILL.md content (string). Same seeding rules apply.
+  # -- Example:
+  #   custom:
+  #     MySkill: |
+  #       ---
+  #       name: MySkill
+  #       description: My custom skill
+  #       ---
+  #       # MySkill
+  #       Instructions here...
+  custom: {}
+  # -- npm-based skills installed via opencode's native npm skill mechanism.
+  # -- Only use this for skills genuinely published as npm packages.
+  # -- The defaults above are file-based; leave this empty unless you have npm-published skills.
+  npm: []
   # -- Inline skill configurations (array of skill config objects)
   # -- See https://opencode.ai/docs/skills/ for format
   config: []
