@@ -197,6 +197,12 @@ tailscaleOperator:
   proxyTag: "tag:k8s"
   # -- Namespace where the Tailscale operator is installed
   namespace: "tailscale"
+  cleanupJob:
+    image:
+      # -- Image for the pre-delete Tailscale cleanup job
+      repository: bitnami/kubectl
+      tag: latest
+      pullPolicy: IfNotPresent
 
 # -- Secret management backend
 # -- Options: "plain" (K8s secrets), "sealed" (Bitnami sealed-secrets), "sops" (Mozilla SOPS), "external" (external-secrets-operator)
