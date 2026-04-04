@@ -16,6 +16,7 @@ spec:
     metadata:
       labels:
         {{- include "ok8s.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: server
       annotations:
         checksum/config: {{ include "ok8s.opencodeConfig" . | sha256sum }}
         {{- if .Values.omo.enabled }}
