@@ -10,6 +10,7 @@ spec:
   type: ClusterIP
   selector:
     {{- include "ok8s.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: server
   ports:
   - name: http
     port: 4096
