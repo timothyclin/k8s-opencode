@@ -35,7 +35,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: cleanup
-          image: bitnami/kubectl:1.30
+          image: "{{ .Values.tailscaleOperator.cleanupJob.image.repository }}:{{ .Values.tailscaleOperator.cleanupJob.image.tag }}"
+          imagePullPolicy: {{ .Values.tailscaleOperator.cleanupJob.image.pullPolicy }}
           command:
             - sh
             - -c
