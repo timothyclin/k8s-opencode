@@ -6,7 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 jobs:
@@ -15,36 +15,9 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-          fetch-depth: 0
-
       - name: Get version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Update values.yaml image tags
-        run: |
-          # Update main image tag
-          yq -i ".image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
-          # Update auth router image tag
-          yq -i ".auth.router.image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
-          # Show updated values
-          cat chart/values.yaml | grep -E "^image:|^  tag:|^  router:|^    tag:"
-
-      - name: Set up Git
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-
-      - name: Commit version update
-        run: |
-          git add chart/values.yaml
-          git commit -m "chore: update image tags to ${{ steps.version.outputs.VERSION }}" || echo "No changes to commit"
-          git push origin ${{ github.ref_name }}
 
   auth-router:
     needs: setup
