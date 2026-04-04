@@ -48,15 +48,18 @@ If they choose single-user, ask for:
 > 
 > **Note:** Username determines ingress hostname. For username "alice", URL is `https://oc-alice.<tailnet>.ts.net`. You don't need to ask for the tailnet name.
 
-**Prompt:**
-> "I need 1 value to install single-user k8s-opencode:
-> - `serverPassword` - What password should I set for the OpenCode web UI?
-> 
-> I also have 2 optional settings with sensible defaults. Let me know if you'd like to change either:
-> - **Memory limit**: Defaults to 2Gi. Need more for large projects?
-> - **Kubedock**: Enabled by default (runs test containers as K8s pods). Want to disable?
-> 
-> (Optional: What username should I use? Defaults to 'opencode'. This determines your home directory name and access URL.)"
+**Use the `question` tool to collect values interactively:**
+
+Use your agent's `question` tool to show an interactive form. Collect `serverPassword` as a **password input field** (not plain text). Example questions to ask:
+
+1. `serverPassword` — "What password should I set for the OpenCode web UI?" *(use a password/secret input field)*
+2. `username` — "What username? Defaults to 'opencode'. This sets your home directory and access URL." *(optional, freetext)*
+3. `memoryLimit` — "Memory limit? Defaults to 2Gi. Increase for large projects." *(optional, freetext)*
+4. `kubedock` — "Disable kubedock? It's enabled by default to run test containers as K8s pods." *(optional, yes/no)*
+
+> **Do NOT ask for the Tailscale tailnet name** — it is determined automatically.
+
+If your agent platform does not support interactive input fields, ask for the password in a clearly labeled field and note that it will be used as a secret value.
 
 ### Multi-User Mode
 

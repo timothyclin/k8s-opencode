@@ -21,13 +21,14 @@ For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full install
 
 3. **Then deploy** — Use the recommended values from `docs/ai-install.md`
 
-3. **After install** — Tell human the access URL (derived from their Tailscale tailnet automatically):
+4. **After install** — Tell human the access URL (the tailnet name is determined automatically from the cluster — do NOT ask for it):
    ```
    https://oc-<username>.<tailnet>.ts.net
    # Default username: https://oc-opencode.<tailnet>.ts.net
    Username: (username, defaults to opencode)
    Password: (the serverPassword you set)
    ```
+   > The `<tailnet>` placeholder is filled automatically by Tailscale — you don't need to know it in advance.
 
 ## What This Is
 
@@ -537,11 +538,13 @@ spec:
 
 When a human asks you to install or configure k8s-opencode:
 
-**1. Gather required values first** — Ask the human:
-- `serverPassword` — password for the web UI
-- `<your-tailnet>` — their Tailscale tailnet name (e.g., `example` in `opencode.example.ts.net`)
+**1. Gather required values first** — Use the `question` tool to collect:
+- `serverPassword` — password for the web UI (use a password input field)
+- `username` — optional, defaults to `opencode`
 
 > API key is optional — don't ask. After login, run `/connect` to authenticate.
+> 
+> **Do NOT ask for the Tailscale tailnet name** — it is determined automatically from the cluster.
 
 **2. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
 
