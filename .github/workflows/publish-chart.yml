@@ -6,7 +6,6 @@ on:
       - "v*"
 
 permissions:
-  contents: write
   packages: write
 
 jobs:
@@ -15,9 +14,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
 
       - name: Get version from tag
         id: version
@@ -31,22 +27,6 @@ jobs:
           # Update image tags in values.yaml so the packaged chart references the correct image version
           yq -i ".image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
           yq -i ".auth.router.image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
-
-      - name: Set up Git
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-
-      - name: Commit version update
-        run: |
-          git add chart/Chart.yaml chart/values.yaml
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: update versions to ${{ steps.version.outputs.VERSION }}"
-            git push origin main
-          else
-            echo "No changes to commit"
-          fi
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
