@@ -2,8 +2,6 @@ name: operator-ci
 
 on:
   pull_request:
-    paths:
-      - "operator/**"
   push:
     branches:
       - main
@@ -14,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  operator-ci:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,14 +20,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for operator changes
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            if git diff --name-only "$BASE" "$HEAD" | grep -q '^operator/'; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "No operator changes — skipping operator tests"
+            fi
+          fi
 
       - name: Set up Go
+        if: steps.filter.outputs.changed == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: operator/go.mod
           cache-dependency-path: operator/go.sum
 
       - name: Verify manifests
+        if: steps.filter.outputs.changed == 'true'
         run: |
           make manifests generate
           if ! git diff --quiet; then
@@ -39,7 +57,9 @@ jobs:
           fi
 
       - name: Lint
+        if: steps.filter.outputs.changed == 'true'
         run: make lint
 
       - name: Test
+        if: steps.filter.outputs.changed == 'true'
         run: make test

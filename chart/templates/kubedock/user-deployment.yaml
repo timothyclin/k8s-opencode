@@ -37,7 +37,7 @@ spec:
         imagePullPolicy: {{ $root.Values.kubedock.image.pullPolicy }}
         command: ["kubedock", "server"]
         args:
-        - "--port={{ $root.Values.kubedock.port }}"
+        - "--listen-addr=:{{ $root.Values.kubedock.port }}"
         - "--labels=app.kubernetes.io/user={{ $user.name }},app.kubernetes.io/instance={{ $root.Release.Name }}"
         {{- range $root.Values.kubedock.extraArgs }}
         - {{ . | quote }}

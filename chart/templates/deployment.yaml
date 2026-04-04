@@ -49,13 +49,27 @@ spec:
         - -c
         - |
           set -e
-          mkdir -p /home/{{ $username }}/.config/opencode
+          USER_NAME="{{ $username }}"
+          USER_ID="{{ .Values.securityContext.runAsUser | default 1000 }}"
+          USER_GID="{{ .Values.securityContext.runAsGroup | default 1000 }}"
+          
+          # Create user with provided name (or fallback)
+          id "$USER_NAME" 2>/dev/null || useradd -u $USER_ID -g $USER_ID -m -d /home/$USER_NAME -s /bin/bash "$USER_NAME"
+          
+          # Configure sudoers for the runtime user
+          echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER_NAME
+          chmod 440 /etc/sudoers.d/$USER_NAME
+          
+          # Build /etc/passwd with dynamic user entry for whoami support
+          cp /etc/passwd /mnt/passwd/passwd
+          
+          mkdir -p /home/$USER_NAME/.config/opencode
           # Copy config from ConfigMap to opencode subdirectory
           if [ -d /tmp/config-source ] && [ "$(ls -A /tmp/config-source 2>/dev/null)" ]; then
             for f in /tmp/config-source/*; do
               [ -f "$f" ] || continue
               filename=$(basename "$f")
-              target="/home/{{ $username }}/.config/opencode/$filename"
+              target="/home/$USER_NAME/.config/opencode/$filename"
               # Copy if target doesn't exist OR if source is newer
               if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
                 cp "$f" "$target"
@@ -64,18 +78,18 @@ spec:
           fi
           # Copy omo config if present
           if [ -d /tmp/omo-source ] && [ "$(ls -A /tmp/omo-source 2>/dev/null)" ]; then
-            mkdir -p /home/{{ $username }}/.config/opencode
+            mkdir -p /home/$USER_NAME/.config/opencode
             for f in /tmp/omo-source/*; do
               [ -f "$f" ] || continue
               filename=$(basename "$f")
-              target="/home/{{ $username }}/.config/opencode/$filename"
+              target="/home/$USER_NAME/.config/opencode/$filename"
               if [ ! -e "$target" ] || [ "$f" -nt "$target" ]; then
                 cp "$f" "$target"
               fi
             done
           fi
           # Best-effort chown (NFS with root_squash may fail)
-          chown -R 1000:1000 /home/{{ $username }} 2>/dev/null || true
+          chown -R $USER_ID:$USER_ID /home/$USER_NAME 2>/dev/null || true
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -91,6 +105,10 @@ spec:
         - name: omo-init
           mountPath: /tmp/omo-source
           readOnly: true
+        - name: sudoers
+          mountPath: /etc/sudoers.d/
+        - name: passwd
+          mountPath: /mnt/passwd
       {{- if .Values.identity.enabled }}
       - name: init-identity
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -177,6 +195,13 @@ spec:
           mountPath: /home/{{ $username }}
         - name: workspace
           mountPath: /home/{{ $username }}/workspace
+        - name: sudoers
+          mountPath: /etc/sudoers.d/
+          readOnly: true
+        - name: passwd
+          mountPath: /etc/passwd
+          subPath: passwd
+          readOnly: true
         {{- with .Values.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -221,6 +246,10 @@ spec:
         configMap:
           name: {{ include "ok8s.fullname" . }}-identity
       {{- end }}
+      - name: sudoers
+        emptyDir: {}
+      - name: passwd
+        emptyDir: {}
       {{- with .Values.extraVolumes }}
       {{- toYaml . | nindent 6 }}
       {{- end }}
