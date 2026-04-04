@@ -120,7 +120,7 @@ kubectl apply -f https://raw.githubusercontent.com/timothyclin/k8s-opencode/main
 
 ### Single-User Deploy
 
-Defaults now include Oh-My-OpenCode, Context7 MCP, user skills, kubedock, and 2Gi memory. Just set your password:
+Defaults now include Oh-My-OpenCode, Superpowers skills, Context7 MCP, user skills, kubedock, and 2Gi memory. Just set your password:
 
 ```yaml
 # values.yaml — fill in serverPassword
@@ -185,7 +185,7 @@ omo:
     visualEngineering:
       model: "github-copilot/claude-sonnet-4.6"
 
-# Plugins: enabled by default (oh-my-opencode, @tarquinen/opencode-dcp)
+# Plugins: enabled by default (oh-my-opencode, @tarquinen/opencode-dcp, superpowers)
 plugins:
   enabled: true
 

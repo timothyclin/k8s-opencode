@@ -165,7 +165,7 @@ mcp:
   remote: []
   laptopServers: []
 
-# Disable plugins (default: oh-my-opencode, @tarquinen/opencode-dcp)
+# Disable plugins (default: oh-my-opencode, @tarquinen/opencode-dcp, superpowers)
 plugins:
   enabled: false
 ```
