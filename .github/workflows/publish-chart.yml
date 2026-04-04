@@ -23,11 +23,14 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Update Chart.yaml version
+      - name: Update version files
         run: |
-          cd chart
-          yq -i ".version = \"${{ steps.version.outputs.VERSION }}\"" Chart.yaml
-          yq -i ".appVersion = \"${{ steps.version.outputs.VERSION }}\"" Chart.yaml
+          # Update Chart.yaml
+          yq -i ".version = \"${{ steps.version.outputs.VERSION }}\"" chart/Chart.yaml
+          yq -i ".appVersion = \"${{ steps.version.outputs.VERSION }}\"" chart/Chart.yaml
+          # Update image tags in values.yaml so the packaged chart references the correct image version
+          yq -i ".image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
+          yq -i ".auth.router.image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
 
       - name: Set up Git
         run: |
@@ -37,9 +40,9 @@ jobs:
 
       - name: Commit version update
         run: |
-          git add chart/Chart.yaml
-          git commit -m "chore: update chart version to ${{ steps.version.outputs.VERSION }}" || echo "No changes to commit"
-          git push origin ${{ github.ref_name }}
+          git add chart/Chart.yaml chart/values.yaml
+          git commit -m "chore: update versions to ${{ steps.version.outputs.VERSION }}" || echo "No changes to commit"
+          git push origin HEAD:main
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
