@@ -65,7 +65,7 @@ spec:
           USER_GID="{{ $root.Values.securityContext.runAsGroup | default 1000 }}"
           
           # Create user with provided name
-          id "$USER_NAME" 2>/dev/null || useradd -u $USER_ID -g $USER_ID -m -d /home/$USER_NAME -s /bin/bash "$USER_NAME"
+          id "$USER_NAME" 2>/dev/null || useradd -u $USER_ID -g $USER_GID -m -d /home/$USER_NAME -s /bin/bash "$USER_NAME"
           
           # Configure sudoers for the runtime user
           echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER_NAME
