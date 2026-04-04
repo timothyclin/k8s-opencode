@@ -155,13 +155,15 @@ mcp:
 
 # -- Plugin configuration for OpenCode
 # -- Plugins extend OpenCode with additional tools and capabilities
-# -- Default plugins: oh-my-opencode (task orchestration) and @tarquinen/opencode-dcp (design system)
+# -- Default plugins: oh-my-opencode (task orchestration), @tarquinen/opencode-dcp (design system),
+# --   and superpowers (skills framework with brainstorming, TDD, debugging, code review workflows)
 plugins:
   # -- Enable default plugins (set to false to disable all plugins)
   enabled: true
   # -- Additional npm plugins to install (array of npm package specifiers)
   # -- Examples: ["my-plugin@latest", "@scope/plugin@1.0.0"]
-  npm: []
+  npm:
+    - "superpowers@git+https://github.com/obra/superpowers.git"
 
 # -- OpenCode runtime configuration
 opencode:

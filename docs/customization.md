@@ -42,12 +42,13 @@ startup and can add new tools, agents, and UI features.
 
 ### Default Plugins
 
-When `plugins.enabled: true` (the default), two plugins are always installed:
+When `plugins.enabled: true` (the default), three plugins are always installed:
 
 | Plugin | Purpose |
 |--------|---------|
 | `oh-my-opencode@latest` | Multi-agent orchestration, Sisyphus task runner |
 | `@tarquinen/opencode-dcp@latest` | Design system and component tools |
+| `superpowers` | Skills framework (brainstorming, TDD, debugging, code review workflows) |
 
 ### Disable Default Plugins
 
