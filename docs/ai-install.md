@@ -14,20 +14,20 @@ Before proceeding, verify the human has:
 
 ## Step 1: Ask Deployment Mode
 
-**First, ask the human which mode they want:**
+**Use the `question` tool to ask which mode they want:**
 
-> "k8s-opencode supports two deployment modes:
-> 
-> 1. **Single-user** (recommended for personal use)
->    - Simple Helm install, one OpenCode instance for you
->    - Quick setup, no operator needed
-> 
-> 2. **Multi-user** (for teams/enterprises)
->    - Install the Kubernetes operator first
->    - Creates isolated workspaces per user via Custom Resource Definition
->    - Dynamic provisioning, each user gets their own namespace
-> 
-> Which mode would you like?"
+```json
+{
+  "questions": [{
+    "question": "Which deployment mode do you want?",
+    "header": "Deployment Mode",
+    "options": [
+      {"label": "Single-user (Recommended)", "description": "Simple Helm install, one OpenCode instance for personal use. Quick setup, no operator needed."},
+      {"label": "Multi-user", "description": "Install the Kubernetes operator first. Creates isolated workspaces per user via CRD. Dynamic provisioning, each user gets their own namespace."}
+    ]
+  }]
+}
+```
 
 ---
 
@@ -50,12 +50,37 @@ If they choose single-user, ask for:
 
 **Use the `question` tool to collect values interactively:**
 
-Use your agent's `question` tool to show an interactive form. Collect `serverPassword` as a **password input field** (not plain text). Example questions to ask:
+Use your agent's `question` tool to show an interactive form. The `question` tool collects values as free-text answers ("Type your own answer") — there is no masked/password input type. Label the password field clearly so the human knows it's a secret value. Example:
 
-1. `serverPassword` — "What password should I set for the OpenCode web UI?" *(use a password/secret input field)*
-2. `username` — "What username? Defaults to 'opencode'. This sets your home directory and access URL." *(optional, freetext)*
-3. `memoryLimit` — "Memory limit? Defaults to 2Gi. Increase for large projects." *(optional, freetext)*
-4. `kubedock` — "Disable kubedock? It's enabled by default to run test containers as K8s pods." *(optional, yes/no)*
+```json
+{
+  "questions": [
+    {
+      "question": "What password should I set for the OpenCode web UI? (This will be stored as a Kubernetes secret)",
+      "header": "Server Password",
+      "options": []
+    },
+    {
+      "question": "What username? Defaults to 'opencode'. This sets your home directory and access URL.",
+      "header": "Username (optional)",
+      "options": []
+    },
+    {
+      "question": "Memory limit? Defaults to 2Gi. Increase for large projects (e.g. 4Gi).",
+      "header": "Memory Limit (optional)",
+      "options": []
+    },
+    {
+      "question": "Disable kubedock? It's enabled by default to run test containers as K8s pods.",
+      "header": "Kubedock",
+      "options": [
+        {"label": "Keep enabled (Recommended)", "description": "Run test containers as Kubernetes pods"},
+        {"label": "Disable", "description": "Disable kubedock"}
+      ]
+    }
+  ]
+}
+```
 
 > **Do NOT ask for the Tailscale tailnet name** — it is determined automatically.
 

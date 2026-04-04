@@ -538,17 +538,49 @@ spec:
 
 When a human asks you to install or configure k8s-opencode:
 
-**1. Gather required values first** — Use the `question` tool to collect:
-- `serverPassword` — password for the web UI (use a password input field)
-- `username` — optional, defaults to `opencode`
+**1. Ask deployment mode first** — Use the `question` tool:
+
+```json
+{
+  "questions": [{
+    "question": "Which deployment mode do you want?",
+    "header": "Deployment Mode",
+    "options": [
+      {"label": "Single-user (Recommended)", "description": "Simple Helm install, one OpenCode instance for personal use"},
+      {"label": "Multi-user", "description": "Install Kubernetes operator first, then create isolated workspaces per user"}
+    ]
+  }]
+}
+```
+
+**2. Gather required values** — Use the `question` tool to collect (single-user example):
+
+```json
+{
+  "questions": [
+    {
+      "question": "What password should I set for the OpenCode web UI?",
+      "header": "Server Password",
+      "options": []
+    },
+    {
+      "question": "What username? Defaults to 'opencode'. Sets your home directory and access URL.",
+      "header": "Username (optional)",
+      "options": []
+    }
+  ]
+}
+```
 
 > API key is optional — don't ask. After login, run `/connect` to authenticate.
 > 
 > **Do NOT ask for the Tailscale tailnet name** — it is determined automatically from the cluster.
+> 
+> **Note:** The `question` tool collects free-text answers via "Type your own answer" — there is no masked/password input type. Just label the field clearly as a password/secret.
 
-**2. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
+**3. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
 
-**3. Tell them the access URL after install:**
+**4. Tell them the access URL after install:**
 ```
 https://oc-<username>.<tailnet>.ts.net
 # Default username: https://oc-opencode.<tailnet>.ts.net
