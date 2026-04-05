@@ -369,6 +369,40 @@ TESTCONTAINERS_CHECKS_DISABLE: "true"
 
 ---
 
+## Known Issues
+
+### Stale Tailscale DNS Entries (oc-user-2, oc-user-3, etc.)
+
+**Symptom**: After reinstalling the chart, the ingress hostname gets assigned a `-2`, `-3`, etc. suffix instead of the expected hostname.
+
+**Root Cause**: This is a known bug in the Tailscale Kubernetes operator (v1.94.2 and earlier). When the operator encounters an optimistic lock error during reconciliation, it may delete and recreate the proxy StatefulSet with a new random suffix. Each new pod registers a new Tailscale device with a new hostname, but the old device is never deleted from the tailnet.
+
+See: [tailscale/tailscale#18922](https://github.com/tailscale/tailscale/issues/18922)
+
+**Impact**:
+- Stale DNS entries accumulate (`oc-username`, `oc-username-1`, `oc-username-2`, etc.)
+- Each stale entry corresponds to a Tailscale machine that must be manually removed
+
+**Workarounds**:
+
+1. **Manual cleanup** (recommended):
+   - Go to [Tailscale Admin Console](https://login.tailscale.com/admin/machines)
+   - Delete the stale machine entries for your namespace
+   - Reinstall the chart - the correct hostname should be assigned
+
+2. **Avoid rapid reinstalls**:
+   - Wait at least 30 seconds between `helm uninstall` and `helm install`
+   - Avoid triggering concurrent modifications during reconciliation
+
+3. **The chart's cleanup job** (improved in v0.2.10):
+   - Adds graceful termination with 30s grace period
+   - Waits 15s for Tailscale control plane to process deregistration
+   - This helps but cannot fully prevent the issue due to the operator bug
+
+**Note**: Upgrading the Tailscale operator to a version that fixes this issue (when available) is the long-term solution.
+
+---
+
 ## Architecture
 
 ### Single-user mode (Helm)
