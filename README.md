@@ -553,13 +553,15 @@ When a human asks you to install or configure k8s-opencode:
 }
 ```
 
-**2. Gather required values** — Use the `question` tool to collect (single-user example):
+**2. Gather required values** — Use the `question` tool to collect ALL values (single-user example):
+
+> **⚠️ CRITICAL: Ask ALL questions.** Do not skip optional fields — the question tool below is complete for a reason. Defaults are applied automatically if not provided.
 
 ```json
 {
   "questions": [
     {
-      "question": "What password should I set for the OpenCode web UI?",
+      "question": "What password should I set for the OpenCode web UI? (This will be stored as a Kubernetes secret)",
       "header": "Server Password",
       "options": []
     },
@@ -567,6 +569,19 @@ When a human asks you to install or configure k8s-opencode:
       "question": "What username? Defaults to 'opencode'. Sets your home directory and access URL.",
       "header": "Username (optional)",
       "options": []
+    },
+    {
+      "question": "Memory limit? Defaults to 2Gi. Increase for large projects (e.g. 4Gi).",
+      "header": "Memory Limit (optional)",
+      "options": []
+    },
+    {
+      "question": "Disable kubedock? It's enabled by default to run test containers as K8s pods.",
+      "header": "Kubedock",
+      "options": [
+        {"label": "Keep enabled (Recommended)", "description": "Run test containers as Kubernetes pods"},
+        {"label": "Disable", "description": "Disable kubedock"}
+      ]
     }
   ]
 }

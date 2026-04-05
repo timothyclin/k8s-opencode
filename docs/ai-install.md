@@ -35,20 +35,24 @@ Before proceeding, verify the human has:
 
 ### Single-User Mode
 
-If they choose single-user, ask for:
+**MUST ask for ALL of these values** using the question tool — do not skip optional fields:
 
-| Value | How to Get | Example |
-|-------|-----------|---------|
-| `serverPassword` | Ask human | `"my-secret-password"` |
-| Memory limit | Optional — defaults to 2Gi | `"4Gi"` |
-| Kubedock | Optional — defaults to enabled | `false` to disable |
-| Username | Optional — defaults to `opencode` | `"timothy"` |
+| Value | Required | How to Get | Default | Example |
+|-------|----------|-----------|---------|---------|
+| `serverPassword` | ✅ Yes | Ask human | (none) | `"my-secret-password"` |
+| `Username` | ❌ No | Ask human | `"opencode"` | `"timothy"` |
+| Memory limit | ❌ No | Ask human | `"2Gi"` | `"4Gi"` |
+| Kubedock | ❌ No | Ask human | `true` (enabled) | `false` to disable |
+
+> **IMPORTANT:** The question tool MUST include ALL fields — do not skip "optional" fields. Defaults are applied automatically if not provided. Asking ensures the user is aware of configurable options.
 
 > **API key is optional** — Don't ask for it. After logging in, run `/connect` to authenticate with 75+ providers.
 > 
 > **Note:** Username determines ingress hostname. For username "alice", URL is `https://oc-alice.<tailnet>.ts.net`. You don't need to ask for the tailnet name.
 
 **Use the `question` tool to collect values interactively:**
+
+> **⚠️ CRITICAL: Include ALL questions.** Do NOT skip optional fields — defaults are applied automatically. The question tool below includes ALL four fields for a reason. Ask all of them to ensure the user is aware of configurable options.
 
 Use your agent's `question` tool to show an interactive form. The `question` tool collects values as free-text answers ("Type your own answer") — there is no masked/password input type. Label the password field clearly so the human knows it's a secret value. Example:
 
