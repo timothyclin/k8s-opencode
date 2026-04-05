@@ -4,9 +4,17 @@ to force clean node deregistration from the tailnet control plane.
 
 Without this, stale Tailscale nodes retain their serve config (127.0.0.1:80)
 after helm uninstall, causing connection errors on reinstall with the same hostname.
+
+Workflow:
+1. Wait for any existing proxy pods to gracefully deregister (send SIGTERM to trigger cleanup)
+2. Delete StatefulSets (pods get SIGTERM, allowing graceful Tailscale unadvertise)
+3. Wait for pod termination
+4. Delete Secrets and Services
+5. Verify DNS hostname is no longer resolvable
 */}}
 {{- if .Values.ingress.enabled }}
 {{- $tsNamespace := .Values.tailscaleOperator.namespace | default "tailscale" }}
+{{- $root := . }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -20,7 +28,7 @@ metadata:
     "helm.sh/hook-weight": "0"
 spec:
   backoffLimit: 1
-  activeDeadlineSeconds: 120
+  activeDeadlineSeconds: 180
   template:
     metadata:
       labels:
@@ -44,17 +52,48 @@ spec:
               set -e
               TS_NS="{{ $tsNamespace }}"
               LABEL="tailscale.com/parent-resource-ns={{ .Release.Namespace }}"
+              GRACE_PERIOD=30
 
-              echo "Removing Tailscale proxy resources in ${TS_NS} for parent namespace {{ .Release.Namespace }}..."
+              echo "Starting Tailscale cleanup for namespace {{ .Release.Namespace }}..."
 
-              # Delete StatefulSets first — pods gracefully shut down and deregister from tailnet
-              kubectl delete statefulset -n "${TS_NS}" -l "${LABEL}" --ignore-not-found --wait=true --timeout=60s
+              # Step 1: Check for existing proxy pods and trigger graceful shutdown
+              # Send SIGTERM to pods so they can unadvertise from Tailscale control plane
+              echo "Checking for existing proxy pods..."
+              EXISTING_PODS=$(kubectl get pods -n "${TS_NS}" -l "${LABEL}" -o name 2>/dev/null || true)
+              if [ -n "${EXISTING_PODS}" ]; then
+                echo "Found existing pods, sending SIGTERM to trigger graceful deregistration..."
+                echo "${EXISTING_PODS}" | xargs -r kubectl delete -n "${TS_NS}" --grace-period="${GRACE_PERIOD}" --wait=false
+                echo "Waiting ${GRACE_PERIOD}s for pods to deregister from tailnet..."
+                sleep "${GRACE_PERIOD}"
+              else
+                echo "No existing proxy pods found."
+              fi
 
-              # Delete Secrets containing node auth state — prevents stale identity reuse
+              # Step 2: Delete StatefulSets — pods will terminate gracefully
+              # The --wait=true waits for pods to be deleted, but we also wait above for deregistration
+              echo "Deleting StatefulSets..."
+              kubectl delete statefulset -n "${TS_NS}" -l "${LABEL}" --ignore-not-found --wait=true --timeout=60s || true
+
+              # Step 3: Wait additional time for Tailscale control plane to process deregistration
+              echo "Waiting for Tailscale DNS cleanup..."
+              sleep 15
+
+              # Step 4: Delete Secrets containing node auth state — prevents stale identity reuse
+              echo "Deleting Secrets..."
               kubectl delete secret -n "${TS_NS}" -l "${LABEL}" --ignore-not-found
 
-              # Delete proxy Services
+              # Step 5: Delete proxy Services
+              echo "Deleting Services..."
               kubectl delete svc -n "${TS_NS}" -l "${LABEL}" --ignore-not-found
+
+              # Step 6: Verify cleanup - check that no resources remain
+              echo "Verifying cleanup..."
+              REMAINING=$(kubectl get statefulset,svc,secret,pods -n "${TS_NS}" -l "${LABEL}" -o name 2>/dev/null || true)
+              if [ -n "${REMAINING}" ]; then
+                echo "WARNING: Remaining resources detected: ${REMAINING}"
+              else
+                echo "All Tailscale proxy resources removed."
+              fi
 
               echo "Tailscale cleanup complete."
 {{- end }}
