@@ -9,6 +9,8 @@ metadata:
     {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "ok8s.selectorLabels" . | nindent 6 }}
@@ -159,6 +161,8 @@ spec:
         env:
         - name: HOME
           value: "/home/{{ $username }}"
+        - name: UV_TOOL_BIN_DIR
+          value: "/usr/local/bin"
         - name: OPENCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
