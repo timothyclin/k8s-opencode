@@ -9,6 +9,8 @@ metadata:
     {{- include "ok8s.labels" . | nindent 4 }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "ok8s.selectorLabels" . | nindent 6 }}
