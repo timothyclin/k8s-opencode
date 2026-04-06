@@ -72,7 +72,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileIngress(ctx context.Context, work
 		ingress.Annotations["tailscale.com/hostname"] = hostname
 
 		if len(workspace.Spec.Tailscale.IngressTags) > 0 {
-			ingress.Annotations["tailscale.com/tags"] = fmt.Sprintf("%s", workspace.Spec.Tailscale.IngressTags[0])
+			ingress.Annotations["tailscale.com/tags"] = workspace.Spec.Tailscale.IngressTags[0]
 		}
 
 		ingress.Spec = networkingv1.IngressSpec{
