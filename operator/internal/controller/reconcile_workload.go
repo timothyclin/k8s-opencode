@@ -172,6 +172,19 @@ func (r *OpenCodeWorkspaceReconciler) reconcileService(ctx context.Context, work
 
 func buildProviderEnvVars(workspace *opencodev1alpha1.OpenCodeWorkspace) []corev1.EnvVar {
 	var envs []corev1.EnvVar
+
+	// Always inject server password (required for OpenCode HTTP server)
+	envs = append(envs, corev1.EnvVar{
+		Name: "OPENCODE_SERVER_PASSWORD",
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "workspace-secrets"},
+				Key:                  "server-password",
+			},
+		},
+	})
+
+	// Inject provider API keys if enabled
 	if workspace.Spec.Providers.Anthropic.Enabled && workspace.Spec.Providers.Anthropic.APIKeySecretRef.Name != "" {
 		envs = append(envs, secretEnvVar("ANTHROPIC_API_KEY", workspace.Spec.Providers.Anthropic.APIKeySecretRef.Name))
 	}

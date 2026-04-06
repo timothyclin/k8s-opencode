@@ -107,7 +107,7 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 			}
 
 			// Reconcile multiple times to progress through all phases
-			for i := 0; i < 5; i++ {
+			for range 5 {
 				_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 					NamespacedName: testNamespacedName,
 				})

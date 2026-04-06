@@ -65,6 +65,12 @@ type OpenCodeWorkspaceSpec struct {
 	// Kubedock configures the optional kubedock sidecar.
 	// +optional
 	Kubedock KubedockSpec `json:"kubedock,omitempty"`
+
+	// ServerPassword is the password for the OpenCode HTTP server.
+	// If not provided, a random password will be generated.
+	// The password is stored in the workspace-secrets Secret.
+	// +optional
+	ServerPassword string `json:"serverPassword,omitempty"`
 }
 
 // ProvidersSpec configures supported AI providers.
