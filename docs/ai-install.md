@@ -133,7 +133,7 @@ serverPassword: "CHANGE_ME"
 # All defaults are pre-configured:
 # - Oh-My-OpenCode (omo.enabled: true)
 # - Context7 MCP server
-# - Skills: CORE, Prompting, Art, CreateSkill, Agents, GitWorkflow
+# - User skills (empty by default - use npm skill packages)
 # - Kubedock enabled (test containers as K8s pods)
 # - 2Gi memory limit
 # - 20Gi workspace / 5Gi data storage
@@ -200,15 +200,10 @@ mcp:
       url: https://mcp.context7.com/mcp
       enabled: true
 
-# Skills: CORE, Prompting, Art, CreateSkill, Agents, GitWorkflow by default
+# Skills: none by default - install via npm packages as needed
 skills:
-  npm:
-    - CORE
-    - Prompting
-    - Art
-    - CreateSkill
-    - Agents
-    - GitWorkflow
+  npm: []
+  config: []
 
 # Kubedock: enabled by default (runs test containers as K8s pods)
 kubedock:

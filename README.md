@@ -155,7 +155,7 @@ omo:
     visualEngineering:
       model: "github-copilot/claude-sonnet-4.6"
 
-# Override default skills (defaults: CORE, Prompting, Art, CreateSkill, Agents, GitWorkflow)
+# Override default skills (empty by default - install via npm packages as needed)
 skills:
   npm: []
   config: []
