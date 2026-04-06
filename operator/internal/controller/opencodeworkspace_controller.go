@@ -50,7 +50,8 @@ const (
 
 type OpenCodeWorkspaceReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme          *runtime.Scheme
+	SystemNamespace string
 }
 
 // +kubebuilder:rbac:groups=opencode.opencode.io,resources=opencodeworkspaces,verbs=get;list;watch;create;update;patch;delete
