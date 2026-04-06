@@ -63,6 +63,8 @@ type OpenCodeWorkspaceReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingressclasses,verbs=get;list;watch;create;update;patch;delete
 
 func (r *OpenCodeWorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
@@ -146,6 +148,10 @@ func (r *OpenCodeWorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	if err := r.reconcileService(ctx, workspace, namespaceName); err != nil {
 		return r.handleReconcileError(ctx, workspace, "Service", err)
+	}
+
+	if err := r.reconcileTailscaleIngress(ctx, workspace, namespaceName); err != nil {
+		return r.handleReconcileError(ctx, workspace, "TailscaleIngress", err)
 	}
 
 	if err := r.reconcileEmailMap(ctx, workspace); err != nil {
