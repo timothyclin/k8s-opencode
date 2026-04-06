@@ -175,13 +175,7 @@ opencode:
 skills:
   # -- npm-based skills to install
   # -- These are user-installed skills that override built-in defaults
-  npm:
-    - CORE
-    - Prompting
-    - Art
-    - CreateSkill
-    - Agents
-    - GitWorkflow
+  npm: []
   # -- Inline skill configurations (array of skill config objects)
   # -- See https://opencode.ai/docs/skills/ for format
   config: []
