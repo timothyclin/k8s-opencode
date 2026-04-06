@@ -27,7 +27,9 @@ jobs:
           version: v4.35.2
 
       - name: Install GitHub CLI
-        uses: actions/setup-github-cli@v2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
 
       - name: Update version files
         run: |
