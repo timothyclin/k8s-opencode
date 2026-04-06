@@ -29,18 +29,6 @@ controllers, no TLS cert management.
 
 ---
 
-## Single-User Mode (Helm Chart)
-
-One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
-
-### Prerequisites
-
-- Kubernetes cluster (ARM64 or amd64)
-- Helm 3.x
-- Tailscale account (free tier works)
-
-> No API key required at install time. After logging in, run `/connect` to authenticate.
-
 ## Installation
 
 ### Prerequisites
@@ -61,7 +49,7 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 
 > **Security Note:** Use a values file instead of `--set` to avoid exposing your password in shell history.
 
-See [Single-User Mode](#single-user-mode-helm-chart) for full instructions.
+See [Single-User Mode](#single-user-mode-helm-chart) for full configuration options.
 
 ### For LLM Agents
 
@@ -70,6 +58,12 @@ Fetch the installation guide and follow it:
 ```
 curl -s https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.md
 ```
+
+---
+
+## Single-User Mode (Helm Chart)
+
+One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
 ### Verify
 
