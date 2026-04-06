@@ -39,7 +39,6 @@ Before proceeding, verify the human has:
 
 | Value | Required | How to Get | Default | Example |
 |-------|----------|-----------|---------|---------|
-| `serverPassword` | ✅ Yes | Ask human | (none) | `"my-secret-password"` |
 | `Username` | ❌ No | Ask human | `"opencode"` | `"timothy"` |
 | Memory limit | ❌ No | Ask human | `"2Gi"` | `"4Gi"` |
 | Kubedock | ❌ No | Ask human | `true` (enabled) | `false` to disable |
@@ -50,20 +49,11 @@ Before proceeding, verify the human has:
 > 
 > **Note:** Username determines ingress hostname. For username "alice", URL is `https://oc-alice.<tailnet>.ts.net`. You don't need to ask for the tailnet name.
 
-**Use the `question` tool to collect values interactively:**
-
-> **⚠️ CRITICAL: Include ALL questions.** Do NOT skip optional fields — defaults are applied automatically. The question tool below includes ALL four fields for a reason. Ask all of them to ensure the user is aware of configurable options.
-
-Use your agent's `question` tool to show an interactive form. The `question` tool collects values as free-text answers ("Type your own answer") — there is no masked/password input type. Label the password field clearly so the human knows it's a secret value. Example:
+**Use your agent's `question` tool to collect optional values:**
 
 ```json
 {
   "questions": [
-    {
-      "question": "What password should I set for the OpenCode web UI? (This will be stored as a Kubernetes secret)",
-      "header": "Server Password",
-      "options": []
-    },
     {
       "question": "What username? Defaults to 'opencode'. This sets your home directory and access URL.",
       "header": "Username (optional)",
@@ -88,7 +78,33 @@ Use your agent's `question` tool to show an interactive form. The `question` too
 
 > **Do NOT ask for the Tailscale tailnet name** — it is determined automatically.
 
-If your agent platform does not support interactive input fields, ask for the password in a clearly labeled field and note that it will be used as a secret value.
+**SECURE PASSWORD HANDLING — DO NOT ASK FOR PASSWORD:**
+
+Instead of asking for the password directly, create a values template and instruct the user to fill it in:
+
+1. **Generate a values.yaml template** with placeholder password
+2. **Instruct the user** to open the file and update the password themselves
+3. **Wait for confirmation** before running Helm
+
+Example prompt to generate values file:
+
+```
+I've created a values.yaml template for your installation.
+
+**Please do the following:**
+1. Open the file at `./values.yaml`
+2. Find `serverPassword: "CHANGE_ME"` 
+3. Replace it with your desired password
+4. Save the file
+5. Tell me when ready, and I'll run Helm install
+```
+
+Then run Helm install with the values file:
+
+```bash
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  -f values.yaml
+```
 
 ### Multi-User Mode
 
@@ -124,11 +140,13 @@ kubectl apply -f https://raw.githubusercontent.com/timothyclin/k8s-opencode/main
 
 ### Single-User Deploy
 
-Defaults now include Oh-My-OpenCode, Superpowers skills, Context7 MCP, user skills, kubedock, and 2Gi memory. Just set your password:
+Defaults now include Oh-My-OpenCode, Superpowers skills, Context7 MCP, user skills, kubedock, and 2Gi memory. 
+
+**First, create a values.yaml with your password:**
 
 ```yaml
-# values.yaml — fill in serverPassword
-serverPassword: "CHANGE_ME"
+# values.yaml — UPDATE the serverPassword
+serverPassword: "CHANGE_ME"  # ← Replace with your password
 
 # All defaults are pre-configured:
 # - Oh-My-OpenCode (omo.enabled: true)

@@ -14,7 +14,7 @@ For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full install
    - **Multi-user**: Install operator first, then create workspaces per user
 
 2. **Gather required info based on mode:**
-   - Single-user: just `serverPassword`
+   - Single-user: collect optional values, create values template for user to add password securely
    - Multi-user: operator installed first, then `name` + `email` per user
 
    > **API key is optional** — Don't ask for it. After login, run `/connect` to authenticate.
@@ -72,28 +72,20 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
 **No version required** — omit `--version` to use the latest published version:
 
-```bash
-# Latest version (recommended - no --version flag needed)
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --set serverPassword=your-secure-password
+> **Security Note:** Use a values file instead of `--set` to avoid exposing your password in shell history.
 
-# Specific version (only if you need an exact version - check GitHub releases)
+```bash
+# Create values.yaml with serverPassword, then:
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version <version> \
-  --set serverPassword=your-secure-password
+  -f values.yaml
 ```
 
-Or with a values file:
+Or with specific version:
 
 ```bash
-# Latest version (recommended)
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  -f my-values.yaml
-
-# Specific version (check GitHub releases for available versions)
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
   --version <version> \
-  -f my-values.yaml
+  -f values.yaml
 ```
 
 > **Namespace is required** — the chart will fail if installed into `default`.
