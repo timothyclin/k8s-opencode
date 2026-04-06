@@ -89,7 +89,7 @@ Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
 the project, i.e.:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/operator/<tag or branch>/dist/install.yaml
+kubectl apply -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/operator-install.yaml
 ```
 
 ### By providing a Helm Chart
