@@ -18,6 +18,8 @@ package controller
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +31,10 @@ import (
 	opencodev1alpha1 "github.com/timothyclin/k8s-opencode/operator/api/v1alpha1"
 )
 
-const providerSecretsName = "provider-api-keys"
+const (
+	providerSecretsName  = "provider-api-keys"
+	workspaceSecretsName = "workspace-secrets"
+)
 
 type APIKeys struct {
 	Anthropic  string
@@ -38,6 +43,12 @@ type APIKeys struct {
 }
 
 func (r *OpenCodeWorkspaceReconciler) reconcileSecrets(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) (*APIKeys, error) {
+	// First, ensure workspace-secrets exists with server password
+	if err := r.reconcileWorkspaceSecrets(ctx, workspace, namespaceName); err != nil {
+		return nil, err
+	}
+
+	// Then handle provider API keys
 	apiKeys := make(map[string][]byte)
 	result := &APIKeys{}
 
@@ -122,4 +133,60 @@ func (r *OpenCodeWorkspaceReconciler) getSecretKey(ctx context.Context, namespac
 	}
 
 	return value, nil
+}
+
+// reconcileWorkspaceSecrets ensures the workspace-secrets Secret exists with server password.
+func (r *OpenCodeWorkspaceReconciler) reconcileWorkspaceSecrets(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) error {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      workspaceSecretsName,
+			Namespace: namespaceName,
+		},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, secret, func() error {
+		if err := controllerutil.SetOwnerReference(workspace, secret, r.Scheme); err != nil {
+			return err
+		}
+
+		if secret.Data == nil {
+			secret.Data = make(map[string][]byte)
+		}
+
+		// Only generate password if it doesn't exist yet
+		if _, exists := secret.Data["server-password"]; !exists {
+			var password string
+			if workspace.Spec.ServerPassword != "" {
+				// Use user-provided password
+				password = workspace.Spec.ServerPassword
+			} else {
+				// Generate random password
+				generated, err := generatePassword(32)
+				if err != nil {
+					return fmt.Errorf("failed to generate server password: %w", err)
+				}
+				password = generated
+			}
+			secret.Data["server-password"] = []byte(password)
+		}
+
+		secret.Type = corev1.SecretTypeOpaque
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to reconcile workspace secrets %q: %w", workspaceSecretsName, err)
+	}
+
+	return nil
+}
+
+// generatePassword creates a cryptographically secure random password.
+func generatePassword(length int) (string, error) {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	// Use base64 URL encoding to avoid special characters that might need escaping
+	return base64.URLEncoding.EncodeToString(bytes)[:length], nil
 }

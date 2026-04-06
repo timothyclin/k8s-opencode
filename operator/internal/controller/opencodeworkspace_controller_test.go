@@ -21,6 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -69,8 +70,9 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &OpenCodeWorkspaceReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
+				Client:          k8sClient,
+				Scheme:          k8sClient.Scheme(),
+				SystemNamespace: "default",
 			}
 
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
@@ -79,6 +81,67 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
 			// Example: If you expect a certain status condition after reconciliation, verify it here.
+		})
+
+		It("should inject OPENCODE_SERVER_PASSWORD env var into StatefulSet", func() {
+			By("Creating the workspace resource")
+			resource := &opencodev1alpha1.OpenCodeWorkspace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: resourceName + "-password-test",
+				},
+				Spec: opencodev1alpha1.OpenCodeWorkspaceSpec{
+					Email: "test@example.com",
+				},
+			}
+			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+			By("Reconciling the created resource")
+			controllerReconciler := &OpenCodeWorkspaceReconciler{
+				Client:          k8sClient,
+				Scheme:          k8sClient.Scheme(),
+				SystemNamespace: "default",
+			}
+
+			testNamespacedName := types.NamespacedName{
+				Name: resource.Name,
+			}
+
+			// Reconcile multiple times to progress through all phases
+			for range 5 {
+				_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+					NamespacedName: testNamespacedName,
+				})
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("Checking that StatefulSet has OPENCODE_SERVER_PASSWORD")
+			// Namespace is created with pattern: {prefix}-{workspace-name}
+			// Default prefix is "oc"
+			expectedNamespace := "oc-" + resource.Name
+			statefulSet := &appsv1.StatefulSet{}
+			statefulSetName := types.NamespacedName{
+				Name:      "workspace",
+				Namespace: expectedNamespace,
+			}
+			err := k8sClient.Get(ctx, statefulSetName, statefulSet)
+			Expect(err).NotTo(HaveOccurred())
+
+			container := statefulSet.Spec.Template.Spec.Containers[0]
+			var foundServerPassword bool
+			for _, env := range container.Env {
+				if env.Name == "OPENCODE_SERVER_PASSWORD" {
+					foundServerPassword = true
+					Expect(env.ValueFrom).NotTo(BeNil(), "OPENCODE_SERVER_PASSWORD should reference a secret")
+					Expect(env.ValueFrom.SecretKeyRef).NotTo(BeNil())
+					Expect(env.ValueFrom.SecretKeyRef.Name).To(Equal("workspace-secrets"))
+					Expect(env.ValueFrom.SecretKeyRef.Key).To(Equal("server-password"))
+					break
+				}
+			}
+			Expect(foundServerPassword).To(BeTrue(), "StatefulSet should have OPENCODE_SERVER_PASSWORD env var")
+
+			By("Cleaning up the test workspace")
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
 	})
 })

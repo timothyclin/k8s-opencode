@@ -249,6 +249,12 @@ spec:
                       More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                     type: object
                 type: object
+              serverPassword:
+                description: |-
+                  ServerPassword is the password for the OpenCode HTTP server.
+                  If not provided, a random password will be generated.
+                  The password is stored in the workspace-secrets Secret.
+                type: string
               storage:
                 description: Storage defines persistent volume sizes for the workspace.
                 properties:
