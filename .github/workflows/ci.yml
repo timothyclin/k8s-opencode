@@ -51,7 +51,7 @@ jobs:
         run: helm lint chart/
 
       - name: Template chart
-        run: helm template test chart/
+        run: helm template test chart/ -n opencode
 
   # Runs only when operator files change
   operator:
