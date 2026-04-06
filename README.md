@@ -296,6 +296,42 @@ Get your OAuth client from
 [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth).
 Required scopes: `devices`, `services`, `keys`.
 
+### Enable Ingress (Multi-User Operator)
+
+To expose a workspace via Tailscale, add the `tailscale` spec to your OpenCodeWorkspace:
+
+```yaml
+apiVersion: opencode.opencode.io/v1alpha1
+kind: OpenCodeWorkspace
+metadata:
+  name: alice
+spec:
+  email: "alice@example.com"
+  tailscale:
+    ingressTags:
+      - "tag:k8s"  # Use the default tag, or your own permitted tag
+```
+
+The operator will create a Tailscale Ingress that exposes the workspace at:
+```
+https://oc-<workspace>-<prefix>.<your-tailnet>.ts.net
+```
+
+**Note on Tailscale Tags:**
+- Tailscale ingress proxies are created as devices in your tailnet
+- Each device must have a tag that is permitted in your ACL policy
+- The default tag is `tag:k8s` — ensure this is allowed in your ACL, or use a custom tag you own
+- To check permitted tags, go to [Tailscale Admin Console](https://login.tailscale.com/admin/settings/acls) and look for `tagOwners`
+
+Example ACL allowing the default tag:
+```json
+{
+  "tagOwners": {
+    "tag:k8s": ["your-email@example.com"]
+  }
+}
+```
+
 ### Enable Ingress (Single-User Helm)
 
 ```bash
