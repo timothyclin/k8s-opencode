@@ -11,8 +11,9 @@ permissions:
 
 jobs:
   # Always runs - validate all YAML files
-  lint:
+  ci-lint:
     runs-on: ubuntu-latest
+    name: lint
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,14 +31,10 @@ jobs:
           fi
 
   # Runs only when chart files change
-  chart:
+  ci-chart:
     runs-on: ubuntu-latest
-    if: |
-      contains(github.event.pull_request.title, '') ||
-      contains(github.event.head_commit.message, '') ||
-      contains(join(inputs.files), 'chart/') ||
-      contains(join(inputs.files), 'Chart.yaml') ||
-      github.event_name == 'push'
+    name: chart
+    if: github.event_name == 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,16 +51,13 @@ jobs:
         run: helm template test chart/ -n opencode
 
   # Runs only when operator files change
-  operator:
+  ci-operator:
     runs-on: ubuntu-latest
+    name: operator
     defaults:
       run:
         working-directory: operator
-    if: |
-      contains(github.event.pull_request.title, '') ||
-      contains(github.event.head_commit.message, '') ||
-      contains(join(inputs.files), 'operator/') ||
-      github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
