@@ -26,6 +26,9 @@ jobs:
         with:
           version: v4.35.2
 
+      - name: Install GitHub CLI
+        uses: actions/setup-github-cli@v2
+
       - name: Update version files
         run: |
           # Update Chart.yaml
