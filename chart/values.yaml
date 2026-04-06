@@ -1,15 +1,12 @@
 # -- OpenCode container image
 image:
   repository: ghcr.io/timothyclin/k8s-opencode/opencode-workspace
-  tag: "0.1.6"
+  tag: "0.2.10"
   pullPolicy: IfNotPresent
-
 # -- Create the release namespace (set to false if installing into an existing namespace)
 createNamespace: false
-
 # -- Deployment mode: "single" (Deployment) or "multi" (StatefulSet)
 mode: "single"
-
 # -- Multi-user configuration (used when mode: "multi")
 users: []
 # - name: alice
@@ -53,7 +50,6 @@ sharedMcp: []
 sharedSkills:
   npm: []
   config: []
-
 # -- OAuth2 Proxy OIDC configuration (shared for multi-user mode)
 auth:
   oidc:
@@ -72,30 +68,26 @@ auth:
   router:
     image:
       repository: ghcr.io/timothyclin/k8s-opencode/auth-router
-      tag: "latest"
+      tag: "0.2.10"
       pullPolicy: IfNotPresent
-
 # -- StatefulSet update strategy (used when mode: "multi")
 updateStrategy:
   type: RollingUpdate
   rollingUpdate:
     partition: 0
     maxUnavailable: 1
-
 # -- Resource quota for multi-user namespaces
 resourceQuota:
   enabled: false
   maxCpu: "8"
   maxMemory: 16Gi
   maxPvcCount: 20
-
 # -- Backup settings for maintenance scripts
 backup:
   enabled: false
   schedule: "0 3 * * *"
   retention: 7
   storageClass: ""
-
 # -- LLM provider API keys (at least one required)
 providers:
   anthropic:
@@ -109,11 +101,9 @@ providers:
     apiKey: ""
     # -- For Gemini, you may also need a project ID for Vertex AI
     projectId: ""
-
 # -- Server auth (REQUIRED — protects the HTTP endpoint)
 # -- If empty, the server will have no authentication
 serverPassword: "change-me"
-
 # -- Oh-My-OpenCode configuration
 omo:
   enabled: true
@@ -131,7 +121,6 @@ omo:
       model: "github-copilot/gpt-4.1"
     visualEngineering:
       model: "github-copilot/claude-sonnet-4.6"
-
 # -- MCP server configuration
 mcp:
   # -- Remote MCP servers (URLs accessible from the cluster)
@@ -152,7 +141,6 @@ mcp:
   #   # Or use MagicDNS instead of IP:
   #   # tailscaleFqdn: "my-laptop.tail12345.ts.net"
   #   port: 3000
-
 # -- Plugin configuration for OpenCode
 # -- Plugins extend OpenCode with additional tools and capabilities
 # -- Default plugins: oh-my-opencode (task orchestration), @tarquinen/opencode-dcp (design system),
@@ -164,12 +152,10 @@ plugins:
   # -- Examples: ["my-plugin@latest", "@scope/plugin@1.0.0"]
   npm:
     - "superpowers@git+https://github.com/obra/superpowers.git"
-
 # -- OpenCode runtime configuration
 opencode:
   username: "opencode"
   extraConfig: ""
-
 # -- Skills configuration for OpenCode
 # -- Skills are reusable prompt templates and tool configurations
 skills:
@@ -179,12 +165,10 @@ skills:
   # -- Inline skill configurations (array of skill config objects)
   # -- See https://opencode.ai/docs/skills/ for format
   config: []
-
 # -- Tailscale cluster ingress (exposes OpenCode UI to your tailnet)
 ingress:
   enabled: false
   # -- Hostname prefix for MagicDNS (default derives from opencode.username as oc-<username>)
-
 # -- Tailscale operator configuration
 # -- If install: true, the chart expects the Tailscale Operator is already installed
 # -- This chart does NOT install the operator — install it separately per the README
@@ -199,7 +183,6 @@ tailscaleOperator:
       repository: bitnami/kubectl
       tag: latest
       pullPolicy: IfNotPresent
-
 # -- Secret management backend
 # -- Options: "plain" (K8s secrets), "sealed" (Bitnami sealed-secrets), "sops" (Mozilla SOPS), "external" (external-secrets-operator)
 secrets:
@@ -208,7 +191,6 @@ secrets:
   sealedSecretsCert: ""
   # -- For external-secrets: the SecretStore name
   externalSecretStore: ""
-
 # -- Persistent storage configuration
 persistence:
   # -- OpenCode data (config, auth, MCP credentials)
@@ -221,7 +203,6 @@ persistence:
     storageClass: ""
     size: 20Gi
     accessMode: ReadWriteOnce
-
 # -- Resource requests and limits
 resources:
   requests:
@@ -230,7 +211,6 @@ resources:
   limits:
     cpu: "2"
     memory: 2Gi
-
 # -- Pod security context for the OpenCode container
 # -- Runs as non-root user (UID 1000) for security best practices
 securityContext:
@@ -239,17 +219,13 @@ securityContext:
   runAsUser: 1000
   runAsGroup: 1000
   fsGroup: 1000
-
 # -- Node selector (defaults to arm64)
 nodeSelector:
   kubernetes.io/arch: arm64
-
 # -- Tolerations
 tolerations: []
-
 # -- Pod annotations
 podAnnotations: {}
-
 # -- Additional environment variables
 extraEnv: []
 # - name: MY_VAR
@@ -257,30 +233,27 @@ extraEnv: []
 
 # -- Additional volume mounts
 extraVolumeMounts: []
-
 # -- Additional volumes
 extraVolumes: []
-
 # -- Identity files: default agent instructions and editor configs copied to /workspace on startup
 # -- Files are copied only if they don't already exist (user edits are preserved across restarts)
 # -- Set enabled: true to deploy the ConfigMap and init container
 identity:
   enabled: false
   files: {}
-    # AGENTS.md: |
-    #   # Project Identity
-    #   This file contains instructions for AI agents working in this workspace.
-    #
-    # .cursorrules: |
-    #   # Cursor Rules
-    #   - Always write TypeScript
-    #   - Use functional components
-    #
-    # .clinerules: |
-    #   # Cline Rules
-    #   - Follow existing code style
-    #   - Add tests for new features
-
+  # AGENTS.md: |
+  #   # Project Identity
+  #   This file contains instructions for AI agents working in this workspace.
+  #
+  # .cursorrules: |
+  #   # Cursor Rules
+  #   - Always write TypeScript
+  #   - Use functional components
+  #
+  # .clinerules: |
+  #   # Cline Rules
+  #   - Follow existing code style
+  #   - Add tests for new features
 # -- Kubedock: Docker API to Kubernetes Pod translation layer
 # -- Prevents OOM kills by running test containers as separate Pods instead of DinD sidecars
 kubedock:
