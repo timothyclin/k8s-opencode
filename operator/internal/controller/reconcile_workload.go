@@ -68,6 +68,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileStatefulSet(ctx context.Context, 
 					{
 						Name:      "workspace",
 						Image:     workspaceContainerImage,
+						Command:   []string{"opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"},
 						Resources: workspace.Spec.Resources,
 						Ports: []corev1.ContainerPort{
 							{

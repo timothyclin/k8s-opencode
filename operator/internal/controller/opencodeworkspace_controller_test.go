@@ -143,5 +143,56 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 			By("Cleaning up the test workspace")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
+
+		It("should set Command field to start OpenCode server", func() {
+			By("Creating the test workspace")
+			resource := &opencodev1alpha1.OpenCodeWorkspace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: resourceName + "-command-test",
+				},
+				Spec: opencodev1alpha1.OpenCodeWorkspaceSpec{
+					Email: "test@example.com",
+				},
+			}
+			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+			By("Reconciling the created resource")
+			controllerReconciler := &OpenCodeWorkspaceReconciler{
+				Client:          k8sClient,
+				Scheme:          k8sClient.Scheme(),
+				SystemNamespace: "default",
+			}
+
+			testNamespacedName := types.NamespacedName{
+				Name: resource.Name,
+			}
+
+			// Reconcile multiple times to progress through all phases
+			for range 5 {
+				_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+					NamespacedName: testNamespacedName,
+				})
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("Checking that StatefulSet has correct Command")
+			// Namespace is created with pattern: {prefix}-{workspace-name}
+			// Default prefix is "oc"
+			expectedNamespace := "oc-" + resource.Name
+			statefulSet := &appsv1.StatefulSet{}
+			statefulSetName := types.NamespacedName{
+				Name:      "workspace",
+				Namespace: expectedNamespace,
+			}
+			err := k8sClient.Get(ctx, statefulSetName, statefulSet)
+			Expect(err).NotTo(HaveOccurred())
+
+			container := statefulSet.Spec.Template.Spec.Containers[0]
+			Expect(container.Command).NotTo(BeEmpty(), "Container should have Command set")
+			Expect(container.Command).To(Equal([]string{"opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"}))
+
+			By("Cleaning up the test workspace")
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+		})
 	})
 })
