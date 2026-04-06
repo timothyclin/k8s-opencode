@@ -6,6 +6,7 @@ on:
       - "v*"
 
 permissions:
+  contents: write
   packages: write
 
 jobs:
@@ -19,6 +20,11 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+      - name: Install yq
+        uses: mikefarah/yq@v4
+        with:
+          version: v4.35.2
+
       - name: Update version files
         run: |
           # Update Chart.yaml
@@ -27,6 +33,26 @@ jobs:
           # Update image tags in values.yaml so the packaged chart references the correct image version
           yq -i ".image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
           yq -i ".auth.router.image.tag = \"${{ steps.version.outputs.VERSION }}\"" chart/values.yaml
+
+      - name: Create version bump PR
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create branch
+          git checkout -b "release/bump-${VERSION}"
+          
+          # Commit changes
+          git add chart/Chart.yaml chart/values.yaml
+          git commit -m "chore: bump chart version to ${VERSION}" || echo "No changes to commit"
+          
+          # Push and create PR
+          git push -u origin "release/bump-${VERSION}"
+          gh pr create --title "chore: release v${VERSION}" \
+            --body "Automated release: bump chart and image versions to ${VERSION}" \
+            || echo "PR may already exist"
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
