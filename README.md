@@ -579,18 +579,13 @@ When a human asks you to install or configure k8s-opencode:
 }
 ```
 
-**2. Gather required values** — Use the `question` tool to collect ALL values (single-user example):
+**2. Gather required values** — Use the `question` tool to collect optional values (NOT password):
 
-> **⚠️ CRITICAL: Ask ALL questions.** Do not skip optional fields — the question tool below is complete for a reason. Defaults are applied automatically if not provided.
+> **⚠️ CRITICAL: Do NOT ask for password.** See "Secure Password Handling" below.
 
 ```json
 {
   "questions": [
-    {
-      "question": "What password should I set for the OpenCode web UI? (This will be stored as a Kubernetes secret)",
-      "header": "Server Password",
-      "options": []
-    },
     {
       "question": "What username? Defaults to 'opencode'. Sets your home directory and access URL.",
       "header": "Username (optional)",
@@ -614,10 +609,21 @@ When a human asks you to install or configure k8s-opencode:
 ```
 
 > API key is optional — don't ask. After login, run `/connect` to authenticate.
-> 
+
 > **Do NOT ask for the Tailscale tailnet name** — it is determined automatically from the cluster.
-> 
-> **Note:** The `question` tool collects free-text answers via "Type your own answer" — there is no masked/password input type. Just label the field clearly as a password/secret.
+
+**Secure Password Handling (REQUIRED):**
+
+Instead of asking for password, create a values template and instruct user to fill it:
+
+1. Generate a `values.yaml` with `serverPassword: "CHANGE_ME"`
+2. Tell user to open the file and replace the password themselves
+3. Wait for confirmation before running Helm
+
+Example:
+```
+I've created values.yaml with placeholder. Please open the file, update serverPassword, then tell me when ready.
+```
 
 **3. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
 
