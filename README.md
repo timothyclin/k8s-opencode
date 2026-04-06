@@ -309,7 +309,7 @@ spec:
   email: "alice@example.com"
   tailscale:
     ingressTags:
-      - "tag:k8s"  # Use the default tag, or your own permitted tag
+      - "tag:your-tag"  # Must be permitted in your Tailscale ACL
 ```
 
 The operator will create a Tailscale Ingress that exposes the workspace at:
@@ -317,20 +317,24 @@ The operator will create a Tailscale Ingress that exposes the workspace at:
 https://oc-<workspace>-<prefix>.<your-tailnet>.ts.net
 ```
 
-**Note on Tailscale Tags:**
-- Tailscale ingress proxies are created as devices in your tailnet
-- Each device must have a tag that is permitted in your ACL policy
-- The default tag is `tag:k8s` — ensure this is allowed in your ACL, or use a custom tag you own
-- To check permitted tags, go to [Tailscale Admin Console](https://login.tailscale.com/admin/settings/acls) and look for `tagOwners`
+**Setting up Tailscale Tags:**
 
-Example ACL allowing the default tag:
+Tailscale ingress proxies are created as devices in your tailnet. Each device must have a tag that is permitted in your ACL policy.
+
+1. **Create a tag** in [Tailscale Admin Console](https://login.tailscale.com/admin/settings/tags)
+2. **Add tag owners** in your ACL policy:
+
 ```json
 {
   "tagOwners": {
-    "tag:k8s": ["your-email@example.com"]
+    "tag:opencode": ["your-email@example.com"]
   }
 }
 ```
+
+3. **Use your tag** in the OpenCodeWorkspace spec (as shown above)
+
+See [Tailscale Tags Documentation](https://tailscale.com/docs/features/tags) for full details.
 
 ### Enable Ingress (Single-User Helm)
 
