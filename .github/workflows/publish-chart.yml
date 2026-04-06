@@ -55,11 +55,13 @@ jobs:
           git add chart/Chart.yaml chart/values.yaml
           git commit -m "chore: bump chart version to ${VERSION}" || echo "No changes to commit"
           
-          # Push and create PR
-          git push -u origin "release/bump-${VERSION}"
-          gh pr create --title "chore: release v${VERSION}" \
+          # Push and create PR with full options
+          git push -u origin "release/bump-${VERSION}" -f
+          gh pr create --base main --head "release/bump-${VERSION}" \
+            --title "chore: release v${VERSION}" \
             --body "Automated release: bump chart and image versions to ${VERSION}" \
-            || echo "PR may already exist"
+            --repo "${{ github.repository }}"
+          echo "PR creation attempted"
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
