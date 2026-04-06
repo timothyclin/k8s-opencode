@@ -25,9 +25,6 @@ jobs:
           go-version-file: operator/go.mod
           cache-dependency-path: operator/go.sum
 
-      - name: Run tests
-        run: make test
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -51,6 +48,9 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
+      # Build multi-arch image with GitHub Actions cache
+      # First build: ~20 min, subsequent builds: ~5-8 min
+      # Tests are skipped here since operator-ci.yml already runs them on main
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -59,6 +59,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Get version from tag
         id: version
