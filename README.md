@@ -3,33 +3,6 @@
 OpenCode on Kubernetes, with Tailscale connectivity for remote access and laptop
 MCP servers.
 
-## AI Installation
-
-For AI agents, see [docs/ai-install.md](docs/ai-install.md) for the full installation guide.
-
-**Quick summary for AI agents:**
-
-1. **First ask: Single or Multi-user?** — k8s-opencode has two modes:
-   - **Single-user**: Simple Helm install, one OpenCode for personal use
-   - **Multi-user**: Install operator first, then create workspaces per user
-
-2. **Gather required info based on mode:**
-   - Single-user: collect optional values, create values template for user to add password securely
-   - Multi-user: operator installed first, then `name` + `email` per user
-
-   > **API key is optional** — Don't ask for it. After login, run `/connect` to authenticate.
-
-3. **Then deploy** — Use the recommended values from `docs/ai-install.md`
-
-4. **After install** — Tell human the access URL (the tailnet name is determined automatically from the cluster — do NOT ask for it):
-   ```
-   https://oc-<username>.<tailnet>.ts.net
-   # Default username: https://oc-opencode.<tailnet>.ts.net
-   Username: (username, defaults to opencode)
-   Password: (the serverPassword you set)
-   ```
-   > The `<tailnet>` placeholder is filled automatically by Tailscale — you don't need to know it in advance.
-
 ## What This Is
 
 Deploy [OpenCode](https://opencode.ai) (AI coding agent) on your Kubernetes
@@ -68,27 +41,35 @@ One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
 > No API key required at install time. After logging in, run `/connect` to authenticate.
 
-### Install
+## Installation
 
-**No version required** — omit `--version` to use the latest published version:
+### Prerequisites
+
+- Kubernetes cluster (ARM64 or amd64)
+- Helm 3.x
+- Tailscale account (free tier works)
+
+> No API key required at install time. After logging in, run `/connect` to authenticate.
+
+### For Humans
+
+```bash
+# Create values.yaml with your serverPassword, then:
+helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
+  -f values.yaml
+```
 
 > **Security Note:** Use a values file instead of `--set` to avoid exposing your password in shell history.
 
-```bash
-# Create values.yaml with serverPassword, then:
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  -f values.yaml
+See [Single-User Mode](#single-user-mode-helm-chart) for full instructions.
+
+### For LLM Agents
+
+Fetch the installation guide and follow it:
+
 ```
-
-Or with specific version:
-
-```bash
-helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
-  --version <version> \
-  -f values.yaml
+curl -s https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.md
 ```
-
-> **Namespace is required** — the chart will fail if installed into `default`.
 
 ### Verify
 
@@ -559,80 +540,5 @@ spec:
 2. Run `make manifests generate`
 3. Implement reconciler logic in `operator/internal/controller/`
 4. Test with `make test`
-
-### How to Help (AI Agent)
-
-When a human asks you to install or configure k8s-opencode:
-
-**1. Ask deployment mode first** — Use the `question` tool:
-
-```json
-{
-  "questions": [{
-    "question": "Which deployment mode do you want?",
-    "header": "Deployment Mode",
-    "options": [
-      {"label": "Single-user (Recommended)", "description": "Simple Helm install, one OpenCode instance for personal use"},
-      {"label": "Multi-user", "description": "Install Kubernetes operator first, then create isolated workspaces per user"}
-    ]
-  }]
-}
-```
-
-**2. Gather required values** — Use the `question` tool to collect optional values (NOT password):
-
-> **⚠️ CRITICAL: Do NOT ask for password.** See "Secure Password Handling" below.
-
-```json
-{
-  "questions": [
-    {
-      "question": "What username? Defaults to 'opencode'. Sets your home directory and access URL.",
-      "header": "Username (optional)",
-      "options": []
-    },
-    {
-      "question": "Memory limit? Defaults to 2Gi. Increase for large projects (e.g. 4Gi).",
-      "header": "Memory Limit (optional)",
-      "options": []
-    },
-    {
-      "question": "Disable kubedock? It's enabled by default to run test containers as K8s pods.",
-      "header": "Kubedock",
-      "options": [
-        {"label": "Keep enabled (Recommended)", "description": "Run test containers as Kubernetes pods"},
-        {"label": "Disable", "description": "Disable kubedock"}
-      ]
-    }
-  ]
-}
-```
-
-> API key is optional — don't ask. After login, run `/connect` to authenticate.
-
-> **Do NOT ask for the Tailscale tailnet name** — it is determined automatically from the cluster.
-
-**Secure Password Handling (REQUIRED):**
-
-Instead of asking for password, create a values template and instruct user to fill it:
-
-1. Generate a `values.yaml` with `serverPassword: "CHANGE_ME"`
-2. Tell user to open the file and replace the password themselves
-3. Wait for confirmation before running Helm
-
-Example:
-```
-I've created values.yaml with placeholder. Please open the file, update serverPassword, then tell me when ready.
-```
-
-**3. Use the recommended deploy** — See [docs/ai-install.md](docs/ai-install.md) for the full config with Oh-My-OpenCode enabled.
-
-**4. Tell them the access URL after install:**
-```
-https://oc-<username>.<tailnet>.ts.net
-# Default username: https://oc-opencode.<tailnet>.ts.net
-Username: (username, defaults to opencode)
-Password: (the serverPassword you set)
-```
 
 
