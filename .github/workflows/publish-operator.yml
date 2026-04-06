@@ -65,9 +65,9 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v3
-        with:
-          kustomize-version: v5.4.1
+        run: |
+          curl -sL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.1/kustomize_v5.4.1_linux_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/kustomize /usr/local/bin/
 
       - name: Build installer manifest
         run: |
