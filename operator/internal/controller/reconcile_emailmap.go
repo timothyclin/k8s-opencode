@@ -32,9 +32,8 @@ import (
 )
 
 const (
-	emailMapNamespace = "opencode-system"
-	emailMapName      = "email-map"
-	emailMapKey       = "email-map.json"
+	emailMapName = "email-map"
+	emailMapKey  = "email-map.json"
 )
 
 func (r *OpenCodeWorkspaceReconciler) reconcileEmailMap(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace) error {
@@ -44,7 +43,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileEmailMap(ctx context.Context, wor
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		key := types.NamespacedName{Name: emailMapName, Namespace: emailMapNamespace}
+		key := types.NamespacedName{Name: emailMapName, Namespace: r.SystemNamespace}
 		configMap := &corev1.ConfigMap{}
 		if err := r.Get(ctx, key, configMap); err != nil {
 			if !apierrors.IsNotFound(err) {
@@ -60,7 +59,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileEmailMap(ctx context.Context, wor
 			configMap = &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      emailMapName,
-					Namespace: emailMapNamespace,
+					Namespace: r.SystemNamespace,
 				},
 				Data: map[string]string{emailMapKey: string(payload)},
 			}
@@ -111,7 +110,7 @@ func (r *OpenCodeWorkspaceReconciler) removeFromEmailMap(ctx context.Context, wo
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		key := types.NamespacedName{Name: emailMapName, Namespace: emailMapNamespace}
+		key := types.NamespacedName{Name: emailMapName, Namespace: r.SystemNamespace}
 		configMap := &corev1.ConfigMap{}
 		if err := r.Get(ctx, key, configMap); err != nil {
 			if apierrors.IsNotFound(err) {
