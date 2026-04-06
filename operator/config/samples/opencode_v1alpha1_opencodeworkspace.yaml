@@ -6,4 +6,52 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: opencodeworkspace-sample
 spec:
-  # TODO(user): Add fields here
+  email: "user@example.com"
+  namespacePrefix: "oc"
+  
+  providers:
+    anthropic:
+      enabled: true
+      apiKeySecretRef:
+        name: anthropic-key
+        namespace: default
+  
+  # Default plugins (oh-my-opencode, opencode-dcp, superpowers)
+  plugins:
+    enabled: true
+    npm:
+      - "superpowers@git+https://github.com/obra/superpowers.git"
+  
+  # MCP servers
+  mcp:
+    remote:
+      - name: context7
+        url: https://mcp.context7.com/mcp
+        enabled: true
+    # Laptop MCP servers (via Tailscale egress)
+    # laptopServers:
+    #   - name: playwright
+    #     tailscaleFqdn: my-laptop.tail12345.ts.net
+    #     port: 3000
+    #     enabled: true
+  
+  # Skills configuration
+  skills:
+    npm: []
+    # config: []
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  
+  storage:
+    workspace: 20Gi
+    data: 5Gi
+  
+  kubedock:
+    enabled: true
+

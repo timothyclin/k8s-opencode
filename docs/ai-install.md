@@ -267,16 +267,48 @@ metadata:
   name: CHANGE_ME          # Workspace name from human
 spec:
   email: "CHANGE_ME"       # Email from human
+  
+  # LLM providers (optional - can use /connect instead)
   providers:
     anthropic:
-      enabled: true        # Optional - can use /connect instead
+      enabled: true
     openai:
       enabled: false
     openrouter:
       enabled: false
+  
+  # Plugins (default: oh-my-opencode, opencode-dcp, superpowers)
+  plugins:
+    enabled: true
+    npm:
+      - "superpowers@git+https://github.com/obra/superpowers.git"
+  
+  # MCP servers
+  mcp:
+    remote:
+      - name: context7
+        url: https://mcp.context7.com/mcp
+        enabled: true
+    # Laptop MCP servers (via Tailscale egress)
+    # laptopServers:
+    #   - name: playwright
+    #     tailscaleFqdn: my-laptop.tail12345.ts.net
+    #     port: 3000
+    #     enabled: true
+  
+  # Skills configuration
+  skills:
+    npm: []  # Add npm skill packages as needed
+    # config: []  # Or inline skill configs
+  
+  # Storage
   storage:
     workspace: "20Gi"
     data: "5Gi"
+  
+  # Kubedock (test containers as K8s pods)
+  kubedock:
+    enabled: true
 ```
 
 ```bash

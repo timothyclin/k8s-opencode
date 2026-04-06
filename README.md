@@ -183,6 +183,8 @@ metadata:
   name: alice
 spec:
   email: "alice@example.com"
+  
+  # LLM providers (optional - can use /connect instead)
   providers:
     anthropic:
       enabled: true
@@ -194,9 +196,39 @@ spec:
       enabled: false
     openrouter:
       enabled: false
+  
+  # Plugins (default: oh-my-opencode, opencode-dcp, superpowers)
+  plugins:
+    enabled: true
+    npm:
+      - "superpowers@git+https://github.com/obra/superpowers.git"
+  
+  # MCP servers
+  mcp:
+    remote:
+      - name: context7
+        url: https://mcp.context7.com/mcp
+        enabled: true
+    # Laptop MCP servers (via Tailscale egress)
+    # laptopServers:
+    #   - name: playwright
+    #     tailscaleFqdn: my-laptop.tail12345.ts.net
+    #     port: 3000
+    #     enabled: true
+  
+  # Skills configuration
+  skills:
+    npm: []  # Add npm skill packages as needed
+    # config: []  # Or inline skill configs
+  
+  # Storage
   storage:
     workspace: "20Gi"
     data: "5Gi"
+  
+  # Kubedock (test containers as K8s pods)
+  kubedock:
+    enabled: true
 ```
 
 ```bash
@@ -209,7 +241,12 @@ For each `OpenCodeWorkspace` CR, the operator reconciles:
 
 - **Namespace** — `oc-<name>` (isolated per user)
 - **PVCs** — `workspace-pvc` and `data-pvc` for persistent storage
-- **ConfigMap** — `opencode-config` with `opencode.json` configuration
+- **ConfigMap** — `opencode-config` with complete `opencode.json` configuration including:
+  - Default plugins (oh-my-opencode@latest, @tarquinen/opencode-dcp@latest)
+  - User-specified npm plugins
+  - MCP servers (remote URLs and laptop servers via Tailscale)
+  - Skills (npm packages and inline configs)
+  - LLM provider configuration and API keys
 - **NetworkPolicy** — isolates user workloads
 - **Service** — ClusterIP on port 4096
 - **StatefulSet** — single-replica OpenCode pod

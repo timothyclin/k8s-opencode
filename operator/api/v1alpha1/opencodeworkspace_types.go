@@ -20,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -71,6 +72,20 @@ type OpenCodeWorkspaceSpec struct {
 	// The password is stored in the workspace-secrets Secret.
 	// +optional
 	ServerPassword string `json:"serverPassword,omitempty"`
+
+	// Plugins configures npm plugins to install in the workspace.
+	// Default plugins (oh-my-opencode@latest, @tarquinen/opencode-dcp@latest, superpowers)
+	// are always included unless explicitly disabled.
+	// +optional
+	Plugins PluginsSpec `json:"plugins,omitempty"`
+
+	// MCP configures Model Context Protocol servers.
+	// +optional
+	MCP MCPSpec `json:"mcp,omitempty"`
+
+	// Skills configures skills (reusable prompt templates and tool configurations).
+	// +optional
+	Skills SkillsSpec `json:"skills,omitempty"`
 }
 
 // ProvidersSpec configures supported AI providers.
@@ -203,6 +218,108 @@ type KubedockSpec struct {
 	// Resources defines CPU/memory requests and limits for kubedock.
 	// +optional
 	Resources ResourceRequirements `json:"resources,omitempty"`
+}
+
+// PluginsSpec configures npm plugins for OpenCode.
+type PluginsSpec struct {
+	// Enabled controls whether default plugins are loaded.
+	// Default plugins: oh-my-opencode@latest, @tarquinen/opencode-dcp@latest, superpowers
+	// +optional
+	// +kubebuilder:default=true
+	Enabled bool `json:"enabled,omitempty"`
+
+	// NPM is a list of additional npm packages to install.
+	// Example: ["my-plugin@latest", "@scope/plugin@1.0.0"]
+	// +optional
+	NPM []string `json:"npm,omitempty"`
+}
+
+// MCPSpec configures Model Context Protocol servers.
+type MCPSpec struct {
+	// Remote lists remote MCP servers accessible via HTTP.
+	// +optional
+	Remote []RemoteMCPServer `json:"remote,omitempty"`
+
+	// LaptopServers lists MCP servers running on the user's laptop (via Tailscale egress).
+	// +optional
+	LaptopServers []LaptopMCPServer `json:"laptopServers,omitempty"`
+}
+
+// RemoteMCPServer defines a remote MCP server configuration.
+type RemoteMCPServer struct {
+	// Name is a unique identifier for this MCP server.
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+
+	// URL is the HTTP endpoint for the MCP server.
+	// +kubebuilder:validation:MinLength=1
+	URL string `json:"url"`
+
+	// Enabled controls whether this MCP server is active.
+	// +optional
+	// +kubebuilder:default=true
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Headers are optional HTTP headers to include in MCP requests.
+	// +optional
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// OAuth configures optional OAuth2 authentication.
+	// +optional
+	OAuth *MCPOAuthConfig `json:"oauth,omitempty"`
+}
+
+// LaptopMCPServer defines an MCP server running on the user's laptop.
+type LaptopMCPServer struct {
+	// Name is a unique identifier for this MCP server.
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+
+	// TailscaleIP is the Tailscale IP address of the laptop.
+	// +optional
+	TailscaleIP string `json:"tailscaleIP,omitempty"`
+
+	// TailscaleFQDN is the MagicDNS hostname of the laptop.
+	// +optional
+	TailscaleFQDN string `json:"tailscaleFqdn,omitempty"`
+
+	// Port is the TCP port where the MCP server listens.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	Port int32 `json:"port"`
+
+	// Enabled controls whether this MCP server is active.
+	// +optional
+	// +kubebuilder:default=true
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+// MCPOAuthConfig defines OAuth2 authentication for MCP servers.
+type MCPOAuthConfig struct {
+	// ClientID is the OAuth2 client ID.
+	// +optional
+	ClientID string `json:"clientId,omitempty"`
+
+	// ClientSecret is the OAuth2 client secret.
+	// +optional
+	ClientSecret string `json:"clientSecret,omitempty"`
+
+	// TokenURL is the OAuth2 token endpoint.
+	// +optional
+	TokenURL string `json:"tokenUrl,omitempty"`
+}
+
+// SkillsSpec configures skills (reusable prompt templates and tool configurations).
+type SkillsSpec struct {
+	// NPM is a list of npm packages providing skills.
+	// +optional
+	NPM []string `json:"npm,omitempty"`
+
+	// Config is a list of inline skill configurations as raw JSON.
+	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
+	Config []runtime.RawExtension `json:"config,omitempty"`
 }
 
 // OpenCodeWorkspaceStatus defines the observed state of OpenCodeWorkspace.

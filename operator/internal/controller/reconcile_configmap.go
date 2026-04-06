@@ -34,8 +34,11 @@ const opencodeConfigMapName = "opencode-config"
 // (NOT opencode-ai/opencode which uses "providers" plural)
 type opencodeConfig struct {
 	Schema           string                      `json:"$schema,omitempty"`
+	Plugin           []string                    `json:"plugin,omitempty"`
 	EnabledProviders []string                    `json:"enabled_providers,omitempty"`
 	Provider         map[string]*providerOptions `json:"provider,omitempty"`
+	MCP              map[string]*mcpServer       `json:"mcp,omitempty"`
+	Skills           *skillsConfig               `json:"skills,omitempty"`
 }
 
 // providerOptions holds per-provider configuration
@@ -45,6 +48,28 @@ type providerOptions struct {
 
 type providerOptionsInner struct {
 	APIKey string `json:"apiKey,omitempty"`
+}
+
+// mcpServer defines an MCP server entry in opencode.json
+type mcpServer struct {
+	Type    string            `json:"type"`
+	URL     string            `json:"url"`
+	Enabled bool              `json:"enabled,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
+	OAuth   *mcpOAuth         `json:"oauth,omitempty"`
+}
+
+// mcpOAuth defines OAuth configuration for MCP servers
+type mcpOAuth struct {
+	ClientID     string `json:"clientId,omitempty"`
+	ClientSecret string `json:"clientSecret,omitempty"`
+	TokenURL     string `json:"tokenUrl,omitempty"`
+}
+
+// skillsConfig defines skills configuration
+type skillsConfig struct {
+	NPM    []string      `json:"npm,omitempty"`
+	Config []interface{} `json:"config,omitempty"`
 }
 
 func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string, apiKeys map[string]string) error {
@@ -79,6 +104,70 @@ func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, wo
 
 	if len(provider) > 0 {
 		config.Provider = provider
+	}
+
+	// Add plugins
+	if workspace.Spec.Plugins.Enabled {
+		config.Plugin = []string{
+			"oh-my-opencode@latest",
+			"@tarquinen/opencode-dcp@latest",
+		}
+		// Add user-specified plugins
+		config.Plugin = append(config.Plugin, workspace.Spec.Plugins.NPM...)
+	}
+
+	// Add MCP servers
+	mcpServers := make(map[string]*mcpServer)
+	for _, remote := range workspace.Spec.MCP.Remote {
+		srv := &mcpServer{
+			Type:    "remote",
+			URL:     remote.URL,
+			Enabled: remote.Enabled,
+		}
+		if len(remote.Headers) > 0 {
+			srv.Headers = remote.Headers
+		}
+		if remote.OAuth != nil {
+			srv.OAuth = &mcpOAuth{
+				ClientID:     remote.OAuth.ClientID,
+				ClientSecret: remote.OAuth.ClientSecret,
+				TokenURL:     remote.OAuth.TokenURL,
+			}
+		}
+		mcpServers[remote.Name] = srv
+	}
+
+	// Add laptop MCP servers
+	for _, laptop := range workspace.Spec.MCP.LaptopServers {
+		host := laptop.TailscaleIP
+		if laptop.TailscaleFQDN != "" {
+			host = laptop.TailscaleFQDN
+		}
+		mcpServers["laptop_"+laptop.Name] = &mcpServer{
+			Type:    "remote",
+			URL:     fmt.Sprintf("http://%s:%d", host, laptop.Port),
+			Enabled: laptop.Enabled,
+		}
+	}
+
+	if len(mcpServers) > 0 {
+		config.MCP = mcpServers
+	}
+
+	// Add skills
+	if len(workspace.Spec.Skills.NPM) > 0 || len(workspace.Spec.Skills.Config) > 0 {
+		skillsCfg := &skillsConfig{
+			NPM: workspace.Spec.Skills.NPM,
+		}
+		// Convert runtime.RawExtension to interface{} for JSON marshaling
+		for _, raw := range workspace.Spec.Skills.Config {
+			var obj interface{}
+			if err := json.Unmarshal(raw.Raw, &obj); err != nil {
+				return fmt.Errorf("unmarshal skill config: %w", err)
+			}
+			skillsCfg.Config = append(skillsCfg.Config, obj)
+		}
+		config.Skills = skillsCfg
 	}
 
 	payload, err := json.MarshalIndent(config, "", "  ")
