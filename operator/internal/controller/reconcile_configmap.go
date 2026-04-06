@@ -68,8 +68,8 @@ type mcpOAuth struct {
 
 // skillsConfig defines skills configuration
 type skillsConfig struct {
-	NPM    []string      `json:"npm,omitempty"`
-	Config []interface{} `json:"config,omitempty"`
+	NPM    []string `json:"npm,omitempty"`
+	Config []any    `json:"config,omitempty"`
 }
 
 func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string, apiKeys map[string]string) error {
@@ -159,9 +159,9 @@ func (r *OpenCodeWorkspaceReconciler) reconcileConfigMap(ctx context.Context, wo
 		skillsCfg := &skillsConfig{
 			NPM: workspace.Spec.Skills.NPM,
 		}
-		// Convert runtime.RawExtension to interface{} for JSON marshaling
+		// Convert runtime.RawExtension to any for JSON marshaling
 		for _, raw := range workspace.Spec.Skills.Config {
-			var obj interface{}
+			var obj any
 			if err := json.Unmarshal(raw.Raw, &obj); err != nil {
 				return fmt.Errorf("unmarshal skill config: %w", err)
 			}
