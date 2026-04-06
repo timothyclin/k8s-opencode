@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	opencodev1alpha1 "github.com/timothyclin/k8s-opencode/operator/api/v1alpha1"
@@ -64,6 +65,12 @@ func (r *OpenCodeWorkspaceReconciler) reconcileStatefulSet(ctx context.Context, 
 		statefulSet.Spec.Template = corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{Labels: labels},
 			Spec: corev1.PodSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: ptr.To(true),
+					RunAsUser:    ptr.To(int64(1000)),
+					RunAsGroup:   ptr.To(int64(1000)),
+					FSGroup:      ptr.To(int64(1000)),
+				},
 				Containers: []corev1.Container{
 					{
 						Name:      "workspace",
