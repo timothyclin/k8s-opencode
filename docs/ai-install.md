@@ -118,7 +118,7 @@ If they choose multi-user:
 
 1. **First install the operator** (one-time):
 ```bash
-kubectl apply -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/operator-install.yaml
+kubectl apply -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/install.yaml
 ```
 
 2. **Then create workspaces** — ask for per-user values:
@@ -368,5 +368,5 @@ kubectl delete namespace opencode
 # Multi-user (operator stays, delete workspaces)
 kubectl delete opencodeworkspace <name>
 # Or remove operator entirely
-kubectl delete -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/operator-install.yaml
+kubectl delete -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/install.yaml
 ```
