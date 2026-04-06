@@ -24,6 +24,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -250,6 +251,90 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 			Expect(podSpec.SecurityContext.RunAsUser).To(Equal(&runAsUser))
 			Expect(podSpec.SecurityContext.RunAsGroup).To(Equal(&runAsGroup))
 			Expect(podSpec.SecurityContext.FSGroup).To(Equal(&fsGroup))
+
+			By("Cleaning up the test workspace")
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+		})
+
+		It("should configure init-permissions initContainer for user setup", func() {
+			ctx := context.Background()
+
+			By("Creating the custom resource")
+			resource := &opencodev1alpha1.OpenCodeWorkspace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: resourceName + "-init-test",
+				},
+				Spec: opencodev1alpha1.OpenCodeWorkspaceSpec{
+					Email: "test@example.com",
+				},
+			}
+			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+			By("Reconciling the created resource")
+			controllerReconciler := &OpenCodeWorkspaceReconciler{
+				Client:          k8sClient,
+				Scheme:          k8sClient.Scheme(),
+				SystemNamespace: "default",
+			}
+
+			testNamespacedName := types.NamespacedName{
+				Name: resource.Name,
+			}
+
+			// Reconcile multiple times to progress through all phases
+			for range 5 {
+				_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+					NamespacedName: testNamespacedName,
+				})
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("Checking that StatefulSet has init-permissions initContainer")
+			expectedNamespace := "oc-" + resource.Name
+			statefulSet := &appsv1.StatefulSet{}
+			statefulSetName := types.NamespacedName{
+				Name:      "workspace",
+				Namespace: expectedNamespace,
+			}
+			err := k8sClient.Get(ctx, statefulSetName, statefulSet)
+			Expect(err).NotTo(HaveOccurred())
+
+			podSpec := statefulSet.Spec.Template.Spec
+			Expect(podSpec.InitContainers).To(HaveLen(1), "Pod should have 1 initContainer")
+
+			initContainer := podSpec.InitContainers[0]
+			Expect(initContainer.Name).To(Equal("init-permissions"))
+			Expect(initContainer.SecurityContext).NotTo(BeNil())
+			Expect(initContainer.SecurityContext.RunAsUser).To(Equal(ptr.To(int64(0))))
+			Expect(initContainer.SecurityContext.RunAsNonRoot).To(Equal(ptr.To(false)))
+
+			By("Checking that initContainer has required volume mounts")
+			mountNames := make(map[string]bool)
+			for _, mount := range initContainer.VolumeMounts {
+				mountNames[mount.Name] = true
+			}
+			Expect(mountNames).To(HaveKey("sudoers"))
+			Expect(mountNames).To(HaveKey("passwd"))
+			Expect(mountNames).To(HaveKey("shadow"))
+
+			By("Checking that main container has passwd/shadow/sudoers mounts")
+			mainContainer := podSpec.Containers[0]
+			mainMountNames := make(map[string]bool)
+			for _, mount := range mainContainer.VolumeMounts {
+				mainMountNames[mount.Name] = true
+			}
+			Expect(mainMountNames).To(HaveKey("sudoers"))
+			Expect(mainMountNames).To(HaveKey("passwd"))
+			Expect(mainMountNames).To(HaveKey("shadow"))
+
+			By("Checking that pod has emptyDir volumes")
+			volumeNames := make(map[string]bool)
+			for _, volume := range podSpec.Volumes {
+				volumeNames[volume.Name] = true
+			}
+			Expect(volumeNames).To(HaveKey("sudoers"))
+			Expect(volumeNames).To(HaveKey("passwd"))
+			Expect(volumeNames).To(HaveKey("shadow"))
 
 			By("Cleaning up the test workspace")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())

@@ -71,6 +71,60 @@ func (r *OpenCodeWorkspaceReconciler) reconcileStatefulSet(ctx context.Context, 
 					RunAsGroup:   ptr.To(int64(1000)),
 					FSGroup:      ptr.To(int64(1000)),
 				},
+				InitContainers: []corev1.Container{
+					{
+						Name:    "init-permissions",
+						Image:   workspaceContainerImage,
+						Command: []string{"sh", "-c"},
+						Args: []string{`set -e
+USER_NAME="opencode"
+USER_ID="1000"
+USER_GID="1000"
+
+# Create user with provided name
+id "$USER_NAME" 2>/dev/null || useradd -u $USER_ID -g $USER_GID -m -d /home/$USER_NAME -s /bin/bash "$USER_NAME"
+
+# Configure sudoers for the runtime user
+echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER_NAME
+chmod 440 /etc/sudoers.d/$USER_NAME
+# sudo refuses sudoers.d if the directory is world-writable (EmptyDir default is 0777)
+chmod 750 /etc/sudoers.d
+
+# Build /etc/passwd and /etc/shadow with dynamic user entry
+cp /etc/passwd /mnt/passwd/passwd
+cp /etc/shadow /mnt/shadow/shadow
+grep -q "^$USER_NAME:" /mnt/shadow/shadow || echo "$USER_NAME:*:0:0:99999:7:::" >> /mnt/shadow/shadow
+chmod 640 /mnt/shadow/shadow
+
+# Fix ownership on mounted directories
+chown -R $USER_ID:$USER_GID /home/$USER_NAME/.opencode 2>/dev/null || true
+chown -R $USER_ID:$USER_GID /workspace 2>/dev/null || true
+
+# Create config directory for opencode
+mkdir -p /home/$USER_NAME/.opencode 2>/dev/null || true
+chown -R $USER_ID:$USER_GID /home/$USER_NAME/.opencode 2>/dev/null || true
+
+# Copy config files from ConfigMap to writable location (ConfigMap is read-only)
+if [ -f /etc/opencode-config/opencode.json ]; then
+  cp /etc/opencode-config/opencode.json /home/$USER_NAME/.opencode/
+  chown $USER_ID:$USER_GID /home/$USER_NAME/.opencode/opencode.json
+fi
+`},
+						SecurityContext: &corev1.SecurityContext{
+							RunAsUser:    ptr.To(int64(0)),
+							RunAsGroup:   ptr.To(int64(0)),
+							RunAsNonRoot: ptr.To(false),
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{Name: "sudoers", MountPath: "/etc/sudoers.d"},
+							{Name: "passwd", MountPath: "/mnt/passwd"},
+							{Name: "shadow", MountPath: "/mnt/shadow"},
+							{Name: workspaceDataPVCName, MountPath: "/home/opencode/.opencode"},
+							{Name: workspacePVCName, MountPath: "/workspace"},
+							{Name: workspaceConfigMapName, MountPath: "/etc/opencode-config", ReadOnly: true},
+						},
+					},
+				},
 				Containers: []corev1.Container{
 					{
 						Name:      "workspace",
@@ -94,9 +148,20 @@ func (r *OpenCodeWorkspaceReconciler) reconcileStatefulSet(ctx context.Context, 
 								MountPath: "/home/opencode/.opencode",
 							},
 							{
-								Name:      workspaceConfigMapName,
-								MountPath: "/home/opencode/.opencode/opencode.json",
-								SubPath:   "opencode.json",
+								Name:      "sudoers",
+								MountPath: "/etc/sudoers.d",
+								ReadOnly:  true,
+							},
+							{
+								Name:      "passwd",
+								MountPath: "/etc/passwd",
+								SubPath:   "passwd",
+								ReadOnly:  true,
+							},
+							{
+								Name:      "shadow",
+								MountPath: "/etc/shadow",
+								SubPath:   "shadow",
 								ReadOnly:  true,
 							},
 						},
@@ -125,6 +190,24 @@ func (r *OpenCodeWorkspaceReconciler) reconcileStatefulSet(ctx context.Context, 
 							ConfigMap: &corev1.ConfigMapVolumeSource{
 								LocalObjectReference: corev1.LocalObjectReference{Name: workspaceConfigMapName},
 							},
+						},
+					},
+					{
+						Name: "sudoers",
+						VolumeSource: corev1.VolumeSource{
+							EmptyDir: &corev1.EmptyDirVolumeSource{},
+						},
+					},
+					{
+						Name: "passwd",
+						VolumeSource: corev1.VolumeSource{
+							EmptyDir: &corev1.EmptyDirVolumeSource{},
+						},
+					},
+					{
+						Name: "shadow",
+						VolumeSource: corev1.VolumeSource{
+							EmptyDir: &corev1.EmptyDirVolumeSource{},
 						},
 					},
 				},
