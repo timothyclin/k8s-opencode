@@ -29,7 +29,7 @@ controllers, no TLS cert management.
 
 ---
 
-## Installation
+## Quick Start
 
 ### Prerequisites
 
@@ -49,7 +49,7 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 
 > **Security Note:** Use a values file instead of `--set` to avoid exposing your password in shell history.
 
-See [Single-User Mode](#single-user-mode-helm-chart) for full configuration options.
+See [Manual Installation - Single-User](#manual-installation---single-user) for full configuration options.
 
 ### For LLM Agents
 
@@ -61,7 +61,7 @@ curl -s https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-
 
 ---
 
-## Single-User Mode (Helm Chart)
+## Manual Installation - Single-User
 
 One OpenCode instance for personal use. Uses a standard Kubernetes `Deployment`.
 
@@ -139,7 +139,7 @@ plugins:
 
 ---
 
-## Multi-User Mode (Operator)
+## Manual Installation - Multi-User
 
 Dynamic user provisioning via Kubernetes CRD. Each user gets an isolated
 workspace with dedicated storage, config, and network policy.
@@ -469,70 +469,3 @@ kubectl apply -f config/samples/
 ```
 
 ---
-
-# AI Instructions
-
-## Context
-
-This repository provides two ways to deploy OpenCode on Kubernetes:
-
-1. **Helm chart** (`chart/`) — for single-user deployments
-2. **Kubernetes operator** (`operator/`) — for multi-user deployments with CRD
-
-## Key Architecture Facts
-
-- OpenCode runs as `opencode serve` — a headless HTTP server on port 4096
-- Single replica per user (stateful — stores sessions and workspace on disk)
-- Tailscale handles all external connectivity (no public ingress)
-- Default Docker image: `ghcr.io/timothyclin/k8s-opencode/opencode-workspace`
-- Operator image: `ghcr.io/timothyclin/k8s-opencode/operator`
-
-## File Structure
-
-```
-chart/                           # Helm chart for single-user mode
-├── Chart.yaml
-├── values.yaml
-└── templates/
-
-operator/                        # Kubernetes operator for multi-user mode
-├── api/v1alpha1/               # CRD types (OpenCodeWorkspace)
-├── internal/controller/        # Reconciliation logic
-├── config/crd/                 # Generated CRDs
-├── config/samples/             # Example CRs
-├── Dockerfile
-└── Makefile
-```
-
-## CRD Spec (OpenCodeWorkspace)
-
-```yaml
-spec:
-  email: string                  # Required, must match ^[^@]+@[^@]+$
-  providers:
-    anthropic/openai/openrouter:
-      enabled: boolean
-      apiKeySecretRef:           # Optional — omit for OAuth
-        name: string
-        namespace: string
-        key: string
-  storage:
-    workspace: string            # e.g., "20Gi"
-    data: string                 # e.g., "5Gi"
-    storageClassName: string     # Optional
-```
-
-## How to Help
-
-**For Helm chart changes:**
-1. Edit `chart/values.yaml` first
-2. Add templates in `chart/templates/`
-3. Test with `helm template`
-
-**For operator changes:**
-1. Edit types in `operator/api/v1alpha1/`
-2. Run `make manifests generate`
-3. Implement reconciler logic in `operator/internal/controller/`
-4. Test with `make test`
-
-
