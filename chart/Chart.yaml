@@ -2,8 +2,8 @@ apiVersion: v2
 name: ok8s
 description: OpenCode + Oh-My-OpenCode on Kubernetes with Tailscale connectivity
 type: application
-version: 0.2.10
-appVersion: "0.2.10"
+version: 0.2.18
+appVersion: "0.2.18"
 keywords:
   - opencode
   - ai-coding
