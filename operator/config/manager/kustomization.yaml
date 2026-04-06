@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: ghcr.io/timothyclin/k8s-opencode/operator
-  newTag: 0.2.10
+  newTag: latest
