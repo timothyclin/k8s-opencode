@@ -2,6 +2,12 @@
 
 Quick install for AI agents working with k8s-opencode.
 
+> ⚠️ **SECURITY CRITICAL:** Do NOT ask human for password directly. Password must NOT enter LLM context.
+> 
+> **Workflow:** Create values.yaml with placeholder → Tell human to update password → Wait for confirmation → Run helm
+
+---
+
 ## Prereq Checklist (AI: Verify These First)
 
 Before proceeding, verify the human has:

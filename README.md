@@ -41,6 +41,17 @@ controllers, no TLS cert management.
 
 ### For Humans
 
+**Option 1: Let an LLM agent do it (Recommended)**
+
+Copy and paste this to your LLM agent (Claude Code, Cursor, OpenCode, etc.):
+
+```
+Install k8s-opencode by following the instructions here:
+https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.md
+```
+
+**Option 2: Manual install**
+
 ```bash
 # Create values.yaml with your serverPassword, then:
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
