@@ -164,7 +164,7 @@ workspace with dedicated storage, config, and network policy.
 ### Install the Operator
 
 ```bash
-kubectl apply -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/operator-install.yaml
+kubectl apply -f https://github.com/timothyclin/k8s-opencode/releases/latest/download/install.yaml
 ```
 
 Or build from source:
