@@ -57,10 +57,13 @@ jobs:
           
           # Push and create PR with full options
           git push -u origin "release/bump-${VERSION}" -f
-          gh pr create --base main --head "release/bump-${VERSION}" \
-            --title "chore: release v${VERSION}" \
-            --body "Automated release: bump chart and image versions to ${VERSION}" \
-            --repo "${{ github.repository }}"
+          # Create PR only if it doesn't exist
+          if ! gh pr list --base main --head "release/bump-${VERSION}" --repo "${{ github.repository }}" | grep -q .; then
+            gh pr create --base main --head "release/bump-${VERSION}" \
+              --title "chore: release v${VERSION}" \
+              --body "Automated release: bump chart and image versions to ${VERSION}" \
+              --repo "${{ github.repository }}"
+          fi
           echo "PR creation attempted"
 
       - name: Set up Helm
