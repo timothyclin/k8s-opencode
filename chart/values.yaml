@@ -307,7 +307,7 @@ authentik:
   # This value cannot be empty and must be unique per installation.
   secretKey: ""
   proxy:
-    hostname: "opencode.company.com"
+    hostname: "opencode.company.com"  # -- Customize this domain/hostname for your setup
   image:
     repository: ghcr.io/goauthentik/server
     tag: "2024.6.1"
@@ -327,7 +327,7 @@ authentik:
       tag: "15"
     database: "authentik"
     username: "authentik"
-    password: ""
+    password: "CHANGE_ME_SECURE_POSTGRES_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
     resources:
       requests:
         cpu: 100m
@@ -343,7 +343,7 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
-    password: ""
+    password: "CHANGE_ME_SECURE_REDIS_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
     resources:
       requests:
         cpu: 50m

@@ -25,7 +25,7 @@ helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 
 ```bash
 # BEFORE making ANY code change:
-cd /path/to/main/repo
+cd /path/to/this/repo
 git worktree list                                    # Check for other active sessions
 git worktree add ../k8s-opencode-<task> -b agent/<task>  # Create isolated worktree
 cd ../k8s-opencode-<task>                            # Work here, NOT in main repo

@@ -53,7 +53,7 @@ https://raw.githubusercontent.com/timothyclin/k8s-opencode/main/docs/ai-install.
 **Option 2: Manual install**
 
 ```bash
-# Create values.yaml with your serverPassword, then:
+# Create values.yaml with your serverPassword (copy from chart/values.yaml), then:
 helm install ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode --create-namespace \
   -f values.yaml
 ```
