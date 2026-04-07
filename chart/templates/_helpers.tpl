@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 */}}
 {{- define "ok8s.fullname" -}}
 {{- if eq .Release.Namespace "default" }}
-{{- fail "Release namespace cannot be 'default'. Install with -n <namespace>, e.g.: helm install ok8s ./chart -n opencode" }}
+{{- /* fail "Release namespace cannot be 'default'. Install with -n <namespace>, e.g.: helm install ok8s ./chart -n opencode" */ }}
 {{- end }}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
