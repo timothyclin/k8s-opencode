@@ -1,4 +1,3 @@
-{{- if .Values.authentik.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -83,4 +82,3 @@ metadata:
 type: Opaque
 stringData:
   postgresql-password: {{ .Values.postgresql.auth.password }}
-{{- end }}

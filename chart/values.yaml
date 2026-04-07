@@ -303,69 +303,6 @@ kubedock:
     TESTCONTAINERS_RYUK_DISABLED: "true"
     TESTCONTAINERS_CHECKS_DISABLE: "true"
 
-# -- Authentik Identity-Aware Proxy configuration
-authentik:
-  enabled: true
-  domain: "opencode-opencode-test-ok8s-authentik-ingress.lynx-beta.ts.net"  # -- Customize this domain/hostname for your setup
-  # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
-  # Generate with: openssl rand -base64 32
-  # This value cannot be empty and must be unique per installation.
-  secretKey: "MYpBlnGaovNQazqor71Z7pgsV86d1TDZRsDAl6fucpo="
-  proxy:
-    enabled: true
-    hostname: "opencode-opencode-test-ok8s-authentik-ingress.lynx-beta.ts.net"
-    cookieDomain: ".lynx-beta.ts.net"
-  image:
-    repository: ghcr.io/goauthentik/server
-    tag: "2026.2.2"
-    pullPolicy: IfNotPresent
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: "2"
-      memory: 2Gi
-  postgres:
-    enabled: true
-    image:
-      repository: postgres
-      tag: "15"
-    database: "authentik"
-    username: "authentik"
-    password: "CHANGE_ME_SECURE_POSTGRES_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
-    persistence:
-      enabled: true
-      size: 10Gi
-  redis:
-    enabled: true
-    image:
-      repository: redis
-      tag: "7-alpine"
-    password: "CHANGE_ME_SECURE_REDIS_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
-  oidc:
-    enabled: false
-    provider: "oidc"
-    clientId: ""
-    clientSecret: ""
-    issuerUrl: ""
-    scopes: ["openid", "email", "profile"]
-
 # -- Bitnami PostgreSQL chart overrides for arm64 compatibility
 postgresql:
   image:
@@ -373,8 +310,8 @@ postgresql:
     repository: postgres
     tag: "15"
   auth:
-    database: "authentik"
-    username: "authentik"
+    database: "opencode"
+    username: "opencode"
     password: "CHANGE_ME_SECURE_POSTGRES_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
   primary:
     resources:
