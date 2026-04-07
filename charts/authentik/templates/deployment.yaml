@@ -1,0 +1,51 @@
+{{- if .Values.authentik.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "authentik.fullname" . }}-authentik
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: authentik
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: authentik
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: authentik
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        command: ["ak", "server"]
+        env:
+        - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+          value: "admin"  # Change in production
+        - name: AUTHENTIK_BOOTSTRAP_EMAIL
+          value: "admin@local"
+        - name: AUTHENTIK_CONFIG__path
+          value: "/config/authentik.yml"
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 9443
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: secrets
+          mountPath: /secrets
+        resources:
+{{ toYaml .Values.authentik.resources | nindent 10 }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "authentik.fullname" . }}-authentik
+      - name: secrets
+        secret:
+          secretName: {{ include "authentik.fullname" . }}-authentik
+{{- end }}
