@@ -298,3 +298,34 @@ kubedock:
     DOCKER_HOST: "tcp://kubedock-service:2475"
     TESTCONTAINERS_RYUK_DISABLED: "true"
     TESTCONTAINERS_CHECKS_DISABLE: "true"
+
+# -- Authentik identity provider configuration
+authentik:
+  enabled: false
+  postgres:
+    image:
+      repository: postgres
+      tag: "15-alpine"
+    database: "authentik"
+    username: "authentik"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    persistence:
+      enabled: true
+      size: 10Gi
+  redis:
+    image:
+      repository: redis
+      tag: "7-alpine"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
