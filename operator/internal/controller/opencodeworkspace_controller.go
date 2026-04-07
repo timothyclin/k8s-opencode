@@ -63,9 +63,13 @@ type OpenCodeWorkspaceReconciler struct {
 // +kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingressclasses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;update;patch;delete
 
 func (r *OpenCodeWorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
@@ -141,6 +145,10 @@ func (r *OpenCodeWorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	if err := r.reconcilePVCs(ctx, workspace, namespaceName); err != nil {
 		return r.handleReconcileError(ctx, workspace, "PVCs", err)
+	}
+
+	if err := r.reconcileKubedock(ctx, workspace, namespaceName); err != nil {
+		return r.handleReconcileError(ctx, workspace, "Kubedock", err)
 	}
 
 	if err := r.reconcileStatefulSet(ctx, workspace, namespaceName); err != nil {

@@ -52,6 +52,14 @@ spec:
     workspace: 20Gi
     data: 5Gi
   
+  # Docker-in-Kubernetes support (for testcontainers)
   kubedock:
     enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
 

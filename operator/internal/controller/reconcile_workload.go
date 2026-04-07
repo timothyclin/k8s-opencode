@@ -275,6 +275,22 @@ func buildProviderEnvVars(workspace *opencodev1alpha1.OpenCodeWorkspace) []corev
 		},
 	})
 
+	// Inject kubedock DOCKER_HOST if enabled
+	if workspace.Spec.Kubedock.Enabled {
+		envs = append(envs, corev1.EnvVar{
+			Name:  "DOCKER_HOST",
+			Value: fmt.Sprintf("tcp://%s:%d", kubedockServiceName, kubedockPort),
+		})
+		envs = append(envs, corev1.EnvVar{
+			Name:  "TESTCONTAINERS_RYUK_DISABLED",
+			Value: "true",
+		})
+		envs = append(envs, corev1.EnvVar{
+			Name:  "TESTCONTAINERS_CHECKS_DISABLE",
+			Value: "true",
+		})
+	}
+
 	// Inject provider API keys if enabled
 	if workspace.Spec.Providers.Anthropic.Enabled && workspace.Spec.Providers.Anthropic.APIKeySecretRef.Name != "" {
 		envs = append(envs, secretEnvVar("ANTHROPIC_API_KEY", workspace.Spec.Providers.Anthropic.APIKeySecretRef.Name))

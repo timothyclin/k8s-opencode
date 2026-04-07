@@ -130,6 +130,7 @@ kubectl apply -f https://github.com/timothyclin/k8s-opencode/releases/latest/dow
 | Workspace name | Ask human | `"alice"` |
 | Email | Ask human | `"alice@example.com"` |
 | Storage sizes | Optional, defaults work | workspace: 20Gi, data: 5Gi |
+| Kubedock | Optional, enabled by default | Set `enabled: false` to disable |
 
 > **API key is optional** — Don't ask. After login, each user runs `/connect` to authenticate.
 
@@ -306,9 +307,16 @@ spec:
     workspace: "20Gi"
     data: "5Gi"
   
-  # Kubedock (test containers as K8s pods)
+  # Docker-in-Kubernetes support (for testcontainers)
   kubedock:
     enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
 ```
 
 ```bash
