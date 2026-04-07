@@ -278,24 +278,25 @@ spec:
     openrouter:
       enabled: false
   
-  # Plugins (default: oh-my-opencode, opencode-dcp, superpowers)
-  plugins:
-    enabled: true
-    npm:
-      - "superpowers@git+https://github.com/obra/superpowers.git"
-  
-  # MCP servers
-  mcp:
-    remote:
-      - name: context7
-        url: https://mcp.context7.com/mcp
-        enabled: true
-    # Laptop MCP servers (via Tailscale egress)
-    # laptopServers:
-    #   - name: playwright
-    #     tailscaleFqdn: my-laptop.tail12345.ts.net
-    #     port: 3000
-    #     enabled: true
+   # Plugins (default: oh-my-opencode@latest, @tarquinen/opencode-dcp@latest)
+   # Add superpowers or other plugins as needed
+   plugins:
+     enabled: true
+     npm:
+       - "superpowers@git+https://github.com/obra/superpowers.git"
+   
+   # MCP servers (none by default - add as needed)
+   mcp:
+     remote:
+       - name: context7
+         url: https://mcp.context7.com/mcp
+         enabled: true
+     # Laptop MCP servers (via Tailscale egress)
+     # laptopServers:
+     #   - name: playwright
+     #     tailscaleFqdn: my-laptop.tail12345.ts.net
+     #     port: 3000
+     #     enabled: true
   
   # Skills configuration
   skills:
