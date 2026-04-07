@@ -25,12 +25,11 @@ spec:
             port:
               number: 80
 {{- else }}
-# Original ingress logic here
-{{- if .Values.auth.oidc.enabled }}
+# Original ingress logic for direct routing to OpenCode
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "ok8s.fullname" . }}-oidc
+  name: {{ include "ok8s.fullname" . }}
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -38,18 +37,17 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - {{ .Values.auth.oidc.hostname }}
-    secretName: {{ include "ok8s.fullname" . }}-oidc-tls
+    - {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
+    secretName: {{ include "ok8s.fullname" . }}-tls
   rules:
-  - host: {{ .Values.auth.oidc.hostname }}
+  - host: {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: {{ include "ok8s.fullname" . }}-auth-router
+            name: {{ include "ok8s.fullname" . }}
             port:
-              number: 8080
-{{- end }}
+              number: 4096
 {{- end }}
