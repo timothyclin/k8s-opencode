@@ -22,7 +22,6 @@ spec:
       containers:
       - name: authentik
         image: {{ .Values.authentik.image.repository }}:{{ .Values.authentik.image.tag }}
-        imagePullPolicy: {{ .Values.authentik.image.pullPolicy }}
         command: ["ak", "server"]
         env:
         - name: AUTHENTIK_BOOTSTRAP_PASSWORD
@@ -35,7 +34,6 @@ spec:
         - containerPort: 9000
           name: http
         - containerPort: 9443
-          name: https
         volumeMounts:
         - name: config
           mountPath: /config
