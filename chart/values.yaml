@@ -302,6 +302,8 @@ kubedock:
 # -- Authentik identity provider configuration
 authentik:
   enabled: false
+  proxy:
+    hostname: "opencode.company.com"
   image:
     repository: ghcr.io/goauthentik/server
     tag: "2024.6.1"
