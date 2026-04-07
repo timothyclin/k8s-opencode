@@ -96,9 +96,9 @@ cp /etc/shadow /mnt/shadow/shadow
 grep -q "^$USER_NAME:" /mnt/shadow/shadow || echo "$USER_NAME:*:0:0:99999:7:::" >> /mnt/shadow/shadow
 chmod 640 /mnt/shadow/shadow
 
-# Fix ownership on mounted directories
-chown -R $USER_ID:$USER_GID /home/$USER_NAME/.opencode 2>/dev/null || true
-chown -R $USER_ID:$USER_GID /workspace 2>/dev/null || true
+      # Fix ownership on mounted directories
+      chown -R $USER_ID:$USER_GID /home/$USER_NAME 2>/dev/null || true
+      chown -R $USER_ID:$USER_GID /workspace 2>/dev/null || true
 
 # Create config directory for opencode
 mkdir -p /home/$USER_NAME/.opencode 2>/dev/null || true
@@ -142,6 +142,11 @@ fi
 								Name:          "http",
 								ContainerPort: 4096,
 							},
+						},
+						SecurityContext: &corev1.SecurityContext{
+							RunAsUser:    ptr.To(int64(1000)),
+							RunAsGroup:   ptr.To(int64(1000)),
+							RunAsNonRoot: ptr.To(true),
 						},
 						Env: buildProviderEnvVars(workspace),
 						VolumeMounts: []corev1.VolumeMount{
