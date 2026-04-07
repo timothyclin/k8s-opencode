@@ -1,0 +1,41 @@
+{{- if .Values.authentik.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ok8s.fullname" . }}-authentik
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: authentik
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector: {}  # Allow from all namespaces
+    ports:
+    - protocol: TCP
+      port: 9000
+    - protocol: TCP
+      port: 9443
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []  # Allow external access for OIDC providers
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}

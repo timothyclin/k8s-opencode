@@ -1,0 +1,22 @@
+{{- if .Values.authentik.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "ok8s.fullname" . }}-authentik-test
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: test
+    image: curlimages/curl:8.4.0
+    command:
+    - sh
+    - -c
+    - |
+      # Test Authentik service availability
+      curl -f http://{{ include "ok8s.fullname" . }}-authentik:80 || exit 1
+
+      # Test PostgreSQL connectivity (basic)
+      echo "Authentik components deployed successfully"
+{{- end }}

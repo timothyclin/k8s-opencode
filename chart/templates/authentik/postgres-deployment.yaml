@@ -1,0 +1,45 @@
+{{- if .Values.authentik.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ok8s.fullname" . }}-authentik-postgres
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: postgres
+        image: "{{ .Values.authentik.postgres.image.repository }}:{{ .Values.authentik.postgres.image.tag }}"
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.authentik.postgres.database | quote }}
+        - name: POSTGRES_USER
+          value: {{ .Values.authentik.postgres.username | quote }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "ok8s.fullname" . }}-authentik-postgres
+              key: password
+        ports:
+        - containerPort: 5432
+        resources: {{ toYaml .Values.authentik.postgres.resources | nindent 10 }}
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: {{ include "ok8s.fullname" . }}-authentik-postgres
+{{- end }}
