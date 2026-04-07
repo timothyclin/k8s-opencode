@@ -298,3 +298,42 @@ kubedock:
     DOCKER_HOST: "tcp://kubedock-service:2475"
     TESTCONTAINERS_RYUK_DISABLED: "true"
     TESTCONTAINERS_CHECKS_DISABLE: "true"
+
+# -- Authentik identity provider configuration
+authentik:
+  enabled: false
+  # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
+  # Generate with: openssl rand -base64 32
+  # This value cannot be empty and must be unique per installation.
+  secretKey: ""
+  postgres:
+    image:
+      repository: postgres
+      tag: "15-alpine"
+    database: "authentik"
+    username: "authentik"
+    password: "change-me-in-production"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    persistence:
+      enabled: true
+      size: 10Gi
+  redis:
+    image:
+      repository: redis
+      tag: "7-alpine"
+    password: "change-me-in-production"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  oidc:
+    clientSecret: ""
