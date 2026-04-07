@@ -302,13 +302,17 @@ kubedock:
 # -- Authentik identity provider configuration
 authentik:
   enabled: false
+  # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
+  # Generate with: openssl rand -base64 32
+  # This value cannot be empty and must be unique per installation.
+  secretKey: ""
   postgres:
     image:
       repository: postgres
       tag: "15-alpine"
     database: "authentik"
     username: "authentik"
-    password: ""
+    password: "change-me-in-production"
     resources:
       requests:
         cpu: 100m
@@ -323,7 +327,7 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
-    password: ""
+    password: "change-me-in-production"
     resources:
       requests:
         cpu: 100m
