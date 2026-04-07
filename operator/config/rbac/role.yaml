@@ -10,6 +10,9 @@ rules:
   - configmaps
   - namespaces
   - persistentvolumeclaims
+  - pods
+  - pods/exec
+  - pods/log
   - secrets
   - serviceaccounts
   - services
