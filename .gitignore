@@ -6,6 +6,9 @@
 .gptengineer/
 .gemini/
 
+# Worktree directories
+.worktrees/
+
 # Dependency directories
 node_modules/
 .venv/
