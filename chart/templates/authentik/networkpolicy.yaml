@@ -23,7 +23,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/name: postgres
+          app.kubernetes.io/name: postgresql
     ports:
     - protocol: TCP
       port: 5432
@@ -34,8 +34,7 @@ spec:
     ports:
     - protocol: TCP
       port: 6379
-  - to: []  # Allow external access for OIDC providers
-    ports:
+  - ports:  # Allow external access for OIDC providers
     - protocol: TCP
       port: 443
 {{- end }}
