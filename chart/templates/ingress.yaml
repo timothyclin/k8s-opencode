@@ -11,10 +11,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - {{ .Values.authentik.proxy.hostname }}
+    - {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
     secretName: {{ include "ok8s.fullname" . }}-authentik-tls
   rules:
-  - host: {{ .Values.authentik.proxy.hostname }}
+  - host: {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
     http:
       paths:
       - path: /
@@ -41,7 +41,7 @@ spec:
     - {{ .Values.auth.oidc.hostname | default "oc-ingress" }}
     secretName: {{ include "ok8s.fullname" . }}-oidc-tls
   rules:
-  - host: {{ .Values.auth.oidc.hostname }}
+   - host: {{ .Values.auth.oidc.hostname | default "oc-ingress" }}
     http:
       paths:
       - path: /
