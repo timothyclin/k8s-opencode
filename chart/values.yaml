@@ -305,7 +305,7 @@ authentik:
   # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
   # Generate with: openssl rand -base64 32
   # This value cannot be empty and must be unique per installation.
-  secretKey: "change-me-in-production"
+  secretKey: ""
   proxy:
     hostname: "opencode.company.com"
   image:
@@ -327,7 +327,7 @@ authentik:
       tag: "15"
     database: "authentik"
     username: "authentik"
-    password: "change-me-in-production"
+    password: ""
     resources:
       requests:
         cpu: 100m
@@ -343,14 +343,14 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
-    password: "change-me-in-production"
+    password: ""
     resources:
       requests:
         cpu: 50m
         memory: 64Mi
       limits:
-         cpu: 500m
-         memory: 512Mi
+        cpu: 500m
+        memory: 512Mi
   oidc:
     enabled: false
     provider: "oidc"
