@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-pvc
+  namespace: registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.registry.storage.size }}
+{{- if .Values.registry.storage.storageClass }}
+  storageClassName: {{ .Values.registry.storage.storageClass }}
+{{- end }}

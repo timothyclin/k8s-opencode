@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: registry-ingress
+  namespace: registry
+  annotations:
+    tailscale.com/hostname: "{{ .Values.registry.tailscale.hostname }}"
+    tailscale.com/tags: "tag:k8s"
+spec:
+  ingressClassName: tailscale
+  rules:
+  - host: {{ .Values.registry.tailscale.hostname }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: registry-service
+            port:
+              number: 5000
+  tls:
+  - hosts:
+    - "{{ .Values.registry.tailscale.hostname }}"

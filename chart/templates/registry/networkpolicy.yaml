@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: registry-network-policy
+  namespace: registry
+spec:
+  podSelector:
+    matchLabels:
+      app: registry
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: tailscale
+    ports:
+    - protocol: TCP
+      port: 5000
+  - from:
+    - namespaceSelector: {}  # Allow all namespaces for internal access
+    ports:
+    - protocol: TCP
+      port: 5000

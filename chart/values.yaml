@@ -253,7 +253,26 @@ identity:
   # .clinerules: |
   #   # Cline Rules
   #   - Follow existing code style
-  #   - Add tests for new features
+   # - Add tests for new features
+# -- Container Registry: Local registry for faster development cycles
+registry:
+  enabled: false
+  image:
+    repository: registry
+    tag: "2.8"
+    pullPolicy: IfNotPresent
+  auth:
+    enabled: true
+    username: "registry-user"
+    password: "change-me-in-production"
+  storage:
+    size: 50Gi
+    storageClass: ""
+  service:
+    port: 5000
+  tailscale:
+    hostname: "registry"
+    tags: ["tag:k8s"]
 # -- Kubedock: Docker API to Kubernetes Pod translation layer
 # -- Prevents OOM kills by running test containers as separate Pods instead of DinD sidecars
 kubedock:
