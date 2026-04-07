@@ -277,3 +277,24 @@ Generate oh-my-opencode.jsonc config
   {{- end }}
 }
 {{- end }}
+
+{{/*
+Authentik fullname
+*/}}
+{{- define "ok8s.authentik.fullname" -}}
+{{- printf "%s-authentik" (include "ok8s.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Authentik PostgreSQL fullname
+*/}}
+{{- define "ok8s.authentik.postgres.fullname" -}}
+{{- printf "%s-authentik-postgres" (include "ok8s.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Authentik Redis fullname
+*/}}
+{{- define "ok8s.authentik.redis.fullname" -}}
+{{- printf "%s-authentik-redis" (include "ok8s.fullname" .) -}}
+{{- end -}}
