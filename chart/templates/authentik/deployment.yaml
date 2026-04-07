@@ -3,9 +3,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "ok8s.fullname" . }}-authentik
+<<<<<<< HEAD
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ok8s.labels" . | nindent 4 }}
+=======
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/instance: {{ .Release.Name }}
+>>>>>>> agent/shared-ingress-authentik
 spec:
   replicas: {{ .Values.authentik.replicaCount }}
   selector:
@@ -20,14 +26,25 @@ spec:
     spec:
       containers:
       - name: authentik
+<<<<<<< HEAD
         image: {{ .Values.authentik.image.repository }}:{{ .Values.authentik.image.tag }}
         imagePullPolicy: {{ .Values.authentik.image.pullPolicy }}
         command: ["ak", "server"]
+=======
+        image: "{{ .Values.authentik.image.repository }}:{{ .Values.authentik.image.tag }}"
+        command: ["ak", "server"]
+        env:
+        - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+          value: "admin"  # Change in production
+        - name: AUTHENTIK_BOOTSTRAP_EMAIL
+          value: "admin@local"
+>>>>>>> agent/shared-ingress-authentik
         ports:
         - containerPort: 9000
           name: http
         - containerPort: 9443
           name: https
+<<<<<<< HEAD
         env:
         - name: AUTHENTIK_CONFIG__path
           value: "/etc/authentik/authentik.yml"
@@ -38,11 +55,23 @@ spec:
           mountPath: /secrets
         resources:
           {{- toYaml .Values.authentik.resources | nindent 10 }}
+=======
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: secrets
+          mountPath: /secrets
+        resources: {{ toYaml .Values.authentik.resources | nindent 10 }}
+>>>>>>> agent/shared-ingress-authentik
       volumes:
       - name: config
         configMap:
           name: {{ include "ok8s.fullname" . }}-authentik
       - name: secrets
         secret:
+<<<<<<< HEAD
           name: {{ include "ok8s.fullname" . }}-authentik
+=======
+          secretName: {{ include "ok8s.fullname" . }}-authentik
+>>>>>>> agent/shared-ingress-authentik
 {{- end }}

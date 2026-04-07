@@ -168,7 +168,6 @@ skills:
 # -- Tailscale cluster ingress (exposes OpenCode UI to your tailnet)
 ingress:
   enabled: false
-  hostname: "opencode.local"
   # -- Hostname prefix for MagicDNS (default derives from opencode.username as oc-<username>)
 # -- Tailscale operator configuration
 # -- If install: true, the chart expects the Tailscale Operator is already installed
@@ -300,47 +299,28 @@ kubedock:
     TESTCONTAINERS_RYUK_DISABLED: "true"
     TESTCONTAINERS_CHECKS_DISABLE: "true"
 
-# -- Authentik Identity-Aware Proxy configuration
+# -- Authentik identity provider configuration
 authentik:
   enabled: false
-  # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
-  # Generate with: openssl rand -base64 32
-  # This value cannot be empty and must be unique per installation.
-  secretKey: ""
+  proxy:
+    hostname: "opencode.company.com"
   image:
     repository: ghcr.io/goauthentik/server
-    tag: "2024.6.0"
+    tag: "2024.6.1"
     pullPolicy: IfNotPresent
   replicaCount: 1
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
       cpu: 500m
-      memory: 1Gi
-
-  # -- OIDC provider configuration
-  oidc:
-    enabled: false
-    provider: "oidc"  # oidc, google, github, etc.
-    clientId: ""
-    clientSecret: ""
-    issuerUrl: ""  # https://accounts.google.com for Google
-    scopes: ["openid", "email", "profile"]
-
-  # -- Proxy provider configuration
-  proxy:
-    enabled: false
-    hostname: "opencode.company.com"
-    cookieDomain: ".company.com"
-
-  # -- Database configuration
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  secretKey: "change-me-in-production"
   postgres:
-    enabled: true
     image:
       repository: postgres
-      tag: "15"
+      tag: "15-alpine"
     database: "authentik"
     username: "authentik"
     password: "change-me-in-production"
@@ -354,18 +334,19 @@ authentik:
     persistence:
       enabled: true
       size: 10Gi
-
-  # -- Redis configuration
   redis:
-    enabled: true
     image:
       repository: redis
       tag: "7-alpine"
     password: "change-me-in-production"
     resources:
       requests:
-        cpu: 50m
-        memory: 64Mi
+        cpu: 100m
+        memory: 256Mi
       limits:
-        cpu: 200m
-        memory: 128Mi
+        cpu: 500m
+        memory: 512Mi
+  oidc:
+    enabled: false
+    issuerUrl: ""
+    clientSecret: ""
