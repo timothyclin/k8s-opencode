@@ -1,0 +1,3 @@
+[submodule ".localtest/homek8s-registry"]
+	path = .localtest/homek8s-registry
+	url = https://github.com/timothyclin/homek8s-registry

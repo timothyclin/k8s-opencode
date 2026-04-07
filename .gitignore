@@ -41,3 +41,6 @@ coverage.out
 .vscode/
 .idea/
 *.swp
+
+# Local Testing Instructions
+.localtest/
