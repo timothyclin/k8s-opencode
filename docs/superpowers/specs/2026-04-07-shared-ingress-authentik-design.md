@@ -18,7 +18,7 @@ Organizations want a single, centralized access point with professional branding
 
 ### Functional Requirements
 - **Shared Hostname**: Single domain (e.g., `opencode.company.com`) for all users
-- **OIDC Authentication**: Google Workspace integration for enterprise SSO
+- **OIDC Authentication**: Integration with enterprise identity providers (e.g., Google Workspace, Azure AD, Okta)
 - **Identity-Based Routing**: Route users to pods based on authenticated email claims
 - **Session Persistence**: Maintain user sessions across requests
 - **Security**: Zero-trust access with continuous claim validation
@@ -50,7 +50,7 @@ Internet
 - **Purpose**: Central identity management and OIDC orchestration
 - **Deployment**: Kubernetes deployment with PostgreSQL and Redis
 - **Configuration**:
-  - OIDC Source: Google Workspace
+  - OIDC Source: Enterprise identity provider (e.g., Google Workspace, Azure AD)
   - Scope Mappings: Extract email, compute dynamic backend URL
   - Proxy Provider: Handle HTTP traffic with dynamic routing
 
@@ -96,8 +96,8 @@ return {
 
 ### Traffic Flow
 1. **Unauthenticated Access**: User visits `https://opencode.company.com`
-2. **OIDC Redirect**: Authentik redirects to Google Workspace login
-3. **Token Exchange**: Google returns OIDC token with user claims
+2. **OIDC Redirect**: Authentik redirects to configured identity provider (e.g., Google Workspace)
+3. **Token Exchange**: Identity provider returns OIDC token with user claims
 4. **Backend Calculation**: Authentik evaluates scope mapping, computes pod DNS
 5. **Session Establishment**: Proxy target overridden for user's session
 6. **Request Proxying**: All subsequent requests route directly to user's StatefulSet
@@ -152,13 +152,13 @@ return {
 ## Deployment and Operations
 
 ### Prerequisites
-- Google Workspace with OIDC configured
+- Enterprise identity provider with OIDC support (e.g., Google Workspace, Azure AD, Okta)
 - Wildcard DNS: `*.company.com` → cluster ingress
 - Tailscale (optional, for remote access)
 
 ### Deployment Steps
 1. Deploy Authentik via Helm chart
-2. Configure Google Workspace OIDC source
+2. Configure enterprise identity provider OIDC source
 3. Create Proxy Provider with scope mappings
 4. Update OpenCode ingress to use Authentik
 5. Test with sample user workspaces
@@ -202,7 +202,7 @@ return {
 **Mitigation**: Start with minimal configuration, leverage existing Helm charts
 
 ### Risk: OIDC Configuration Issues
-**Mitigation**: Test thoroughly with Google Workspace admin
+**Mitigation**: Test thoroughly with identity provider admin
 
 ### Risk: DNS Resolution Failures
 **Mitigation**: Validate headless service DNS before rollout
