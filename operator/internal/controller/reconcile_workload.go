@@ -98,22 +98,17 @@ chmod 640 /mnt/shadow/shadow
 
       # Fix ownership on mounted directories
       chown -R $USER_ID:$USER_GID /home/$USER_NAME 2>/dev/null || true
-      chown -R $USER_ID:$USER_GID /workspace 2>/dev/null || true
-
-# Create config directory for opencode
-mkdir -p /home/$USER_NAME/.opencode 2>/dev/null || true
-chown -R $USER_ID:$USER_GID /home/$USER_NAME/.opencode 2>/dev/null || true
 
 # Copy config files from ConfigMap to writable location (ConfigMap is read-only)
 if [ -f /etc/opencode-config/opencode.json ]; then
+  mkdir -p /home/$USER_NAME/.opencode 2>/dev/null || true
   cp /etc/opencode-config/opencode.json /home/$USER_NAME/.opencode/
-  chown $USER_ID:$USER_GID /home/$USER_NAME/.opencode/opencode.json
 fi
 `},
 						SecurityContext: &corev1.SecurityContext{
-							RunAsUser:    ptr.To(int64(0)),
-							RunAsGroup:   ptr.To(int64(0)),
-							RunAsNonRoot: ptr.To(false),
+							RunAsUser:    ptr.To(int64(1000)),
+							RunAsGroup:   ptr.To(int64(1000)),
+							RunAsNonRoot: ptr.To(true),
 						},
 						Env: []corev1.EnvVar{
 							{
@@ -125,18 +120,19 @@ fi
 							{Name: "sudoers", MountPath: "/etc/sudoers.d"},
 							{Name: "passwd", MountPath: "/mnt/passwd"},
 							{Name: "shadow", MountPath: "/mnt/shadow"},
-							{Name: workspaceDataPVCName, MountPath: fmt.Sprintf("/home/%s/.opencode", workspace.Name)},
-							{Name: workspacePVCName, MountPath: "/workspace"},
+							{Name: workspaceDataPVCName, MountPath: fmt.Sprintf("/home/%s", workspace.Name)},
+							{Name: workspacePVCName, MountPath: fmt.Sprintf("/home/%s/workspace", workspace.Name)},
 							{Name: workspaceConfigMapName, MountPath: "/etc/opencode-config", ReadOnly: true},
 						},
 					},
 				},
 				Containers: []corev1.Container{
 					{
-						Name:      "workspace",
-						Image:     workspaceContainerImage,
-						Command:   []string{"opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"},
-						Resources: workspace.Spec.Resources,
+						Name:       "workspace",
+						Image:      workspaceContainerImage,
+						Command:    []string{"opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"},
+						WorkingDir: fmt.Sprintf("/home/%s", workspace.Name),
+						Resources:  workspace.Spec.Resources,
 						Ports: []corev1.ContainerPort{
 							{
 								Name:          "http",
@@ -152,11 +148,11 @@ fi
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								Name:      workspacePVCName,
-								MountPath: "/workspace",
+								MountPath: fmt.Sprintf("/home/%s/workspace", workspace.Name),
 							},
 							{
 								Name:      workspaceDataPVCName,
-								MountPath: fmt.Sprintf("/home/%s/.opencode", workspace.Name),
+								MountPath: fmt.Sprintf("/home/%s", workspace.Name),
 							},
 							{
 								Name:      "sudoers",

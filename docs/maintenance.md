@@ -68,6 +68,14 @@ helm upgrade ok8s oci://ghcr.io/timothyclin/k8s-opencode/chart/ok8s -n opencode 
 
 > **Note**: The password is stored in the per-user Secret. Upgrading will update the Secret, and the pod will restart with the new credentials.
 
+## Storage Compatibility
+
+### NFS Root Squash
+
+When using NFS-backed PersistentVolumes with `root_squash` enabled (common for security), the init container cannot change file ownership using `chown`. The operator automatically uses `chmod 777` to make directories world-writable, allowing the workspace container (running as UID 1000) to access mounted volumes.
+
+This is less secure than proper ownership but ensures compatibility with NFS `root_squash`. For optimal security, configure NFS with `no_root_squash` or use alternative storage backends that support ownership changes.
+
 ---
 
 ## Binary Updates
