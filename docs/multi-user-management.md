@@ -373,7 +373,51 @@ Therefore, relying purely on Traefik for dynamic routing requires the deployment
 of external automation—such as a custom Kubernetes controller or complex CI/CD
 scripts—to generate, apply, and manage an individual IngressRoute object for
 every single user on the platform, significantly increasing operational
-overhead.
+## Authentik Identity-Aware Proxy Setup
+
+For shared hostname access with centralized OIDC authentication, deploy Authentik as an Identity-Aware Proxy.
+
+### Prerequisites
+
+- OIDC provider (Google Workspace, Azure AD, Okta, etc.)
+- Wildcard DNS: `*.yourdomain.com` → cluster ingress
+
+### Configuration
+
+Enable Authentik in your Helm values:
+
+```yaml
+authentik:
+  enabled: true
+  oidc:
+    enabled: true
+    provider: "oidc"
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    issuerUrl: "https://accounts.google.com"  # For Google Workspace
+  proxy:
+    hostname: "opencode.yourdomain.com"
+```
+
+### Post-Deployment Setup
+
+1. Access Authentik admin: `https://opencode.yourdomain.com/admin`
+2. Configure OIDC Source for your identity provider
+3. Create Proxy Provider with dynamic backend mapping
+4. Set up scope mapping for user routing:
+
+```python
+email = request.user.email
+username = email.split('@')[0]
+backend = f"http://opencode-{username}-0.opencode-headless.default.svc.cluster.local:4096"
+return {"ak_proxy": {"backend_override": backend}}
+```
+
+### User Access
+
+Users access via: `https://opencode.yourdomain.com`
+
+Authentik handles authentication and routes to the appropriate user pod based on email claims.
 
 ## ---
 
