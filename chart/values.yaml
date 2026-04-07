@@ -343,7 +343,7 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
-      password: "change-me-in-production"
+    password: "change-me-in-production"
     resources:
       requests:
         cpu: 50m
@@ -353,5 +353,8 @@ authentik:
         memory: 512Mi
   oidc:
     enabled: false
-    issuerUrl: ""
+    provider: "oidc"
+    clientId: ""
     clientSecret: ""
+    issuerUrl: ""
+    scopes: ["openid", "email", "profile"]
