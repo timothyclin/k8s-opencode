@@ -25,29 +25,27 @@ spec:
             port:
               number: 80
 {{- else }}
-# Original ingress logic for direct routing to OpenCode
+# Original ingress logic here
+{{- if and (eq .Values.mode "single") .Values.ingress.enabled }}
+{{- $hostname := .Values.ingress.hostname | default (include "ok8s.ingressHostname" .) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "ok8s.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ok8s.labels" . | nindent 4 }}
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    tailscale.com/hostname: {{ $hostname | quote }}
 spec:
-  ingressClassName: nginx
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: {{ include "ok8s.fullname" . }}
+      port:
+        number: 4096
   tls:
-  - hosts:
-    - {{ .Values.authentik.proxy.hostname }}
-    secretName: {{ include "ok8s.fullname" . }}-tls
-  rules:
-  - host: {{ .Values.authentik.proxy.hostname }}
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ include "ok8s.fullname" . }}
-            port:
-              number: 4096
+    - hosts:
+        - {{ $hostname }}
+{{- end }}
 {{- end }}
