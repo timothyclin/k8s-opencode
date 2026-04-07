@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -196,9 +197,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockDeployment(ctx context.Co
 		if deployment.Labels == nil {
 			deployment.Labels = map[string]string{}
 		}
-		for k, v := range labels {
-			deployment.Labels[k] = v
-		}
+		maps.Copy(deployment.Labels, labels)
 
 		deployment.Spec.Replicas = &replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{MatchLabels: labels}

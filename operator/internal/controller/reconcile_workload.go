@@ -77,7 +77,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileStatefulSet(ctx context.Context, 
 						Image:   workspaceContainerImage,
 						Command: []string{"sh", "-c"},
 						Args: []string{`set -e
-USER_NAME="opencode"
+USER_NAME="${WORKSPACE_USER}"
 USER_ID="1000"
 USER_GID="1000"
 
@@ -115,11 +115,17 @@ fi
 							RunAsGroup:   ptr.To(int64(0)),
 							RunAsNonRoot: ptr.To(false),
 						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "WORKSPACE_USER",
+								Value: workspace.Name,
+							},
+						},
 						VolumeMounts: []corev1.VolumeMount{
 							{Name: "sudoers", MountPath: "/etc/sudoers.d"},
 							{Name: "passwd", MountPath: "/mnt/passwd"},
 							{Name: "shadow", MountPath: "/mnt/shadow"},
-							{Name: workspaceDataPVCName, MountPath: "/home/opencode/.opencode"},
+							{Name: workspaceDataPVCName, MountPath: fmt.Sprintf("/home/%s/.opencode", workspace.Name)},
 							{Name: workspacePVCName, MountPath: "/workspace"},
 							{Name: workspaceConfigMapName, MountPath: "/etc/opencode-config", ReadOnly: true},
 						},
@@ -145,7 +151,7 @@ fi
 							},
 							{
 								Name:      workspaceDataPVCName,
-								MountPath: "/home/opencode/.opencode",
+								MountPath: fmt.Sprintf("/home/%s/.opencode", workspace.Name),
 							},
 							{
 								Name:      "sudoers",
@@ -263,6 +269,12 @@ func (r *OpenCodeWorkspaceReconciler) reconcileService(ctx context.Context, work
 
 func buildProviderEnvVars(workspace *opencodev1alpha1.OpenCodeWorkspace) []corev1.EnvVar {
 	var envs []corev1.EnvVar
+
+	// Set HOME environment variable to user's home directory
+	envs = append(envs, corev1.EnvVar{
+		Name:  "HOME",
+		Value: fmt.Sprintf("/home/%s", workspace.Name),
+	})
 
 	// Always inject server password (required for OpenCode HTTP server)
 	envs = append(envs, corev1.EnvVar{
