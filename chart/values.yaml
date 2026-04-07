@@ -343,7 +343,7 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
-      password: "change-me-in-production"
+    password: "change-me-in-production"
     resources:
       requests:
         cpu: 50m
