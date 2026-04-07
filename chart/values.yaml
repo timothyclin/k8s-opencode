@@ -302,12 +302,14 @@ kubedock:
 # -- Authentik identity provider configuration
 authentik:
   enabled: false
+  secretKey: "change-me-in-production"
   postgres:
     image:
       repository: postgres
       tag: "15-alpine"
     database: "authentik"
     username: "authentik"
+    password: "change-me-in-production"
     resources:
       requests:
         cpu: 100m
@@ -322,6 +324,7 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
+    password: "change-me-in-production"
     resources:
       requests:
         cpu: 100m
@@ -329,3 +332,5 @@ authentik:
       limits:
         cpu: 500m
         memory: 512Mi
+  oidc:
+    clientSecret: ""
