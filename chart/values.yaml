@@ -1,7 +1,7 @@
 # -- OpenCode container image
 image:
   repository: ghcr.io/timothyclin/k8s-opencode/opencode-workspace
-  tag: "0.3.2"
+  tag: "0.3.3"
   pullPolicy: IfNotPresent
 # -- Create the release namespace (set to false if installing into an existing namespace)
 createNamespace: false
@@ -68,7 +68,7 @@ auth:
   router:
     image:
       repository: ghcr.io/timothyclin/k8s-opencode/auth-router
-      tag: "0.3.2"
+      tag: "0.3.3"
       pullPolicy: IfNotPresent
 # -- StatefulSet update strategy (used when mode: "multi")
 updateStrategy:
