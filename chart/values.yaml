@@ -351,3 +351,10 @@ authentik:
       limits:
          cpu: 500m
          memory: 512Mi
+  oidc:
+    enabled: false
+    provider: "oidc"
+    clientId: ""
+    clientSecret: ""
+    issuerUrl: ""
+    scopes: ["openid", "email", "profile"]
