@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: image-puller
+  namespace: registry
+spec:
+  restartPolicy: Never
+  containers:
+  - name: puller
+    image: docker:latest
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      echo "Pulling from Tailscale registry..."
+      /host/snap/microk8s/current/bin/ctr --address /host/var/snap/microk8s/common/run/containerd.sock -n k8s.io images pull registry.lynx-beta.ts.net/operator:0.3.3
+      echo "Tagging for local registry..."
+      /host/snap/microk8s/current/bin/ctr --address /host/var/snap/microk8s/common/run/containerd.sock -n k8s.io images tag registry.lynx-beta.ts.net/operator:0.3.3 localhost:32000/operator:0.3.3
+      echo "Done"
+    volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock

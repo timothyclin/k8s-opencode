@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: image-importer
+  namespace: kube-system
+spec:
+  hostPID: true
+  hostIPC: true
+  hostNetwork: true
+  restartPolicy: Never
+  containers:
+  - name: importer
+    image: docker:latest
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      echo "Starting image import process..."
+      
+      # Try docker on host first
+      if [ -S /host/var/run/docker.sock ]; then
+        echo "Found host docker socket, trying to pull with docker..."
+        if docker -H unix:///host/var/run/docker.sock pull registry.lynx-beta.ts.net/operator:0.3.3; then
+          echo "Successfully pulled image with docker"
+          # Tag for local registry
+          docker -H unix:///host/var/run/docker.sock tag registry.lynx-beta.ts.net/operator:0.3.3 localhost:32000/operator:0.3.3
+          # Push to local registry
+          docker -H unix:///host/var/run/docker.sock push localhost:32000/operator:0.3.3
+          echo "Pushed image to local registry"
+          exit 0
+        else
+          echo "Failed to pull with host docker"
+        fi
+      fi
+      
+      # Try ctr with containerd
+      CTR_PATH="/host/snap/microk8s/current/bin/ctr"
+      SOCKET_PATH="/host/var/snap/microk8s/common/run/containerd.sock"
+      if [ -x "$CTR_PATH" ] && [ -S "$SOCKET_PATH" ]; then
+        echo "Found ctr and socket, pulling image..."
+        if $CTR_PATH --address $SOCKET_PATH -n k8s.io images pull registry.lynx-beta.ts.net/operator:0.3.3; then
+          echo "Successfully pulled image with ctr"
+          $CTR_PATH --address $SOCKET_PATH -n k8s.io images tag registry.lynx-beta.ts.net/operator:0.3.3 localhost:32000/operator:0.3.3
+          echo "Tagged image for local registry"
+          exit 0
+        else
+          echo "Failed to pull with ctr"
+        fi
+      else
+        echo "ctr or socket not found"
+      fi
+      echo "All import methods failed"
+      exit 1
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /host
+      name: host-root
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory

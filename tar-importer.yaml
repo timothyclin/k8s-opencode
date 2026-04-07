@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tar-importer
+  namespace: registry
+spec:
+  hostPID: true
+  hostIPC: true
+  hostNetwork: true
+  restartPolicy: Never
+  containers:
+  - name: importer
+    image: docker:latest
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      echo "Importing tar file into containerd..."
+      CTR_PATH="/host/snap/microk8s/current/bin/ctr"
+      SOCKET_PATH="/host/var/snap/microk8s/common/run/containerd.sock"
+      TAR_PATH="/host/tmp/operator-0.3.3.tar"
+      if [ -x "$CTR_PATH" ] && [ -S "$SOCKET_PATH" ] && [ -f "$TAR_PATH" ]; then
+        echo "Found ctr, socket, and tar file"
+        $CTR_PATH --address $SOCKET_PATH -n k8s.io images import $TAR_PATH
+        echo "Imported tar file"
+        # Tag it for the local registry
+        $CTR_PATH --address $SOCKET_PATH -n k8s.io images tag $(docker inspect registry.lynx-beta.ts.net/operator:0.3.3 | jq -r '.[0].RepoDigests[0]') localhost:32000/operator:0.3.3
+        echo "Tagged image for local registry"
+        exit 0
+      else
+        echo "Missing: ctr=$([ -x $CTR_PATH ] && echo yes || echo no), socket=$([ -S $SOCKET_PATH ] && echo yes || echo no), tar=$([ -f $TAR_PATH ] && echo yes || echo no)"
+        exit 1
+      fi
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory

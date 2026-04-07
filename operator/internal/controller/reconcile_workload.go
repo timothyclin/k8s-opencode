@@ -106,9 +106,9 @@ if [ -f /etc/opencode-config/opencode.json ]; then
 fi
 `},
 						SecurityContext: &corev1.SecurityContext{
-							RunAsUser:    ptr.To(int64(1000)),
-							RunAsGroup:   ptr.To(int64(1000)),
-							RunAsNonRoot: ptr.To(true),
+							RunAsUser:    ptr.To(int64(0)),
+							RunAsGroup:   ptr.To(int64(0)),
+							RunAsNonRoot: ptr.To(false),
 						},
 						Env: []corev1.EnvVar{
 							{
