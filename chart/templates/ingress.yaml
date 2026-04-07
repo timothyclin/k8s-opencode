@@ -25,6 +25,8 @@ spec:
             port:
               number: 80
 {{- else }}
+# Original ingress logic here
+{{- if and (eq .Values.mode "single") .Values.ingress.enabled }}
 {{- $hostname := .Values.ingress.hostname | default (include "ok8s.ingressHostname" .) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -45,4 +47,5 @@ spec:
   tls:
     - hosts:
         - {{ $hostname }}
+{{- end }}
 {{- end }}
