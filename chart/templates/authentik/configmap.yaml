@@ -10,18 +10,19 @@ data:
     debug: false
     secret_key: /secrets/secretKey
     disable_startup_analytics: true
+    domain: {{ .Values.authentik.domain }}
 
     # Database
     database:
-      host: {{ include "ok8s.fullname" . }}-authentik-postgres
-      name: {{ .Values.authentik.postgres.database }}
-      user: {{ .Values.authentik.postgres.username }}
-      password: /secrets/postgresPassword
+      host: {{ .Release.Name }}-postgresql
+      name: {{ .Values.postgresql.auth.database }}
+      user: {{ .Values.postgresql.auth.username }}
+      password: /postgres-secrets/postgresql-password
 
     # Redis
     redis:
-      host: {{ include "ok8s.fullname" . }}-authentik-redis
-      password: /secrets/redisPassword
+      host: {{ .Release.Name }}-redis
+      password: /redis-secrets/redis-password
 
     # Email (disabled for this use case)
     email:

@@ -3,6 +3,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ok8s.fullname" . }}-authentik
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "ok8s.labels" . | nindent 4 }}
 spec:
   ports:
   - name: http

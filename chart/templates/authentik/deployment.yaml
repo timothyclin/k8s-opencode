@@ -28,8 +28,38 @@ spec:
           value: "admin"  # Change in production
         - name: AUTHENTIK_BOOTSTRAP_EMAIL
           value: "admin@local"
+        - name: AUTHENTIK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "ok8s.authentik.fullname" . }}
+              key: secretKey
+        - name: AUTHENTIK_POSTGRESQL__HOST
+          value: "{{ .Release.Name }}-postgresql"
+        - name: AUTHENTIK_POSTGRESQL__NAME
+          value: "{{ .Values.postgresql.auth.database }}"
+        - name: AUTHENTIK_POSTGRESQL__USER
+          value: "{{ .Values.postgresql.auth.username }}"
+        - name: AUTHENTIK_POSTGRESQL__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-postgresql
+              key: postgresql-password
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-postgresql
+              key: postgresql-password
+        - name: AUTHENTIK_REDIS__HOST
+          value: "{{ .Release.Name }}-redis"
+        - name: AUTHENTIK_REDIS__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-redis
+              key: redis-password
         - name: AUTHENTIK_CONFIG__path
           value: "/config/authentik.yml"
+        - name: AK_DOMAIN
+          value: {{ .Values.authentik.domain }}
         ports:
         - containerPort: 9000
           name: http
@@ -39,13 +69,23 @@ spec:
           mountPath: /config
         - name: secrets
           mountPath: /secrets
+        - name: postgres-secret
+          mountPath: /postgres-secrets
+        - name: redis-secret
+          mountPath: /redis-secret
         resources:
-{{ toYaml .Values.authentik.resources | nindent 10 }}
+{{ toYaml .Values.authentik.resources | indent 10 }}
       volumes:
       - name: config
         configMap:
-          name: {{ include "ok8s.fullname" . }}-authentik
+          name: {{ include "ok8s.authentik.fullname" . }}
       - name: secrets
         secret:
-          secretName: {{ include "ok8s.fullname" . }}-authentik
+          secretName: {{ include "ok8s.authentik.fullname" . }}
+      - name: postgres-secret
+        secret:
+          secretName: {{ .Release.Name }}-postgresql
+      - name: redis-secret
+        secret:
+          secretName: {{ .Release.Name }}-redis
 {{- end }}

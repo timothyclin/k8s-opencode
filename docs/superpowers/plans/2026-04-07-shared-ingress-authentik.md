@@ -124,7 +124,7 @@ authentik:
 
 - [ ] **Step 2: Validate YAML syntax**
 
-Run: `helm template test ./chart --set authentik.enabled=true --dry-run`
+Run: `helm template test ./chart --set authentik.enabled=true`
 Expected: No YAML parsing errors
 
 - [ ] **Step 3: Commit values update**
@@ -662,10 +662,8 @@ spec:
       # Test Authentik service availability
       curl -f http://{{ include "ok8s.fullname" . }}-authentik:80/ || exit 1
 
-      # Test PostgreSQL connectivity (basic)
-      echo "Authentik components deployed successfully"
-spec:
-  restartPolicy: Never
+       # Test PostgreSQL connectivity (basic)
+       echo "Authentik components deployed successfully"
 {{- end }}
 ```
 
@@ -808,7 +806,7 @@ authentik:
 ```python
 email = request.user.email
 username = email.split('@')[0]
-backend = f"http://opencode-{username}-0.opencode-headless.default.svc.cluster.local:4096"
+backend = f"http://opencode-{username}-0.opencode-headless.{{ .Release.Namespace }}.svc.cluster.local:4096"
 return {"ak_proxy": {"backend_override": backend}}
 ```
 
@@ -851,5 +849,3 @@ Expected: No linting errors
 
 ```bash
 git commit --allow-empty -m "feat: complete Authentik implementation - all templates validated"
-```</content>
-<parameter name="filePath">docs/superpowers/plans/2026-04-07-shared-ingress-authentik.md

@@ -6,9 +6,13 @@ image:
 # -- Create the release namespace (set to false if installing into an existing namespace)
 createNamespace: false
 # -- Deployment mode: "single" (Deployment) or "multi" (StatefulSet)
-mode: "single"
+mode: "multi"
 # -- Multi-user configuration (used when mode: "multi")
-users: []
+users:
+- name: testuser
+  email: "test@example.com"
+  password: "testpass"
+  workspaceSize: 20Gi
 # - name: alice
 #   email: "alice@example.com"       # Required for OIDC auth — maps Google email to this user
 #   password: "change-me"
@@ -167,7 +171,8 @@ skills:
   config: []
 # -- Tailscale cluster ingress (exposes OpenCode UI to your tailnet)
 ingress:
-  enabled: false
+  enabled: true
+  # -- NOTE: Tailscale ingress requires customization of hostname and tags based on your tailnet setup. See Tailscale Setup section in README.
   # -- Hostname prefix for MagicDNS (default derives from opencode.username as oc-<username>)
 # -- Tailscale operator configuration
 # -- If install: true, the chart expects the Tailscale Operator is already installed
@@ -219,9 +224,8 @@ securityContext:
   runAsUser: 1000
   runAsGroup: 1000
   fsGroup: 1000
-# -- Node selector (defaults to arm64)
-nodeSelector:
-  kubernetes.io/arch: arm64
+# -- Node selector (empty by default to support multiple architectures)
+nodeSelector: {}
 # -- Tolerations
 tolerations: []
 # -- Pod annotations
@@ -301,16 +305,19 @@ kubedock:
 
 # -- Authentik Identity-Aware Proxy configuration
 authentik:
-  enabled: false
+  enabled: true
+  domain: "opencode-opencode-test-ok8s-authentik-ingress.lynx-beta.ts.net"  # -- Customize this domain/hostname for your setup
   # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
   # Generate with: openssl rand -base64 32
   # This value cannot be empty and must be unique per installation.
-  secretKey: ""
+  secretKey: "MYpBlnGaovNQazqor71Z7pgsV86d1TDZRsDAl6fucpo="
   proxy:
-    hostname: "opencode.company.com"
+    enabled: true
+    hostname: "opencode-opencode-test-ok8s-authentik-ingress.lynx-beta.ts.net"
+    cookieDomain: ".lynx-beta.ts.net"
   image:
     repository: ghcr.io/goauthentik/server
-    tag: "2024.6.1"
+    tag: "2026.2.2"
     pullPolicy: IfNotPresent
   replicaCount: 1
   resources:
@@ -327,7 +334,7 @@ authentik:
       tag: "15"
     database: "authentik"
     username: "authentik"
-    password: ""
+    password: "CHANGE_ME_SECURE_POSTGRES_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
     resources:
       requests:
         cpu: 100m
@@ -343,7 +350,7 @@ authentik:
     image:
       repository: redis
       tag: "7-alpine"
-    password: ""
+    password: "CHANGE_ME_SECURE_REDIS_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
     resources:
       requests:
         cpu: 50m
@@ -358,3 +365,50 @@ authentik:
     clientSecret: ""
     issuerUrl: ""
     scopes: ["openid", "email", "profile"]
+
+# -- Bitnami PostgreSQL chart overrides for arm64 compatibility
+postgresql:
+  image:
+    registry: docker.io
+    repository: postgres
+    tag: "15"
+  auth:
+    database: "authentik"
+    username: "authentik"
+    password: "CHANGE_ME_SECURE_POSTGRES_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
+  primary:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    persistence:
+      enabled: true
+      size: 10Gi
+
+# -- Bitnami Redis chart overrides for arm64 compatibility
+redis:
+  image:
+    registry: docker.io
+    repository: redis
+    tag: "7-alpine"
+  auth:
+    password: "CHANGE_ME_SECURE_REDIS_PASSWORD"  # -- CRITICAL: Change this to a secure password before deploying
+  master:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  replica:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

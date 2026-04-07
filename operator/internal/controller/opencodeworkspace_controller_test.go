@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -60,10 +61,16 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
+			// Cleanup logic after each test, like removing the resource instance.
 			resource := &opencodev1alpha1.OpenCodeWorkspace{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+			if err != nil {
+				if errors.IsNotFound(err) {
+					// Resource was already deleted or never created
+					return
+				}
+				Fail(fmt.Sprintf("Failed to get resource for cleanup: %v", err))
+			}
 
 			By("Cleanup the specific resource instance OpenCodeWorkspace")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
@@ -80,8 +87,15 @@ var _ = Describe("OpenCodeWorkspace Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+
+			By("Checking the resource status")
+			// Re-fetch the resource to get updated status
+			err = k8sClient.Get(ctx, typeNamespacedName, opencodeworkspace)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Verify that the status has been updated
+			Expect(opencodeworkspace.Status.Phase).NotTo(BeEmpty(), "Status phase should be set")
+			Expect(opencodeworkspace.Status.Namespace).To(Equal("oc-test-resource"), "Status namespace should be set correctly")
 		})
 
 		It("should inject OPENCODE_SERVER_PASSWORD env var into StatefulSet", func() {
