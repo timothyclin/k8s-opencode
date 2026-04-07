@@ -14,7 +14,7 @@ spec:
     - {{ .Values.authentik.proxy.hostname }}
     secretName: {{ include "ok8s.fullname" . }}-authentik-tls
   rules:
-  - host: {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
+  - host: {{ .Values.authentik.proxy.hostname }}
     http:
       paths:
       - path: /
