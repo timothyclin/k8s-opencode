@@ -92,5 +92,4 @@ git commit -m "feat: add Authentik main server deployment and configuration"
 
 - [ ] **Step 3: Verify commit**
 
-Run `git log --oneline -1` to confirm the commit message.</content>
-<parameter name="filePath">docs/superpowers/plans/2026-04-07-add-authentik-deployment.md
+Run `git log --oneline -1` to confirm the commit message.

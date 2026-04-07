@@ -29,7 +29,11 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
+	opencodev1alpha1 "github.com/timothyclin/k8s-opencode/operator/api/v1alpha1"
 	"github.com/timothyclin/k8s-opencode/operator/test/utils"
 )
 
@@ -67,6 +71,13 @@ var _ = Describe("Manager", Ordered, func() {
 		cmd = exec.Command("make", "install")
 		_, err = utils.Run(cmd)
 		Expect(err).NotTo(HaveOccurred(), "Failed to install CRDs")
+
+		By("creating test API keys secret")
+		cmd = exec.Command("kubectl", "create", "secret", "generic", "test-api-keys",
+			"--from-literal=anthropic=sk-test-key",
+			"-n", namespace)
+		_, err = utils.Run(cmd)
+		Expect(err).NotTo(HaveOccurred(), "Failed to create test API keys secret")
 
 		By("deploying the controller-manager")
 		cmd = exec.Command("make", "deploy", fmt.Sprintf("IMG=%s", managerImage))
@@ -266,6 +277,82 @@ var _ = Describe("Manager", Ordered, func() {
 				g.Expect(metricsOutput).To(ContainSubstring("< HTTP/1.1 200 OK"))
 			}
 			Eventually(verifyMetricsAvailable, 2*time.Minute).Should(Succeed())
+		})
+
+		It("should create and reconcile an OpenCodeWorkspace", func() {
+			By("creating an OpenCodeWorkspace CR")
+			workspace := &opencodev1alpha1.OpenCodeWorkspace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-workspace",
+				},
+				Spec: opencodev1alpha1.OpenCodeWorkspaceSpec{
+					Email: "test@example.com",
+					Providers: opencodev1alpha1.ProvidersSpec{
+						Anthropic: opencodev1alpha1.AnthropicProviderConfig{
+							Enabled: true,
+							APIKeySecretRef: opencodev1alpha1.SecretKeyRef{
+								Name:      "test-api-keys",
+								Namespace: namespace,
+							},
+						},
+					},
+					Storage: opencodev1alpha1.StorageSpec{
+						Workspace: resource.MustParse("1Gi"),
+						Data:      resource.MustParse("500Mi"),
+					},
+				},
+			}
+
+			// Create the workspace
+			cmd := exec.Command("kubectl", "apply", "-f", "-")
+			stdin, err := cmd.StdinPipe()
+			Expect(err).NotTo(HaveOccurred())
+			go func() {
+				defer stdin.Close()
+				workspaceYAML, _ := yaml.Marshal(workspace)
+				stdin.Write(workspaceYAML)
+			}()
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Failed to create OpenCodeWorkspace")
+
+			By("verifying the workspace reaches Running phase")
+			verifyWorkspaceRunning := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "opencodeworkspace", "test-workspace", "-o", "jsonpath={.status.phase}")
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(output).To(Equal("Running"), "Workspace should be in Running phase")
+			}
+			Eventually(verifyWorkspaceRunning, 5*time.Minute).Should(Succeed())
+
+			By("verifying workspace resources are created")
+			// Check that the namespace was created
+			cmd = exec.Command("kubectl", "get", "namespace", "oc-test-workspace")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Workspace namespace should exist")
+
+			// Check that the StatefulSet was created
+			cmd = exec.Command("kubectl", "get", "statefulset", "-n", "oc-test-workspace")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "StatefulSet should exist in workspace namespace")
+
+			// Check that the Service was created
+			cmd = exec.Command("kubectl", "get", "service", "-n", "oc-test-workspace")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Service should exist in workspace namespace")
+
+			// Check reconciliation metrics
+			verifyReconciliationMetrics := func(g Gomega) {
+				metricsOutput, err := getMetricsOutput()
+				g.Expect(err).NotTo(HaveOccurred(), "Failed to retrieve logs from curl pod")
+				g.Expect(metricsOutput).To(ContainSubstring("< HTTP/1.1 200 OK"))
+				g.Expect(metricsOutput).To(ContainSubstring(`controller_runtime_reconcile_total{controller="opencodeworkspace",result="success"} 1`))
+			}
+			Eventually(verifyReconciliationMetrics, 2*time.Minute).Should(Succeed())
+
+			By("cleaning up the test workspace")
+			cmd = exec.Command("kubectl", "delete", "opencodeworkspace", "test-workspace")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Failed to delete OpenCodeWorkspace")
 		})
 
 		// +kubebuilder:scaffold:e2e-webhooks-checks

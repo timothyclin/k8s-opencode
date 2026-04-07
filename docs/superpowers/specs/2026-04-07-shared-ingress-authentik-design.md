@@ -219,5 +219,4 @@ return {
 
 ## Conclusion
 
-This Authentik-based shared ingress architecture provides enterprise-grade multi-user access to OpenCode with centralized authentication and dynamic routing. By leveraging Authentik's Identity-Aware Proxy capabilities, we eliminate custom routing code while maintaining security and scalability. The design integrates cleanly with existing OpenCode operator patterns and provides a superior user experience through a single, branded access point.</content>
-<parameter name="filePath">docs/superpowers/specs/2026-04-07-shared-ingress-authentik-design.md
+This Authentik-based shared ingress architecture provides enterprise-grade multi-user access to OpenCode with centralized authentication and dynamic routing. By leveraging Authentik's Identity-Aware Proxy capabilities, we eliminate custom routing code while maintaining security and scalability. The design integrates cleanly with existing OpenCode operator patterns and provides a superior user experience through a single, branded access point.
