@@ -40,6 +40,7 @@ const (
 	kubedockServiceAccount  = "kubedock"
 	kubedockRoleName        = "kubedock"
 	kubedockRoleBindingName = "kubedock"
+	kubedockComponent       = "kubedock"
 )
 
 func (r *OpenCodeWorkspaceReconciler) reconcileKubedock(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) error {
@@ -87,7 +88,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockServiceAccount(ctx contex
 		if sa.Labels == nil {
 			sa.Labels = map[string]string{}
 		}
-		sa.Labels["app.kubernetes.io/component"] = "kubedock"
+		sa.Labels["app.kubernetes.io/component"] = kubedockComponent
 		sa.Labels["opencode.io/workspace"] = workspace.Name
 
 		if err := controllerutil.SetOwnerReference(workspace, sa, r.Scheme); err != nil {
@@ -113,7 +114,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockRole(ctx context.Context,
 		if role.Labels == nil {
 			role.Labels = map[string]string{}
 		}
-		role.Labels["app.kubernetes.io/component"] = "kubedock"
+		role.Labels["app.kubernetes.io/component"] = kubedockComponent
 		role.Labels["opencode.io/workspace"] = workspace.Name
 
 		role.Rules = []rbacv1.PolicyRule{
@@ -152,7 +153,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockRoleBinding(ctx context.C
 		if rb.Labels == nil {
 			rb.Labels = map[string]string{}
 		}
-		rb.Labels["app.kubernetes.io/component"] = "kubedock"
+		rb.Labels["app.kubernetes.io/component"] = kubedockComponent
 		rb.Labels["opencode.io/workspace"] = workspace.Name
 
 		rb.Subjects = []rbacv1.Subject{
@@ -181,7 +182,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockRoleBinding(ctx context.C
 
 func (r *OpenCodeWorkspaceReconciler) reconcileKubedockDeployment(ctx context.Context, workspace *opencodev1alpha1.OpenCodeWorkspace, namespaceName string) error {
 	labels := map[string]string{
-		"app.kubernetes.io/component": "kubedock",
+		"app.kubernetes.io/component": kubedockComponent,
 		"opencode.io/workspace":       workspace.Name,
 	}
 	replicas := int32(1)
@@ -268,12 +269,12 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockService(ctx context.Conte
 		if service.Labels == nil {
 			service.Labels = map[string]string{}
 		}
-		service.Labels["app.kubernetes.io/component"] = "kubedock"
+		service.Labels["app.kubernetes.io/component"] = kubedockComponent
 		service.Labels["opencode.io/workspace"] = workspace.Name
 
 		service.Spec.Type = corev1.ServiceTypeClusterIP
 		service.Spec.Selector = map[string]string{
-			"app.kubernetes.io/component": "kubedock",
+			"app.kubernetes.io/component": kubedockComponent,
 			"opencode.io/workspace":       workspace.Name,
 		}
 		service.Spec.Ports = []corev1.ServicePort{
