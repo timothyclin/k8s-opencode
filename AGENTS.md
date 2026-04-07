@@ -165,6 +165,8 @@ Each commit should represent one logical change. Don't mix unrelated changes in 
 
 ## Testing & Verification
 
+**BEFORE performing any dev/test tasks, read `.localtest/` contents for local testing procedures.**
+
 ### Before Marking Work Complete
 
 1. Run `helm template` or `helm lint` on chart changes
