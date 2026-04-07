@@ -214,7 +214,7 @@ func (r *OpenCodeWorkspaceReconciler) reconcileKubedockDeployment(ctx context.Co
 						Command:         []string{"kubedock", "server"},
 						Args: []string{
 							fmt.Sprintf("--listen-addr=:%d", kubedockPort),
-							fmt.Sprintf("--labels=opencode.io/workspace=%s", workspace.Name),
+							fmt.Sprintf("--label=opencode.io/workspace=%s", workspace.Name),
 						},
 						Ports: []corev1.ContainerPort{
 							{
