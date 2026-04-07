@@ -168,6 +168,7 @@ skills:
 # -- Tailscale cluster ingress (exposes OpenCode UI to your tailnet)
 ingress:
   enabled: false
+  hostname: "opencode.local"
   # -- Hostname prefix for MagicDNS (default derives from opencode.username as oc-<username>)
 # -- Tailscale operator configuration
 # -- If install: true, the chart expects the Tailscale Operator is already installed
