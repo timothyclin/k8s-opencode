@@ -11,10 +11,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - {{ .Values.authentik.proxy.hostname }}
-    secretName: {{ include "ok8s.fullname" . }}-authentik-tls
+    - {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
+    secretName: {{ include "ok8s.fullname" . }}-tls
   rules:
-  - host: {{ .Values.authentik.proxy.hostname }}
+  - host: {{ .Values.authentik.proxy.hostname | default "opencode.company.com" }}
     http:
       paths:
       - path: /
@@ -25,7 +25,7 @@ spec:
             port:
               number: 80
 {{- else }}
-# Original ingress logic here
+# Original ingress logic for direct routing to OpenCode
 {{- if and (eq .Values.mode "single") .Values.ingress.enabled }}
 {{- $hostname := .Values.ingress.hostname | default (include "ok8s.ingressHostname" .) }}
 apiVersion: networking.k8s.io/v1
