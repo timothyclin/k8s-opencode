@@ -299,17 +299,47 @@ kubedock:
     TESTCONTAINERS_RYUK_DISABLED: "true"
     TESTCONTAINERS_CHECKS_DISABLE: "true"
 
-# -- Authentik identity provider configuration
+# -- Authentik Identity-Aware Proxy configuration
 authentik:
   enabled: false
   # -- CRITICAL: Authentik secret key used for encryption. MUST be set to a cryptographically strong random string (at least 32 characters).
   # Generate with: openssl rand -base64 32
   # This value cannot be empty and must be unique per installation.
   secretKey: ""
+  image:
+    repository: ghcr.io/goauthentik/server
+    tag: "2024.6.0"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  # -- OIDC provider configuration
+  oidc:
+    enabled: false
+    provider: "oidc"  # oidc, google, github, etc.
+    clientId: ""
+    clientSecret: ""
+    issuerUrl: ""  # https://accounts.google.com for Google
+    scopes: ["openid", "email", "profile"]
+
+  # -- Proxy provider configuration
+  proxy:
+    enabled: false
+    hostname: "opencode.company.com"
+    cookieDomain: ".company.com"
+
+  # -- Database configuration
   postgres:
+    enabled: true
     image:
       repository: postgres
-      tag: "15-alpine"
+      tag: "15"
     database: "authentik"
     username: "authentik"
     password: "change-me-in-production"
@@ -323,17 +353,18 @@ authentik:
     persistence:
       enabled: true
       size: 10Gi
+
+  # -- Redis configuration
   redis:
+    enabled: true
     image:
       repository: redis
       tag: "7-alpine"
     password: "change-me-in-production"
     resources:
       requests:
-        cpu: 100m
-        memory: 256Mi
+        cpu: 50m
+        memory: 64Mi
       limits:
-        cpu: 500m
-        memory: 512Mi
-  oidc:
-    clientSecret: ""
+        cpu: 200m
+        memory: 128Mi
