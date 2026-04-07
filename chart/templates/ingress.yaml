@@ -38,10 +38,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - {{ .Values.auth.oidc.hostname | default "oc-ingress" }}
+    - {{ .Values.auth.oidc.hostname }}
     secretName: {{ include "ok8s.fullname" . }}-oidc-tls
   rules:
-  - host: {{ .Values.auth.oidc.hostname | default "oc-ingress" }}
+  - host: {{ .Values.auth.oidc.hostname }}
     http:
       paths:
       - path: /
